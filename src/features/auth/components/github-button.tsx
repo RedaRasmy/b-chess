@@ -12,7 +12,7 @@ export default function GithubButton() {
     }
     return (
         <Button
-            variant="outline"
+            variant="secondary"
             className="w-full cursor-pointer"
             onClick={handleClick}
         >
