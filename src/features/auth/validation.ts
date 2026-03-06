@@ -2,9 +2,9 @@ import { z } from "zod"
 
 export const NameSchema = z
     .string()
-    .min(1, "Name is required")
-    .min(3, "Name must be at least 3 characters")
-    .max(15, "Name must be at most 15 characters")
+    .min(1, "Username is required")
+    .min(3, "Username must be at least 3 characters")
+    .max(15, "Username must be at most 15 characters")
 
 export const EmailSchema = z
     .string()
@@ -22,11 +22,17 @@ export const LoginSchema = z.object({
     password: PasswordSchema,
 })
 
-export const RegisterSchema = z.object({
-    username: NameSchema,
-    email: EmailSchema,
-    password: PasswordSchema,
-})
+export const RegisterSchema = z
+    .object({
+        username: NameSchema,
+        email: EmailSchema,
+        password: PasswordSchema,
+        confirmPassword: z.string(),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+        message: "Passwords don't match",
+        path: ["confirmPassword"],
+    })
 
 export type LoginCredentials = z.infer<typeof LoginSchema>
 export type RegisterCredentials = z.infer<typeof RegisterSchema>
