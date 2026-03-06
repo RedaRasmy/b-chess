@@ -39,7 +39,11 @@ export default function LoginPage() {
 
     const mutation = useMutation({
         mutationFn: (data: RegisterCredentials) =>
-            authClient.signIn.email(data),
+            authClient.signUp.email({
+                name: data.username,
+                email: data.email,
+                password: data.password,
+            }),
         onSuccess: async () => {
             router.replace("/")
         },
