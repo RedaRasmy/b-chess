@@ -75,7 +75,7 @@ export default function LoginPage() {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
     return (
-        <div className="w-full h-screen bg-linear-to-br from-primary/10 via-background to-secondary/10 flex items-center justify-center p-4">
+        <div className="w-full h-full flex items-center justify-center p-4">
             <div className="w-full max-w-md">
                 {/* Back to Home */}
                 <Link href="/" className="inline-block mb-6">

@@ -53,7 +53,7 @@ export default function page() {
     }
 
     return (
-        <div className="w-full h-screen bg-linear-to-br from-primary/10 via-background to-secondary/10 flex items-center justify-center p-4">
+        <div className="w-full h-full flex items-center justify-center p-4">
             <div className="w-full max-w-md">
                 <Card className="shadow-xl">
                     <CardHeader className="text-center">
