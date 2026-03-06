@@ -24,14 +24,28 @@ export default function page() {
 
     const mutation = useMutation({
         mutationFn: async ({ username }: Data) => {
+            const { data: availability } = await authClient.isUsernameAvailable(
+                { username },
+            )
+
+            if (!availability?.available) {
+                throw new Error(
+                    "Username is already taken. Please try another.",
+                )
+            }
             const { data: result, error } = await authClient.updateUser({
                 username,
             })
+
             if (error) throw error
             return result
         },
         onSuccess: () => router.replace("/profile"),
-        onError: (err) => form.setError("username", { message: err.message }),
+        onError: (err) => {
+            form.setError("username", {
+                message: err.message ?? "Semething went wrong",
+            })
+        },
     })
 
     async function onSubmit(data: Data) {
