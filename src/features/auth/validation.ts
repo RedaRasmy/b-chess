@@ -1,6 +1,6 @@
 import { z } from "zod"
 
-export const NameSchema = z
+export const UsernameSchema = z
     .string()
     .min(1, "Username is required")
     .min(3, "Username must be at least 3 characters")
@@ -18,13 +18,13 @@ export const PasswordSchema = z
     .max(50, "Password must be at most 50 characters")
 
 export const LoginSchema = z.object({
-    email: EmailSchema,
+    emailOrUsername: z.string().min(1, "Email or username is required"),
     password: PasswordSchema,
 })
 
 export const RegisterSchema = z
     .object({
-        username: NameSchema,
+        username: UsernameSchema,
         email: EmailSchema,
         password: PasswordSchema,
         confirmPassword: z.string(),

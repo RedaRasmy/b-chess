@@ -15,7 +15,11 @@ import {
 import { useState } from "react"
 import { Separator } from "@/components/ui/separator"
 import { ArrowLeft, Eye, EyeClosed, Key, Mail } from "lucide-react"
-import { LoginCredentials, LoginSchema } from "@/features/auth/validation"
+import {
+    EmailSchema,
+    LoginCredentials,
+    LoginSchema,
+} from "@/features/auth/validation"
 import { authClient } from "@/lib/auth-client"
 import Link from "next/link"
 import { useSearchParams, useRouter } from "next/navigation"
@@ -26,7 +30,7 @@ export default function LoginPage() {
     const form = useForm({
         resolver: zodResolver(LoginSchema),
         defaultValues: {
-            email: "",
+            emailOrUsername: "",
             password: "",
         },
     })
@@ -36,9 +40,28 @@ export default function LoginPage() {
     const router = useRouter()
 
     const mutation = useMutation({
-        mutationFn: (data: LoginCredentials) => authClient.signIn.email(data),
-        onSuccess: async (user) => {
-            router.replace("/")
+        mutationFn: async (data: LoginCredentials) => {
+            const isEmail = EmailSchema.safeParse(data.emailOrUsername).success
+
+            if (isEmail) {
+                const { data: result, error } = await authClient.signIn.email({
+                    email: data.emailOrUsername,
+                    password: data.password,
+                })
+                if (error) throw error
+                return result
+            } else {
+                const { data: result, error } =
+                    await authClient.signIn.username({
+                        username: data.emailOrUsername,
+                        password: data.password,
+                    })
+                if (error) throw error
+                return result
+            }
+        },
+        onSuccess: async () => {
+            router.replace("/profile")
         },
         onError: (err) => {
             const message =
@@ -87,12 +110,12 @@ export default function LoginPage() {
                             <p className="text-red-500">{message}</p>
                             {/* Email Field */}
                             <Controller
-                                name="email"
+                                name="emailOrUsername"
                                 control={form.control}
                                 render={({ field, fieldState }) => (
                                     <Field data-invalid={fieldState.invalid}>
                                         <FieldLabel htmlFor="email">
-                                            Email
+                                            Identifier
                                         </FieldLabel>
                                         <div className="relative">
                                             <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -103,7 +126,7 @@ export default function LoginPage() {
                                                 aria-invalid={
                                                     fieldState.invalid
                                                 }
-                                                placeholder="Enter your email"
+                                                placeholder="Enter your email or username"
                                                 className="pl-10"
                                             />
                                         </div>

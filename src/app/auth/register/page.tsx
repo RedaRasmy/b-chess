@@ -38,21 +38,29 @@ export default function LoginPage() {
     const router = useRouter()
 
     const mutation = useMutation({
-        mutationFn: (data: RegisterCredentials) =>
-            authClient.signUp.email({
+        mutationFn: async (data: RegisterCredentials) => {
+            const { data: result, error } = await authClient.signUp.email({
                 name: data.username,
                 email: data.email,
                 password: data.password,
-            }),
+                username: data.username,
+            })
+            if (error) throw error
+            return result
+        },
         onSuccess: async () => {
-            router.replace("/")
+            router.replace("/profile")
         },
         onError: (err) => {
-            const message =
-                err.message || "Something went wrong , Please try again."
-            form.setError("root", {
-                message,
-            })
+            const message = err.message || "Something went wrong"
+
+            if (message.toLowerCase().includes("username")) {
+                form.setError("username", { message })
+            } else if (message.toLowerCase().includes("email")) {
+                form.setError("email", { message })
+            } else {
+                form.setError("root", { message })
+            }
         },
     })
 
