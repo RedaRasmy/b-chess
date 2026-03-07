@@ -6,6 +6,7 @@ export function PlayerTimer({ color }: { color: "white" | "black" }) {
     if (!clock) throw new Error("PlayerTimer can't be used while clock is null")
 
     const status = useGameStore((s) => s.status)
+    const endGame = useGameStore((s) => s.endGame)
     const [ms, setMs] = useState(clock[color])
 
     useEffect(() => {
@@ -16,7 +17,11 @@ export function PlayerTimer({ color }: { color: "white" | "black" }) {
 
         const interval = setInterval(() => {
             const elapsed = Date.now() - (clock.lastTickAt ?? Date.now())
-            setMs(Math.max(0, clock[color] - elapsed))
+            const remaining = Math.max(0, clock[color] - elapsed)
+            setMs(remaining)
+            if (remaining === 0) {
+                endGame(color === "white" ? "black" : "white", "timeout")
+            }
         }, 100)
 
         return () => clearInterval(interval)
