@@ -160,27 +160,10 @@ export default function Page() {
                     <PlayerInfo color={color} />
                 </div>
             </div>
-            <div className="bg-secondary flex-1 w-full landscape:min-w-80 py-3 lg:py-5 flex flex-col gap-5 lg:gap-8 justify-center items-center border-l border-black/30 ">
-                <div className="grid grid-cols-2 px-2 w-full lg:px-4 gap-2 grid-rows-2 ">
+            <div className="bg-secondary flex-1 w-full landscape:min-w-80 lg:py-5 flex flex-col gap-5 lg:gap-8 justify-center items-center border-l border-black/30 ">
+                <div className="flex flex-col w-full items-center px-2 lg:px-4 gap-1  ">
                     <Button
-                        disabled={isGameOver}
-                        className="cursor-pointer font-semibold max-w-80 w-full place-self-end"
-                        // onClick={resign}
-                        variant={"outline"}
-                    >
-                        <Flag />
-                        Resign
-                    </Button>
-                    <Button
-                        className="cursor-pointer font-semibold max-w-80 "
-                        onClick={replay}
-                        variant={"outline"}
-                    >
-                        <RotateCcw />
-                        Replay
-                    </Button>
-                    <Button
-                        className="cursor-pointer font-semibold max-w-80 w-full place-self-end"
+                        className="cursor-pointer font-semibold max-w-70 w-full "
                         onClick={undo}
                         variant={"outline"}
                         disabled={!canUndo}
@@ -189,8 +172,16 @@ export default function Page() {
                         Undo
                     </Button>
                     <Button
+                        className="cursor-pointer font-semibold max-w-70 w-full"
+                        onClick={replay}
+                        variant={"outline"}
+                    >
+                        <RotateCcw />
+                        Replay
+                    </Button>
+                    <Button
                         asChild
-                        className="cursor-pointer font-semibold max-w-80"
+                        className="cursor-pointer font-semibold max-w-70 w-full"
                         onClick={resetGame}
                         variant={"outline"}
                     >
