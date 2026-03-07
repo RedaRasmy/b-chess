@@ -5,6 +5,7 @@ import { useGameStore } from "@/features/game/game-store"
 import { getMaterialState } from "@/features/game/utils/get-material-state"
 import ChessPieceImage from "@/features/game/components/chess-piece-image"
 import { Skeleton } from "@/components/ui/skeleton"
+import { getOppositeColor } from "@/features/game/utils/get-color"
 
 export default function PlayerInfo({ color }: { color: Color | null }) {
     const { white, black, fen, clock } = useGameStore()
@@ -30,8 +31,10 @@ export default function PlayerInfo({ color }: { color: Color | null }) {
 
     const pieces: PieceSymbol[] = ["p", "b", "n", "r", "q"]
 
+    const opponentColor = getOppositeColor(color)
+
     return (
-        <div className="bg-accent/70 rounded-sm flex items-center justify-between gap-2 px-2 py-2 h-fit w-full">
+        <div className="bg-accent/70 rounded-sm flex items-center justify-between gap-3 px-2 py-2 w-full">
             <div className="flex items-center gap-2">
                 <Avatar className="border-2 border-gray-300">
                     <AvatarImage
@@ -40,7 +43,7 @@ export default function PlayerInfo({ color }: { color: Color | null }) {
                     <AvatarFallback>B</AvatarFallback>
                 </Avatar>
                 <p className="font-bold">{player.username}</p>
-                <div className="flex items-center h-full ">
+                <div className="flex items-center h-full ml-2">
                     {pieces.map((type, index) => (
                         <div
                             key={pieces[index]}
@@ -53,7 +56,7 @@ export default function PlayerInfo({ color }: { color: Color | null }) {
                                 <ChessPieceImage
                                     key={i}
                                     piece={{
-                                        color,
+                                        color: opponentColor,
                                         type,
                                     }}
                                     size={20}
