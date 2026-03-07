@@ -14,7 +14,7 @@ import PlayerInfo from "@/features/game/components/player-info"
 import { useGameStore } from "@/features/game/game-store"
 import { getColor } from "@/features/game/utils/get-color"
 import { Square } from "chess.js"
-import { Flag, Plus, RotateCcw, Undo } from "lucide-react"
+import { Plus, RotateCcw, Undo } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useRef } from "react"
 import { Chessboard } from "react-chessboard"
@@ -94,28 +94,32 @@ export default function Page() {
 
     return (
         <div className="flex flex-wrap w-full h-full gap-3 lg:gap-5 xl:gap-8">
-            <Dialog open={isGameOver}>
-                <DialogContent className="">
-                    <DialogHeader>
-                        <DialogTitle>
-                            {isDraw
-                                ? "You Draw"
-                                : isWin
-                                  ? "You Won"
-                                  : "You Lost"}
-                        </DialogTitle>
-                        <DialogDescription>By {endReason}</DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                        <Button asChild variant="outline">
-                            <Link href={"/"}>Home</Link>
-                        </Button>
-                        <Button className="cursor-pointer" onClick={replay}>
-                            Replay
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            {isGameOver && (
+                <Dialog defaultOpen>
+                    <DialogContent className="">
+                        <DialogHeader>
+                            <DialogTitle>
+                                {isDraw
+                                    ? "You Draw"
+                                    : isWin
+                                      ? "You Won"
+                                      : "You Lost"}
+                            </DialogTitle>
+                            <DialogDescription>
+                                By {endReason}
+                            </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter>
+                            <Button asChild variant="outline">
+                                <Link href={"/"}>Home</Link>
+                            </Button>
+                            <Button className="cursor-pointer" onClick={replay}>
+                                Replay
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+            )}
             <div className="flex-auto flex justify-center items-center">
                 <div className="flex flex-col w-full max-w-[75vh] gap-2 px-1">
                     <PlayerInfo color={opponentColor} />
