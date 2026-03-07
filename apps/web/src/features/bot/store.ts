@@ -1,5 +1,5 @@
 import { useGameStore } from "@/features/game/game-store"
-import { PieceColor } from "@/features/game/types"
+import { PieceColor, PlayerInfo } from "@/features/game/types"
 import { Square } from "chess.js"
 import { create } from "zustand"
 
@@ -13,6 +13,7 @@ export interface BotState {
         difficulty: number
         playerColor: PieceColor
         timeControl?: { initial: number; increment: number }
+        player?: PlayerInfo
     } | null
 
     // actions
@@ -22,6 +23,7 @@ export interface BotState {
         difficulty: number
         playerColor: PieceColor
         timeControl?: { initial: number; increment: number }
+        player?: PlayerInfo
     }) => void
     replayBotGame: () => void
     requestBotMove: () => void
@@ -93,7 +95,7 @@ export const useBotStore = create<BotState>((set, get) => ({
         set({ engine: null, engineReady: false, isThinking: false })
     },
 
-    startBotGame: ({ difficulty, playerColor, timeControl }) => {
+    startBotGame: ({ difficulty, playerColor, timeControl, player }) => {
         set({ lastConfig: { difficulty, playerColor, timeControl } })
         const game = useGameStore.getState()
         const botColor = playerColor === "white" ? "black" : "white"
@@ -103,7 +105,7 @@ export const useBotStore = create<BotState>((set, get) => ({
             username: `Stockfish lvl ${difficulty}`,
         }
 
-        const humanPlayer = {
+        const humanPlayer = player ?? {
             id: "player",
             username: "You",
         }

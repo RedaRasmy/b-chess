@@ -12,6 +12,7 @@ import { ColorOption } from "@/features/bot/types"
 import parseTimerOption from "@/features/game/utils/parse-timer-option"
 import SelectTimer from "@/features/game/components/select-timer"
 import { useRouter } from "next/navigation"
+import { authClient } from "@/lib/auth-client"
 
 export default function BotOptions() {
     const { startBotGame } = useBotStore()
@@ -19,6 +20,15 @@ export default function BotOptions() {
     const [playerColor, setPlayerColor] = useState<ColorOption>("white")
     const [timer, setTimer] = useState<TimerOption | null>("rapid 10+0")
     const router = useRouter()
+    const { data: session } = authClient.useSession()
+    const user = session?.user
+    const player = user
+        ? {
+              id: user.id,
+              avatar: user.image ?? undefined,
+              username: user.username ?? "You",
+          }
+        : undefined
 
     function handleStart() {
         const color =
@@ -38,6 +48,7 @@ export default function BotOptions() {
             timeControl,
             difficulty: level,
             playerColor: color,
+            player,
         })
         router.push("/bot/play")
     }

@@ -36,7 +36,7 @@ export default function PlayerInfo({ color }: { color: Color | null }) {
     return (
         <div className="bg-accent/70 rounded-sm flex items-center justify-between gap-3 px-2 py-2 w-full">
             <div className="flex items-center gap-2">
-                <Avatar className="border-2 border-gray-300">
+                <Avatar>
                     <AvatarImage
                         src={player.avatar ?? "/images/default-avatar.jpg"}
                     />
