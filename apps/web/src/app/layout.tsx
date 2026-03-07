@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { Geist, Geist_Mono, Inter } from "next/font/google"
 import "./globals.css"
 import { Providers } from "@/app/providers"
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
+import { SidebarProvider } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
 import Header from "@/components/header"
 
@@ -36,9 +36,9 @@ export default function RootLayout({
                 <Providers>
                     <SidebarProvider>
                         <AppSidebar />
-                        <div className="w-full grid grid-rows-[auto_1fr]">
+                        <div className="w-full grid grid-rows-[auto_1fr] h-screen">
                             <Header />
-                            <main className="px-3 pb-5 md:px-5 lg:px-7 overflow-auto h-full">
+                            <main className="pb-5 md:px-5 lg:px-7 overflow-auto">
                                 {children}
                             </main>
                         </div>
