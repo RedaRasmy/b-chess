@@ -37,7 +37,7 @@ export function PlayerTimer({ color }: { color: "white" | "black" }) {
             : `${minutes}:${String(seconds).padStart(2, "0")}`
 
     return (
-        <span className={ms < 10000 ? "text-red-500" : "" + "px-2"}>
+        <span className={(ms < 10000 ? "text-red-500" : "") + "px-2"}>
             {display}
         </span>
     )

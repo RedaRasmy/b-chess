@@ -31,7 +31,7 @@ export default function BotOptions() {
         const timeControl = timer
             ? {
                   initial: parseTimerOption(timer).base * 1000,
-                  increment: parseTimerOption(timer).plus,
+                  increment: parseTimerOption(timer).plus * 1000,
               }
             : undefined
         startBotGame({
