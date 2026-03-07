@@ -31,8 +31,8 @@ export const useGameStore = create<GameState>((set, get) => ({
     result: null,
     endReason: null,
     clock: DEFAULT_CLOCK,
-
-    
+    viewIndex: null,
+    displayFen: new Chess().fen(),
 
     selectSquare: (square) => {
         const { chess, selectedSquare, playerColor, status } = get()
@@ -45,7 +45,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
         if (selectedSquare) {
             const move = get().makeMove(selectedSquare, square)
-            if (move) return // move was made, deselection handled inside makeMove
+            if (move) return
         }
 
         const piece = chess.get(square)
@@ -55,7 +55,6 @@ export const useGameStore = create<GameState>((set, get) => ({
             return set({ selectedSquare: null, legalMoves: [] })
         }
 
-        // only allow selecting your own pieces
         if (playerColor && turn !== playerColor) {
             return set({ selectedSquare: null, legalMoves: [] })
         }
@@ -90,7 +89,9 @@ export const useGameStore = create<GameState>((set, get) => ({
 
             set({
                 fen: chess.fen(),
-                moveHistory: chess.history({ verbose: true }) as Move[],
+                displayFen: chess.fen(),
+                viewIndex: null,
+                moveHistory: chess.history({ verbose: true }),
                 lastMove: {
                     from,
                     to,
@@ -148,6 +149,8 @@ export const useGameStore = create<GameState>((set, get) => ({
         set({
             chess,
             fen: chess.fen(),
+            displayFen: chess.fen(),
+            viewIndex: null,
             mode: "idle",
             status: "waiting",
             playerColor: null,
@@ -202,4 +205,44 @@ export const useGameStore = create<GameState>((set, get) => ({
         set({ clock: { ...clock, activeColor: null, lastTickAt: null } })
     },
 
+    goToMove: (index) => {
+        const { moveHistory } = get()
+        if (index < 0 || index >= moveHistory.length) return
+
+        const chess = new Chess()
+        for (let i = 0; i <= index; i++) {
+            chess.move(moveHistory[i])
+        }
+        set({ viewIndex: index, displayFen: chess.fen() })
+    },
+
+    goToStart: () => {
+        set({ viewIndex: -1, displayFen: new Chess().fen() })
+    },
+
+    goToEnd: () => {
+        const { fen } = get()
+        set({ viewIndex: null, displayFen: fen })
+    },
+
+    stepBack: () => {
+        const { viewIndex, moveHistory } = get()
+        const current = viewIndex ?? moveHistory.length - 1
+        if (current <= 0) {
+            get().goToStart()
+        } else {
+            get().goToMove(current - 1)
+        }
+    },
+
+    stepForward: () => {
+        const { viewIndex, moveHistory } = get()
+        if (viewIndex === null) return
+        const next = viewIndex + 1
+        if (next >= moveHistory.length) {
+            get().goToEnd()
+        } else {
+            get().goToMove(next)
+        }
+    },
 }))

@@ -60,7 +60,9 @@ export interface GameState {
     // moves
     moveHistory: Move[]
     lastMove: LastMove | null
-
+    viewIndex: number | null
+    displayFen: string
+    
     // selection
     selectedSquare: Square | null
     legalMoves: Square[]
@@ -84,6 +86,11 @@ export interface GameState {
     endGame: (result: GameResult, reason: GameEndReason) => void
     startClock: (timeControl?: { initial: number; increment: number }) => void
     pauseClock: () => void
+    goToMove: (index: number) => void
+    goToStart: () => void
+    goToEnd: () => void
+    stepBack: () => void
+    stepForward: () => void
 }
 
 export type ChessTimer = {
