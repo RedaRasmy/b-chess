@@ -16,7 +16,7 @@ import { getColor } from "@/features/game/utils/get-color"
 import { Square } from "chess.js"
 import { Flag, Plus, RotateCcw, Undo } from "lucide-react"
 import Link from "next/link"
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import { Chessboard } from "react-chessboard"
 
 export default function Page() {
@@ -31,12 +31,19 @@ export default function Page() {
         chess,
         legalMoves,
         selectedSquare,
+        undo,
+        moveHistory,
     } = useGameStore()
     const requestBotMove = useBotStore((s) => s.requestBotMove)
     const initEngine = useBotStore((s) => s.initEngine)
     const destroyEngine = useBotStore((s) => s.destroyEngine)
     const replay = useBotStore((s) => s.replayBotGame)
     const engineReady = useBotStore((s) => s.engineReady)
+
+    const canUndo =
+        playerColor === "white"
+            ? moveHistory.length > 0
+            : moveHistory.length > 1
 
     const isDraw = result === "draw"
     const isWin = result === playerColor
@@ -53,13 +60,21 @@ export default function Page() {
         return useGameStore.getState().fen !== prevFen
     }
 
+    const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
     useEffect(() => {
         if (status !== "playing" || !engineReady) return
 
         const turn = chess.turn() === "w" ? "white" : "black"
         const isBotTurn = turn !== playerColor
 
-        if (isBotTurn) requestBotMove()
+        if (isBotTurn) {
+            timeoutRef.current = setTimeout(requestBotMove, 500)
+        }
+
+        return () => {
+            if (timeoutRef.current) clearTimeout(timeoutRef.current)
+        }
     }, [displayFen, engineReady])
 
     useEffect(() => {
@@ -166,8 +181,9 @@ export default function Page() {
                     </Button>
                     <Button
                         className="cursor-pointer font-semibold max-w-80 w-full place-self-end"
-                        // onClick={realUndo}
+                        onClick={undo}
                         variant={"outline"}
+                        disabled={!canUndo}
                     >
                         <Undo />
                         Undo

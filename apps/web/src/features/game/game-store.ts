@@ -5,6 +5,7 @@ import {
     GameState,
     PromotionPiece,
 } from "@/features/game/types"
+import { getColor } from "@/features/game/utils/get-color"
 import { Chess, Move, Square } from "chess.js"
 import { create } from "zustand"
 
@@ -33,6 +34,38 @@ export const useGameStore = create<GameState>((set, get) => ({
     clock: DEFAULT_CLOCK,
     viewIndex: null,
     displayFen: new Chess().fen(),
+
+    undo: () => {
+        const { chess, playerColor, mode, status } = get()
+        if (!playerColor || mode !== "bot" || status !== "playing") return
+
+        const turn = chess.turn()
+        if (getColor(playerColor) === turn) {
+            chess.undo() // bot's move
+            chess.undo()
+        } else {
+            chess.undo()
+        }
+
+        const newHistory = chess.history({ verbose: true })
+
+        set({
+            fen: chess.fen(),
+            displayFen: chess.fen(),
+            moveHistory: newHistory,
+            lastMove:
+                newHistory.length > 0
+                    ? {
+                          from: newHistory[newHistory.length - 1]
+                              .from as Square,
+                          to: newHistory[newHistory.length - 1].to as Square,
+                      }
+                    : null,
+            viewIndex: null,
+            selectedSquare: null,
+            legalMoves: [],
+        })
+    },
 
     selectSquare: (square) => {
         const { chess, selectedSquare, playerColor, status } = get()

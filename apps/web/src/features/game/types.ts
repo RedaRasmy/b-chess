@@ -62,7 +62,7 @@ export interface GameState {
     lastMove: LastMove | null
     viewIndex: number | null
     displayFen: string
-    
+
     // selection
     selectedSquare: Square | null
     legalMoves: Square[]
@@ -91,6 +91,7 @@ export interface GameState {
     goToEnd: () => void
     stepBack: () => void
     stepForward: () => void
+    undo: () => void
 }
 
 export type ChessTimer = {
