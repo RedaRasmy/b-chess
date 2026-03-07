@@ -9,6 +9,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog"
 import { useBotStore } from "@/features/bot/store"
+import useBot from "@/features/bot/use-bot"
 import HistoryController from "@/features/game/components/history-controller"
 import PlayerInfo from "@/features/game/components/player-info"
 import { useGameStore } from "@/features/game/game-store"
@@ -16,10 +17,10 @@ import { getColor } from "@/features/game/utils/get-color"
 import { Square } from "chess.js"
 import { Plus, RotateCcw, Undo } from "lucide-react"
 import Link from "next/link"
-import { useEffect, useRef } from "react"
 import { Chessboard } from "react-chessboard"
 
 export default function Page() {
+    useBot()
     const {
         result,
         endReason,
@@ -27,18 +28,12 @@ export default function Page() {
         resetGame,
         displayFen,
         selectSquare,
-        status,
-        chess,
         legalMoves,
         selectedSquare,
         undo,
         moveHistory,
     } = useGameStore()
-    const requestBotMove = useBotStore((s) => s.requestBotMove)
-    const initEngine = useBotStore((s) => s.initEngine)
-    const destroyEngine = useBotStore((s) => s.destroyEngine)
     const replay = useBotStore((s) => s.replayBotGame)
-    const engineReady = useBotStore((s) => s.engineReady)
 
     const canUndo =
         playerColor === "white"
@@ -59,28 +54,6 @@ export default function Page() {
         selectSquare(to)
         return useGameStore.getState().fen !== prevFen
     }
-
-    const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-    useEffect(() => {
-        if (status !== "playing" || !engineReady) return
-
-        const turn = chess.turn() === "w" ? "white" : "black"
-        const isBotTurn = turn !== playerColor
-
-        if (isBotTurn) {
-            timeoutRef.current = setTimeout(requestBotMove, 500)
-        }
-
-        return () => {
-            if (timeoutRef.current) clearTimeout(timeoutRef.current)
-        }
-    }, [displayFen, engineReady])
-
-    useEffect(() => {
-        initEngine()
-        return () => destroyEngine()
-    }, [])
 
     const legalMoveStyles = Object.fromEntries(
         legalMoves.map((sq) => [
