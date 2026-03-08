@@ -53,15 +53,15 @@ export default function SelectTimer({
                     <div
                         key={i}
                         className={cn(
-                            "rounded-lg hover:bg-accent/10 px-10 md:px-15 lg:px-10 border-2 border-accent/50  cursor-pointer w-full max-w-70 flex items-center gap-1 flex-col  py-4 lg:py-6",
+                            "rounded-lg hover:bg-accent/10 px-10 md:px-15 lg:px-10 border-2 border-accent/50 cursor-pointer w-full max-w-70 flex items-center gap-1 flex-col  py-2.5 lg:py-6",
                             {
                                 "border-primary bg-primary/30": value === op,
                             },
                         )}
                         onClick={() => handleClick(op)}
                     >
-                        <Icon color="red" />
-                        <p className="font-semibold text-lg">
+                        <Icon color="red" className="not-md:size-5" />
+                        <p className="font-semibold md:text-lg">
                             {base / 60}+{plus}
                         </p>
                         <p className="text-muted-foreground">{type}</p>

@@ -38,7 +38,7 @@ export default function RootLayout({
                         <AppSidebar />
                         <div className="w-full grid grid-rows-[auto_1fr] h-screen">
                             <Header />
-                            <main className="pb-5 md:px-5 lg:px-7 overflow-auto">
+                            <main className="md:px-5 lg:px-7 overflow-auto my-auto">
                                 {children}
                             </main>
                         </div>

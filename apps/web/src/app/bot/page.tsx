@@ -54,31 +54,35 @@ export default function BotOptions() {
     }
 
     return (
-        <div className="space-y-5 flex flex-col w-full">
-            <div className="flex items-center gap-2 flex-col">
-                <h1 className="text-3xl font-bold">Play vs Bot</h1>
-                <p className="text-muted-foreground">
-                    Practice against our intelligent AI opponents
-                </p>
-            </div>
-
-            <Card className="">
+        <div className="grid py-2 items-center overflow-auto w-full px-2 lg:px-5 xl:px-20 ">
+            <Card className="px-4 py-6 md:space-y-2 w-full md:px-20 lg:px-10 ">
                 <CardHeader>
-                    <div>
-                        <h1 className="text-2xl font-semibold flex gap-3 items-center">
-                            <Bot />
-                            Bot Configuration
-                        </h1>
-                        <p className="text-muted-foreground">
-                            Customize your AI opponent
-                        </p>
-                    </div>
+                    <h1 className="text-2xl font-semibold flex gap-3 items-center">
+                        <Bot size={40} />
+                        Bot Configuration
+                    </h1>
                 </CardHeader>
                 <CardContent>
-                    <div className="flex flex-col  gap-5 lg:gap-7 w-full">
-                        <div className="flex flex-col lg:justify-around gap-5 lg:gap-7 xl:flex-row">
-                            <div className="flex flex-col gap-5 lg:gap-7 w-full ">
-                                <div className="flex flex-col lg:items-center justify-center w-full max-w-[min(100%,400px)]">
+                    <div className="flex flex-col w-full h-full gap-6 lg:gap-10 lg:flex-row">
+                        <div className="flex flex-col lg:items-center justify-center w-full h-full">
+                            <h1 className="text-xl items-center font-semibold mb-4 lg:mb-6 flex gap-2 ">
+                                <Timer />
+                                Timer
+                                <span className="text-xs text-muted-foreground">
+                                    (optional)
+                                </span>
+                            </h1>
+                            <div className="flex items-center justify-center w-full flex-col">
+                                <SelectTimer
+                                    className=""
+                                    value={timer}
+                                    onChange={setTimer}
+                                />
+                            </div>
+                        </div>
+                        <div className="flex flex-col items-center gap-5 w-full md:space-y-3">
+                            <div className="space-y-5 md:space-y-8 w-full">
+                                <div className="flex flex-col lg:items-center justify-center w-full max-w-[min(100%,400px)">
                                     <h1 className="text-xl text-nowrap items-center justify-between font-semibold mb-4 flex gap-2 w-full ">
                                         Difficulty Level
                                         <Badge className="h-4 w-20 rounded-lg">
@@ -93,7 +97,7 @@ export default function BotOptions() {
                                     />
                                 </div>
                                 <div>
-                                    <h1 className="text-xl text-nowrap items-center justify-between font-semibold mb-4 flex gap-2 w-full ">
+                                    <h1 className="text-xl text-nowrap items-center justify-between font-semibold mb-4 lg:mb-5 flex gap-2 w-full ">
                                         Your Color
                                     </h1>
                                     <SelectColor
@@ -104,31 +108,15 @@ export default function BotOptions() {
                                     />
                                 </div>
                             </div>
-                            <div className="flex flex-col lg:items-center justify-center w-full ">
-                                <h1 className="text-xl items-center font-semibold mb-4 lg:mb-6 flex gap-2 ">
-                                    <Timer />
-                                    Time Control
-                                    <span className="text-xs text-muted-foreground">
-                                        (optional)
-                                    </span>
-                                </h1>
-                                <div className="flex items-center justify-center w-full flex-col">
-                                    <SelectTimer
-                                        className=""
-                                        value={timer}
-                                        onChange={setTimer}
-                                    />
-                                </div>
+                            <div className="flex bg-red- h-full items-center justify-center w-full ">
+                                <Button
+                                    className="w-full lg:text-xl max-w-md py-5 lg:py-10 cursor-pointer"
+                                    onClick={handleStart}
+                                    variant={"destructive"}
+                                >
+                                    Start
+                                </Button>
                             </div>
-                        </div>
-                        <div className="flex flex-col lg:flex-row-reverse gap-2">
-                            <Button
-                                className="w-full lg:max-w-xs py-5 cursor-pointer"
-                                onClick={handleStart}
-                                variant={"outline"}
-                            >
-                                Start
-                            </Button>
                         </div>
                     </div>
                 </CardContent>
