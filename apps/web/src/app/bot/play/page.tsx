@@ -137,8 +137,8 @@ export default function Page() {
                     <PlayerInfo color={color} />
                 </div>
             </div>
-            <div className="bg-secondary flex-1 w-full landscape:min-w-80 lg:py-5 flex flex-col gap-5 lg:gap-8 justify-center items-center border-l border-black/30 ">
-                <div className="flex flex-col w-full items-center px-2 lg:px-4 gap-1  ">
+            <div className="bg-secondary flex-1 w-full landscape:min-w-80 py-5 flex flex-col gap-5 lg:gap-8 justify-center items-center border-l border-black/30 ">
+                <div className="flex flex-col w-full items-center px-2 lg:px-4 gap-1">
                     <Button
                         className="cursor-pointer font-semibold max-w-70 w-full "
                         onClick={undo}
