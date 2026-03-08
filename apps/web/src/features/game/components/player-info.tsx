@@ -42,7 +42,7 @@ export default function PlayerInfo({ color }: { color: Color | null }) {
                     />
                     <AvatarFallback>B</AvatarFallback>
                 </Avatar>
-                <p className="font-bold">{player.username}</p>
+                <p className="text-muted-foreground">{player.username}</p>
                 <div className="flex items-center h-full ml-2">
                     {pieces.map((type, index) => (
                         <div

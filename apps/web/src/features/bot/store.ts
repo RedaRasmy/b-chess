@@ -103,6 +103,7 @@ export const useBotStore = create<BotState>((set, get) => ({
         const botPlayer = {
             id: "stockfish",
             username: `Stockfish lvl ${difficulty}`,
+            avatar: "/images/stockfish.webp",
         }
 
         const humanPlayer = player ?? {
