@@ -211,7 +211,16 @@ export const useGameStore = create<GameState>((set, get) => ({
             result,
             endReason: reason,
             status: "finished",
-            clock: clock ? { ...clock, activeColor: null } : null,
+            clock: clock
+                ? {
+                      ...clock,
+                      activeColor: null,
+                      lastTickAt: null,
+                      ...(reason === "timeout" && {
+                          [result === "white" ? "black" : "white"]: 0,
+                      }),
+                  }
+                : null,
         })
     },
 
