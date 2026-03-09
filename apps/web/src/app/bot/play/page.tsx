@@ -10,29 +10,18 @@ import {
 } from "@/components/ui/dialog"
 import { useBotStore } from "@/features/bot/store"
 import useBot from "@/features/bot/use-bot"
+import GameBoard from "@/features/game/components/game-board"
 import HistoryController from "@/features/game/components/history-controller"
 import PlayerInfo from "@/features/game/components/player-info"
 import { useGameStore } from "@/features/game/game-store"
 import { getColor } from "@/features/game/utils/get-color"
-import { Square } from "chess.js"
 import { Plus, RotateCcw, Undo } from "lucide-react"
 import Link from "next/link"
-import { Chessboard } from "react-chessboard"
 
 export default function Page() {
     useBot()
-    const {
-        result,
-        endReason,
-        playerColor,
-        resetGame,
-        displayFen,
-        selectSquare,
-        legalMoves,
-        selectedSquare,
-        undo,
-        moveHistory,
-    } = useGameStore()
+    const { result, endReason, playerColor, resetGame, undo, moveHistory } =
+        useGameStore()
     const replay = useBotStore((s) => s.replayBotGame)
 
     const canUndo =
@@ -47,23 +36,6 @@ export default function Page() {
     const color = playerColor === null ? null : getColor(playerColor)
 
     const isGameOver = result !== null
-
-    function onPieceDrop(from: Square, to: Square) {
-        const prevFen = useGameStore.getState().fen
-        selectSquare(from)
-        selectSquare(to)
-        return useGameStore.getState().fen !== prevFen
-    }
-
-    const legalMoveStyles = Object.fromEntries(
-        legalMoves.map((sq) => [
-            sq,
-            {
-                background:
-                    "radial-gradient(circle, color-mix(in oklch, var(--primary) 70%, transparent) 25%, transparent 25%)",
-            },
-        ]),
-    )
 
     return (
         <div className="flex flex-wrap w-full h-full gap-3 lg:gap-5 xl:gap-8">
@@ -96,44 +68,7 @@ export default function Page() {
             <div className="flex-auto flex justify-center items-center">
                 <div className="flex flex-col w-full max-w-[75vh] gap-2 px-1">
                     <PlayerInfo color={opponentColor} />
-                    <Chessboard
-                        options={{
-                            boardStyle: {
-                                borderRadius: 5,
-                            },
-                            darkSquareStyle: {
-                                backgroundColor: "var(--secondary)",
-                            },
-                            lightSquareStyle: {
-                                backgroundColor:
-                                    "oklch(from var(--primary) l c h / 0.5)",
-                            },
-                            darkSquareNotationStyle: {
-                                color: "var(--primary)",
-                            },
-                            lightSquareNotationStyle: {
-                                color: "black",
-                            },
-                            boardOrientation: playerColor ?? "white",
-                            position: displayFen,
-                            onSquareClick: ({ square }) =>
-                                selectSquare(square as Square),
-                            onPieceDrop: ({ sourceSquare, targetSquare }) =>
-                                onPieceDrop(
-                                    sourceSquare as Square,
-                                    targetSquare as Square,
-                                ),
-                            squareStyles: {
-                                ...legalMoveStyles,
-                                ...(selectedSquare && {
-                                    [selectedSquare]: {
-                                        backgroundColor:
-                                            "color-mix(in oklch, var(--primary) 20%, transparent)",
-                                    },
-                                }),
-                            },
-                        }}
-                    />
+                    <GameBoard />
                     <PlayerInfo color={color} />
                 </div>
             </div>
