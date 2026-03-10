@@ -1,13 +1,6 @@
 "use client"
 import { Button } from "@/components/ui/button"
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog"
+import BotEndDialog from "@/features/bot/components/bot-end-dialog"
 import { useBotStore } from "@/features/bot/store"
 import useBot from "@/features/bot/use-bot"
 import GameBoard from "@/features/game/components/game-board"
@@ -20,8 +13,7 @@ import Link from "next/link"
 
 export default function Page() {
     useBot()
-    const { result, endReason, playerColor, resetGame, undo, moveHistory } =
-        useGameStore()
+    const { playerColor, resetGame, undo, moveHistory } = useGameStore()
     const replay = useBotStore((s) => s.replayBotGame)
 
     const canUndo =
@@ -29,42 +21,13 @@ export default function Page() {
             ? moveHistory.length > 0
             : moveHistory.length > 1
 
-    const isDraw = result === "draw"
-    const isWin = result === playerColor
     const opponentColor =
         playerColor === null ? null : playerColor === "white" ? "b" : "w"
     const color = playerColor === null ? null : getColor(playerColor)
 
-    const isGameOver = result !== null
-
     return (
         <div className="flex flex-wrap w-full h-full gap-3 lg:gap-5 xl:gap-8">
-            {isGameOver && (
-                <Dialog defaultOpen>
-                    <DialogContent className="">
-                        <DialogHeader>
-                            <DialogTitle>
-                                {isDraw
-                                    ? "You Draw"
-                                    : isWin
-                                      ? "You Won"
-                                      : "You Lost"}
-                            </DialogTitle>
-                            <DialogDescription>
-                                By {endReason}
-                            </DialogDescription>
-                        </DialogHeader>
-                        <DialogFooter>
-                            <Button asChild variant="outline">
-                                <Link href={"/"}>Home</Link>
-                            </Button>
-                            <Button className="cursor-pointer" onClick={replay}>
-                                Replay
-                            </Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
-            )}
+            <BotEndDialog />
             <div className="flex-auto flex justify-center items-center">
                 <div className="flex flex-col w-full max-w-[75vh] gap-2 px-1">
                     <PlayerInfo color={opponentColor} />
