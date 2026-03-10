@@ -5,16 +5,20 @@ import {
     ChevronRight,
     ChevronsRight,
 } from "lucide-react"
+import { useHotkeys } from "react-hotkeys-hook"
 
 export default function HistoryController() {
-    const undo = useGameStore((s) => s.stepBack)
-    const redo = useGameStore((s) => s.stepForward)
+    const stepBack = useGameStore((s) => s.stepBack)
+    const stepForward = useGameStore((s) => s.stepForward)
     const gotoStart = useGameStore((s) => s.goToStart)
     const gotoEnd = useGameStore((s) => s.goToEnd)
     const viewIndex = useGameStore((s) => s.viewIndex)
 
     const isAtStart = viewIndex === -1
     const isAtEnd = viewIndex === null
+
+    useHotkeys(["ctrl+z", "meta+z"], stepBack)
+    useHotkeys(["ctrl+shift+z", "meta+shift+z"], stepForward)
 
     return (
         <div className="grid grid-cols-4 w-full bg-accent/50 ">
@@ -27,14 +31,14 @@ export default function HistoryController() {
             </button>
             <button
                 disabled={isAtStart}
-                onClick={undo}
+                onClick={stepBack}
                 className="w-full cursor-pointer hover:bg-accent stroke-white/50 hover:stroke-white"
             >
                 <ChevronLeft className="size-9 stroke-inherit font-bold mx-auto" />
             </button>
             <button
                 disabled={isAtEnd}
-                onClick={redo}
+                onClick={stepForward}
                 className="w-full cursor-pointer hover:bg-accent stroke-white/50 hover:stroke-white"
             >
                 <ChevronRight className="size-9 stroke-inherit font-bold mx-auto" />
