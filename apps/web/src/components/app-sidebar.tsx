@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/sidebar"
 import Link from "next/link"
 import Image from "next/image"
-import { LogoutButton } from "@/features/auth/components/logout-button"
 import { cn } from "@/lib/utils"
 import { usePathname } from "next/navigation"
 
@@ -80,15 +79,7 @@ export function AppSidebar() {
                     ))}
                 </SidebarMenu>
             </SidebarContent>
-            <SidebarFooter className="bg-background">
-                <div
-                    className={cn("flex p-2", {
-                        "justify-center": isCollapsed,
-                    })}
-                >
-                    <LogoutButton onlyIcon={isCollapsed} />
-                </div>
-            </SidebarFooter>
+            <SidebarFooter className="bg-background"></SidebarFooter>
         </Sidebar>
     )
 }
