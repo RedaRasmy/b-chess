@@ -32,7 +32,7 @@ export function AppSidebar() {
             className={cn(isCollapsed ? "w-14" : "w-64")}
             collapsible="icon"
         >
-            <SidebarContent className="bg-background">
+            <SidebarContent>
                 <div className="p-4 border-b border-sidebar-border ">
                     <Link
                         onClick={() => setOpenMobile(false)}
@@ -79,7 +79,7 @@ export function AppSidebar() {
                     ))}
                 </SidebarMenu>
             </SidebarContent>
-            <SidebarFooter className="bg-background"></SidebarFooter>
+            <SidebarFooter></SidebarFooter>
         </Sidebar>
     )
 }
