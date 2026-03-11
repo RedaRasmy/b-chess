@@ -1,5 +1,6 @@
 import { useGameStore } from "@/features/game/game-store"
 import { playSound } from "@/lib/sounds"
+import { cn } from "@/lib/utils"
 import { useEffect, useRef, useState } from "react"
 
 export function PlayerTimer({ color }: { color: "white" | "black" }) {
@@ -51,7 +52,11 @@ export function PlayerTimer({ color }: { color: "white" | "black" }) {
             : `${minutes}:${String(seconds).padStart(2, "0")}`
 
     return (
-        <span className={(ms < 10000 ? "text-red-500" : "") + "px-2"}>
+        <span
+            className={cn("px-2", {
+                "text-red-500": ms <= 10000,
+            })}
+        >
             {display}
         </span>
     )
