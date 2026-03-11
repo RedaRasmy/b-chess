@@ -30,7 +30,33 @@ export interface BotState {
 }
 
 function getThinkingTime(skill: number): number {
+    if (skill <= 2) return 50
+    if (skill <= 5) return 100
     return Math.floor(100 + (skill / 20) * 1900)
+}
+
+export const ELO_MAP: Record<number, number> = {
+    0: 400,
+    1: 500,
+    2: 600,
+    3: 700,
+    4: 800,
+    5: 900,
+    6: 1000,
+    7: 1100,
+    8: 1200,
+    9: 1300,
+    10: 1400,
+    11: 1500,
+    12: 1600,
+    13: 1700,
+    14: 1800,
+    15: 1900,
+    16: 2000,
+    17: 2100,
+    18: 2200,
+    19: 2400,
+    20: 2600,
 }
 
 export const useBotStore = create<BotState>((set, get) => ({
@@ -53,13 +79,18 @@ export const useBotStore = create<BotState>((set, get) => ({
         engine.onmessage = (e: MessageEvent<string>) => {
             const line = e.data
 
-            // engine is ready
-            if (line === "uciok" || line === "readyok") {
+            if (line === "readyok") {
+                const { difficulty } = get()
+                engine.postMessage(
+                    "setoption name UCI_LimitStrength value true",
+                )
+                engine.postMessage(
+                    `setoption name UCI_Elo value ${ELO_MAP[difficulty]}`,
+                )
                 set({ engineReady: true })
                 console.log("engine is ready")
             }
 
-            // engine found best move
             if (line.startsWith("bestmove")) {
                 const parts = line.split(" ")
                 const move = parts[1]
@@ -122,17 +153,6 @@ export const useBotStore = create<BotState>((set, get) => ({
         game.setStatus("playing")
 
         set({ difficulty, botColor })
-
-        const { engine } = get()
-        if (engine) {
-            engine.postMessage("ucinewgame")
-            engine.postMessage(`setoption name Skill Level value ${difficulty}`)
-            engine.postMessage(`setoption name UCI_LimitStrength value true`)
-        }
-
-        if (botColor === "white") {
-            get().requestBotMove()
-        }
     },
 
     requestBotMove: () => {
