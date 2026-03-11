@@ -1,13 +1,20 @@
 import { useGameStore } from "@/features/game/game-store"
-import { useEffect, useState } from "react"
+import { playSound } from "@/lib/sounds"
+import { useEffect, useRef, useState } from "react"
 
 export function PlayerTimer({ color }: { color: "white" | "black" }) {
     const clock = useGameStore((s) => s.clock)
-    if (!clock) throw new Error("PlayerTimer can't be used while clock is null")
+    const playerColor = useGameStore((s) => s.playerColor)
+    if (!clock || !playerColor)
+        throw new Error(
+            "PlayerTimer can't be used while clock or playerColor is null",
+        )
 
     const status = useGameStore((s) => s.status)
     const endGame = useGameStore((s) => s.endGame)
     const [ms, setMs] = useState(clock[color])
+    const isPlayer = playerColor === color
+    const alertedRef = useRef(false)
 
     useEffect(() => {
         if (status !== "playing" || clock.activeColor !== color) {
@@ -22,9 +29,16 @@ export function PlayerTimer({ color }: { color: "white" | "black" }) {
             if (remaining === 0) {
                 endGame(color === "white" ? "black" : "white", "timeout")
             }
+            if (isPlayer && remaining <= 10000 && !alertedRef.current) {
+                alertedRef.current = true
+                playSound("timeoutAlert")
+            }
         }, 100)
 
-        return () => clearInterval(interval)
+        return () => {
+            clearInterval(interval)
+            alertedRef.current = false
+        }
     }, [clock, status, color])
 
     const minutes = Math.floor(ms / 60000)

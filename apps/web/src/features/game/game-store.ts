@@ -6,6 +6,7 @@ import {
     PromotionPiece,
 } from "@/features/game/types"
 import { getColor } from "@/features/game/utils/get-color"
+import { playSound } from "@/lib/sounds"
 import { Chess, Move, Square } from "chess.js"
 import { create } from "zustand"
 
@@ -104,6 +105,18 @@ export const useGameStore = create<GameState>((set, get) => ({
 
         try {
             const move = chess.move({ from, to, promotion })
+
+            if (chess.isCheck()) {
+                playSound("check")
+            } else if (move.captured) {
+                playSound("capture")
+            } else if (move.isKingsideCastle() || move.isQueensideCastle()) {
+                playSound("castle")
+            } else if (move.isPromotion()) {
+                playSound("promote")
+            } else {
+                playSound("move")
+            }
 
             let newClock: ClockState | null = null
 
@@ -222,6 +235,8 @@ export const useGameStore = create<GameState>((set, get) => ({
                   }
                 : null,
         })
+
+        playSound("gameEnd")
     },
 
     startClock: (timeControl) => {
@@ -239,6 +254,8 @@ export const useGameStore = create<GameState>((set, get) => ({
                 lastTickAt: Date.now(),
             },
         })
+
+        playSound("gameStart")
     },
 
     pauseClock: () => {
