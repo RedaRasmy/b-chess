@@ -3,9 +3,9 @@
     "private": true,
     "scripts": {
         "dev:web": "pnpm --filter @bchess/web dev",
-        "db:generate": "pnpm --filter @bchess/web db:generate",
-        "db:migrate": "pnpm --filter @bchess/web db:migrate",
-        "db:push": "pnpm --filter @bchess/web db:push",
-        "db:studio": "pnpm --filter @bchess/web db:studio"
+        "db:generate": "pnpm --filter @bchess/packages/db generate",
+        "db:migrate": "pnpm --filter @bchess/packages/db migrate",
+        "db:push": "pnpm --filter @bchess/packages/db push",
+        "db:studio": "pnpm --filter @bchess/packages/db studio"
     }
 }
