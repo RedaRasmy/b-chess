@@ -16,10 +16,10 @@ import { usePathname } from "next/navigation"
 
 const items = [
     { title: "Profile", path: "/profile", icon: User },
-    { title: "Multiplayer", path: "/multiplayer", icon: Users },
+    // { title: "Multiplayer", path: "/multiplayer", icon: Users },
     { title: "Bot", path: "/bot", icon: Bot },
     //   { title: "Leaderboard", path: "/leaderboard", icon: Trophy },
-    { title: "Settings", path: "/settings", icon: Settings },
+    // { title: "Settings", path: "/settings", icon: Settings },
 ]
 
 export function AppSidebar() {
@@ -36,7 +36,7 @@ export function AppSidebar() {
                 <div className="p-4 border-b border-sidebar-border ">
                     <Link
                         onClick={() => setOpenMobile(false)}
-                        href="/"
+                        href="/bot"
                         className="flex items-center gap-2 hover:opacity-80 transition-opacity"
                     >
                         <div className="size-9 bg-gradient-primary rounded-lg flex items-center justify-center">
@@ -60,7 +60,7 @@ export function AppSidebar() {
                     </Link>
                 </div>
 
-                <SidebarMenu className="flex p-2 py-3">
+                <SidebarMenu className="flex p-2 py-3 gap-1">
                     {items.map((item) => (
                         <SidebarMenuItem key={item.title}>
                             <SidebarMenuButton
