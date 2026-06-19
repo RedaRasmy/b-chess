@@ -1,3 +1,6 @@
+import { redirect } from "next/navigation"
+
 export default function Page() {
-    return "hello"
+    redirect("/bot") // for now
+    return "Hello"
 }
