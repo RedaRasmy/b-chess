@@ -1,16 +1,16 @@
 import { Module, Global } from '@nestjs/common';
 import { db } from '.';
 
-export const DRIZZLE = 'DRIZZLE_CLIENT';
+export const DATABASE_CONNECTION = 'DATABASE_CONNECTION';
 
 @Global()
 @Module({
   providers: [
     {
-      provide: DRIZZLE,
+      provide: DATABASE_CONNECTION,
       useValue: db,
     },
   ],
-  exports: [DRIZZLE],
+  exports: [DATABASE_CONNECTION],
 })
 export class DatabaseModule {}
