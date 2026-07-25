@@ -1,17 +1,19 @@
-import { auth } from "@/lib/auth"
+"use client"
 import { Button } from "./ui/button"
 import { SidebarTrigger } from "./ui/sidebar"
 import Link from "next/link"
-import { headers } from "next/headers"
+import { authClient } from "@/lib/auth-client"
 
-export default async function Header() {
-    const session = await auth.api.getSession({ headers: await headers() })
+export default function Header() {
+    const { isPending, data: session } = authClient.useSession()
+
+    const showLogin = !isPending && !session
 
     return (
         <div className="min-h-10 flex items-center pl-2 pr-4 justify-between sticky py-3">
             <SidebarTrigger />
             <div className="flex gap-2 md:gap-4">
-                {!session && (
+                {showLogin && (
                     <Button asChild>
                         <Link href={"/auth/login"}>Sign in</Link>
                     </Button>

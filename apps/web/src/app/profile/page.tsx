@@ -1,16 +1,27 @@
-import { Button } from "@/components/ui/button"
+"use client"
+import LoadingPage from "@/components/loading-page"
 import { LogoutButton } from "@/features/auth/components/logout-button"
-import { auth } from "@/lib/auth"
-import { headers } from "next/headers"
-import { redirect } from "next/navigation"
+import { authClient } from "@/lib/auth-client"
+import { useRouter } from "next/navigation"
+import { useEffect } from "react"
 
-export default async function Page() {
-    const session = await auth.api.getSession({
-        headers: await headers(),
-    })
+export default function Page() {
+    const { isPending, data: session } = authClient.useSession()
 
-    if (!session) redirect("/auth/login")
-    if (!session.user.username) redirect("/onboarding")
+    const router = useRouter()
+
+    useEffect(() => {
+        if (!isPending && !session) {
+            router.replace("/auth/login")
+        }
+        if (session && !session.user.username) {
+            router.replace("/onboarding")
+        }
+    }, [isPending, session, router])
+
+    if (isPending) return <LoadingPage />
+
+    if (!session) return null
 
     console.log("session data :", session)
 

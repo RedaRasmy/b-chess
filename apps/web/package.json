@@ -10,11 +10,9 @@
     },
     "dependencies": {
         "@base-ui/react": "^1.2.0",
-        "@bchess/db": "workspace:*",
-        "@better-auth/drizzle-adapter": "^1.5.3",
         "@hookform/resolvers": "^5.2.2",
         "@tanstack/react-query": "^5.90.21",
-        "better-auth": "^1.5.3",
+        "better-auth": "^1.5.4",
         "chess.js": "^1.4.0",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",

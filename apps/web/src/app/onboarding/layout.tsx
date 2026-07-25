@@ -1,11 +1,25 @@
-import { auth } from "@/lib/auth"
-import { headers } from "next/headers"
-import { redirect } from "next/navigation"
-import { ReactNode } from "react"
+"use client"
+import LoadingPage from "@/components/loading-page"
+import { authClient } from "@/lib/auth-client"
+import { useRouter } from "next/navigation"
+import { ReactNode, useEffect } from "react"
 
 export default async function Layout({ children }: { children: ReactNode }) {
-    const session = await auth.api.getSession({ headers: await headers() })
-    if (!session) redirect("/auth/login")
-    if (session.user.username) redirect("/profile")
+    const { isPending, data: session } = authClient.useSession()
+    const router = useRouter()
+
+    useEffect(() => {
+        if (!isPending) {
+            if (!session) {
+                router.replace("/auth/login")
+            } else if (session.user.username) {
+                router.replace("/profile")
+            }
+        }
+    }, [isPending, session])
+
+    if (isPending) return <LoadingPage />
+    if (!session) return null
+
     return children
 }
