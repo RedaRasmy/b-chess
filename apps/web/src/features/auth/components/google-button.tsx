@@ -4,10 +4,12 @@ import { authClient } from "@/lib/auth-client"
 
 export default function GoogleButton() {
     async function handleClick() {
+        const baseUrl =
+            process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
         await authClient.signIn.social({
             provider: "google",
-            callbackURL: "/profile",
-            errorCallbackURL: "/auth/login",
+            callbackURL: `${baseUrl}/profile`,
+            errorCallbackURL: `${baseUrl}/auth/login`,
         })
     }
     return (
