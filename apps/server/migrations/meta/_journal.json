@@ -5,22 +5,15 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1784947334653,
-      "tag": "0000_last_gressill",
+      "when": 1785018724772,
+      "tag": "0000_youthful_sinister_six",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "7",
-      "when": 1785014997608,
-      "tag": "0001_harsh_killer_shrike",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1785015122794,
-      "tag": "0002_mysterious_cassandra_nova",
+      "when": 1785018738275,
+      "tag": "0001_overjoyed_ezekiel_stane",
       "breakpoints": true
     }
   ]

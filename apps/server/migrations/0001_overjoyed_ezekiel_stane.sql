@@ -1,6 +1,6 @@
 CREATE TABLE "user_stats" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"user_id" uuid NOT NULL,
+	"user_id" text NOT NULL,
 	"wins" integer DEFAULT 0 NOT NULL,
 	"losses" integer DEFAULT 0 NOT NULL,
 	"draws" integer DEFAULT 0 NOT NULL,
