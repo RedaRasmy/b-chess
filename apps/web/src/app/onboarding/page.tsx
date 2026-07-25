@@ -15,7 +15,7 @@ import z from "zod"
 const Schema = z.object({ username: UsernameSchema })
 type Data = z.infer<typeof Schema>
 
-export default function page() {
+export default function Page() {
     const form = useForm({
         resolver: zodResolver(Schema),
         defaultValues: { username: "" },
