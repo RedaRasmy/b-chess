@@ -10,7 +10,6 @@ import { MultiplayerModule } from './multiplayer/multiplayer.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '../.env',
     }),
     AuthModule.forRoot({
       auth,
