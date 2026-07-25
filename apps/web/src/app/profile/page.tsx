@@ -1,7 +1,9 @@
 "use client"
 import LoadingPage from "@/components/loading-page"
-import { LogoutButton } from "@/features/auth/components/logout-button"
+import ProfileHeader from "@/features/profile/components/profile-header"
+import { fetchStats } from "@/features/profile/requests"
 import { authClient } from "@/lib/auth-client"
+import { useQuery } from "@tanstack/react-query"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 
@@ -19,15 +21,20 @@ export default function Page() {
         }
     }, [isPending, session, router])
 
-    if (isPending) return <LoadingPage />
+    const { data: stats, isPending: isStatsPending } = useQuery({
+        queryKey: ["stats"],
+        queryFn: fetchStats,
+    })
 
-    if (!session) return null
+    if (isPending || isStatsPending) return <LoadingPage />
+
+    if (!session || !session.user.username || !stats) return null
 
     console.log("session data :", session)
 
     return (
-        <div>
-            <LogoutButton />
+        <div className="flex flex-col items-center h-full">
+            <ProfileHeader username={session.user.username} stats={stats} />
         </div>
     )
 }
