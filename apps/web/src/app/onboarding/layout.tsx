@@ -4,7 +4,7 @@ import { authClient } from "@/lib/auth-client"
 import { useRouter } from "next/navigation"
 import { ReactNode, useEffect } from "react"
 
-export default async function Layout({ children }: { children: ReactNode }) {
+export default function Layout({ children }: { children: ReactNode }) {
     const { isPending, data: session } = authClient.useSession()
     const router = useRouter()
 
