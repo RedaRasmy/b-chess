@@ -2,6 +2,9 @@
     "name": "bchess",
     "private": true,
     "scripts": {
+        "build": "turbo build",
+        "dev": "turbo dev",
+        "lint": "turbo lint",
         "dev:web": "pnpm --filter ./apps/web dev",
         "db:generate": "pnpm --filter ./packages/db generate",
         "db:migrate": "pnpm --filter ./packages/db migrate",
@@ -11,5 +14,8 @@
     "packageManager": "pnpm@10.32.1",
     "dependencies": {
         "next": "16.1.6"
+    },
+    "devDependencies": {
+        "turbo": "^2.10.7"
     }
 }

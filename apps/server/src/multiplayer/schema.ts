@@ -10,30 +10,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { createdAt, timestamps } from '../database/timestamps';
-// import { GAMEOVER_REASONS, TIMER_OPTIONS } from '@bchess/shared';
-export const TIMER_OPTIONS = [
-  'bullet 1+0',
-  'bullet 2+1',
-  'blitz 3+0',
-  'blitz 3+2',
-  'blitz 5+0',
-  'blitz 5+3',
-  'rapid 10+0',
-  'rapid 10+5',
-  'rapid 15+10',
-] as const;
-
-export const GAMEOVER_REASONS = [
-  'Checkmate',
-  'Timeout',
-  'Fifty moves rule',
-  'Insufficient material',
-  'Stalemate',
-  'Threefold repetition',
-  'Resignation',
-  'Agreement',
-] as const;
-
+import { GAMEOVER_REASONS, TIMER_OPTIONS } from '@bchess/shared';
 import { DEFAULT_POSITION } from 'chess.js';
 import { user } from '../database/schema';
 
