@@ -1,5 +1,5 @@
 import { Module, Global } from '@nestjs/common';
-import { db } from '.';
+import { db } from '@bchess/db';
 
 export const DATABASE_CONNECTION = 'DATABASE_CONNECTION';
 

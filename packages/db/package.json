@@ -1,0 +1,39 @@
+{
+    "name": "@bchess/db",
+    "version": "1.0.0",
+    "main": "./dist/index.js",
+    "module": "./dist/index.mjs",
+    "types": "./dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.mjs",
+            "require": "./dist/index.js",
+            "default": "./dist/index.mjs"
+        }
+    },
+    "scripts": {
+        "build": "tsup src/index.ts --format cjs,esm --dts",
+        "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+        "push": "npx drizzle-kit push",
+        "generate": "npx drizzle-kit generate",
+        "migrate": "npx drizzle-kit migrate",
+        "studio": "npx drizzle-kit studio"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "packageManager": "pnpm@10.32.1",
+    "devDependencies": {
+        "@types/node": "^26.1.1",
+        "drizzle-kit": "^0.31.9",
+        "tsup": "^8.5.1",
+        "typescript": "^7.0.2"
+    },
+    "dependencies": {
+        "chess.js": "^1.4.0",
+        "dotenv": "^17.4.1",
+        "drizzle-orm": "^0.45.2",
+        "postgres": "^3.4.8"
+    }
+}
