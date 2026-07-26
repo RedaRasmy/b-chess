@@ -24,15 +24,18 @@
     "db:studio": "npx drizzle-kit studio"
   },
   "dependencies": {
+    "@bchess/shared": "workspace:^",
     "@better-auth/drizzle-adapter": "^1.5.4",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.0.1",
     "@nestjs/mapped-types": "*",
     "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/platform-socket.io": "^11.1.28",
     "@nestjs/websockets": "^11.1.28",
     "@thallesp/nestjs-better-auth": "^2.7.0",
     "better-auth": "^1.5.4",
+    "chess.js": "^1.4.0",
     "dotenv": "^17.4.1",
     "drizzle-orm": "^0.45.1",
     "postgres": "^3.4.8",
