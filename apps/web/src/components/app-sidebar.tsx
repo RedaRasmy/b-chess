@@ -16,8 +16,8 @@ import { usePathname } from "next/navigation"
 
 const items = [
     { title: "Profile", path: "/profile", icon: User },
-    // { title: "Multiplayer", path: "/multiplayer", icon: Users },
     { title: "Bot", path: "/bot", icon: Bot },
+    { title: "Multiplayer", path: "/multiplayer", icon: Users },
     //   { title: "Leaderboard", path: "/leaderboard", icon: Trophy },
     // { title: "Settings", path: "/settings", icon: Settings },
 ]
