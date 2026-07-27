@@ -1,6 +1,6 @@
 {
     "installCommand": "pnpm install",
-    "buildCommand": "pnpm --filter @bchess/web build",
+    "buildCommand": "pnpm turbo build --filter=@bchess/web",
     "outputDirectory": "apps/web/.next",
     "framework": "nextjs"
 }
