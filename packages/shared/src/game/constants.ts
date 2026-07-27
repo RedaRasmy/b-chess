@@ -1,6 +1,6 @@
 export {
     GAMEOVER_REASONS,
-    GameoverReason,
+    type GameoverReason,
     TIMER_OPTIONS,
-    TimerOption
+    type TimerOption,
 } from "@bchess/db/tables"
