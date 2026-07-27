@@ -18,6 +18,7 @@ import { DatabaseModule } from './database/database.module';
       auth,
     }),
     ProfileModule,
+    MultiplayerModule,
   ],
   controllers: [AppController],
   providers: [AppService],

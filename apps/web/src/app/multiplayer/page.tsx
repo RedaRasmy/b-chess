@@ -2,14 +2,32 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import SelectTimer from "@/features/game/components/select-timer"
+import { useSocket } from "@/features/multiplayer/hooks/use-socket"
+import { useSocketListener } from "@/features/multiplayer/hooks/use-socket-listener"
 import { TimerOption } from "@bchess/shared"
 import { Timer, Users } from "lucide-react"
+import { useRouter } from "next/navigation"
 import { useState } from "react"
 
 export default function Page() {
+    const socket = useSocket()
     const [timer, setTimer] = useState<TimerOption>("rapid 10+0")
+    const router = useRouter()
 
-    function handleStart() {}
+    function handleStart() {
+        socket.emit("join_queue", {
+            timer,
+        })
+    }
+
+    useSocketListener("queue_joined", ({ gameId }) => {
+        console.log("queue joined")
+    })
+
+    useSocketListener("game_found", (game) => {
+        console.log("game found: ", game)
+        router.push(`/multiplayer/${game.id}`)
+    })
 
     return (
         <div className="grid py-2 items-center overflow-auto w-full px-2 xl:px-20 ">

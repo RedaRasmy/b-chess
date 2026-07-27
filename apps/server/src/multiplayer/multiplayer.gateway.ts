@@ -65,7 +65,7 @@ export class MultiplayerGateway
 
       socket.join(`game:${ongoingGame.id}`);
       this.server.to(`user:${opponentId}`).emit('opponent_status_changed', {
-        status: 'disconnected',
+        status: 'connected',
       });
     }
   }
@@ -96,14 +96,16 @@ export class MultiplayerGateway
       socket.data.user.id,
     );
 
+    console.log(result);
+
     if (result.status === 'MATCH_FOUND') {
       result.players.forEach((userId) => {
         this.server
           .to(`user:${userId}`)
-          .emit('game_found', { gameId: result.gameId });
+          .emit('game_found', result.game);
       });
     } else {
-      // socket.emit('queue_joined', { gameId: result.game.id });
+      socket.emit('queue_joined', { gameId: result.game.id });
     }
   }
 

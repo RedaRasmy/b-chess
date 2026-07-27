@@ -12,7 +12,8 @@ export class MultiplayerService {
 
   async findOrCreateMatch(dto: CreateGameDto, userId: string) {
     const matching = await this.db.query.games.findFirst({
-      where: (games) => eq(games.status, 'matching'),
+      where: (games) =>
+        and(eq(games.status, 'matching'), eq(games.timer, dto.timer)),
     });
 
     if (!matching) {
@@ -22,21 +23,22 @@ export class MultiplayerService {
         .values({
           timer: dto.timer,
           whiteId: userId,
-          blackTimeLeft: base,
-          whiteTimeLeft: base,
+          blackTimeLeft: base * 1000, // ms
+          whiteTimeLeft: base * 1000,
         })
         .returning();
       return { status: 'QUEUED', game: newGame } as const;
     }
 
-    await this.db
+    const [game] = await this.db
       .update(games)
       .set({ status: 'preparing', blackId: userId })
-      .where(eq(games.id, matching.id));
+      .where(eq(games.id, matching.id))
+      .returning();
 
     return {
       status: 'MATCH_FOUND',
-      gameId: matching.id,
+      game,
       players: [matching.whiteId, userId],
     } as const;
   }

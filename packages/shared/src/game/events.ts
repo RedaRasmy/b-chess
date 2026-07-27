@@ -12,6 +12,7 @@ export const SERVER_EVENTS = {
     NEW_MOVE: "new_move",
     CURRENT_STATE: "current_state",
     OPPONENT_STATUS_CHANGED: "opponent_status_changed",
+    QUEUE_JOINED: "queue_joined",
 } as const
 
 export const SOCKET_EVENTS = {
@@ -28,12 +29,13 @@ export type ClientEvent = ClientEvents[keyof ClientEvents]
 //
 
 export type ServerToClientEvents = {
-    [SERVER_EVENTS.GAME_FOUND]: (p: { gameId: string }) => void
+    [SERVER_EVENTS.GAME_FOUND]: (p: Game) => void
     [SERVER_EVENTS.NEW_MOVE]: () => void
     [SERVER_EVENTS.CURRENT_STATE]: (game: Game) => void
     [SERVER_EVENTS.OPPONENT_STATUS_CHANGED]: (p: {
         status: "connected" | "disconnected"
     }) => void
+    [SERVER_EVENTS.QUEUE_JOINED]: (p: { gameId: string }) => void
 }
 
 export type ClientToServerEvents = {
