@@ -1,7 +1,10 @@
+import { Game, IGame } from "../validation"
+
 export const CLIENT_EVENTS = {
     MOVE: "move",
     SYNC_GAME: "sync_game",
     JOIN_GAME: "join_game",
+    JOIN_QUEUE: "join_queue",
 } as const
 
 export const SERVER_EVENTS = {
@@ -25,16 +28,19 @@ export type ClientEvent = ClientEvents[keyof ClientEvents]
 //
 
 export type ServerToClientEvents = {
-    [SERVER_EVENTS.GAME_FOUND]: () => void
+    [SERVER_EVENTS.GAME_FOUND]: (p: { gameId: string }) => void
     [SERVER_EVENTS.NEW_MOVE]: () => void
-    [SERVER_EVENTS.CURRENT_STATE]: () => void
-    [SERVER_EVENTS.OPPONENT_STATUS_CHANGED]: () => void
+    [SERVER_EVENTS.CURRENT_STATE]: (game: Game) => void
+    [SERVER_EVENTS.OPPONENT_STATUS_CHANGED]: (p: {
+        status: "connected" | "disconnected"
+    }) => void
 }
 
 export type ClientToServerEvents = {
     [CLIENT_EVENTS.MOVE]: () => void
     [CLIENT_EVENTS.SYNC_GAME]: () => void
     [CLIENT_EVENTS.JOIN_GAME]: () => void
+    [CLIENT_EVENTS.JOIN_QUEUE]: (p: IGame) => void
 }
 
 // Utility Types

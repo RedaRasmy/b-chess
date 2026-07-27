@@ -20,3 +20,6 @@ export const GAMEOVER_REASONS = [
     "Resignation",
     "Agreement",
 ] as const
+
+export type TimerOption = (typeof TIMER_OPTIONS)[number]
+export type GameoverReason = (typeof GAMEOVER_REASONS)[number]

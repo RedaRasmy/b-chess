@@ -2,7 +2,8 @@ import { Inject, Injectable } from '@nestjs/common';
 import { DATABASE_CONNECTION } from '../database/database.module';
 import { type UserSession } from '@thallesp/nestjs-better-auth';
 import { eq, sql } from 'drizzle-orm';
-import { type Database, userStats } from '@bchess/db';
+import { type Database } from '@bchess/db';
+import { userStats } from '@bchess/db/tables';
 
 export type GameResult = 'WIN' | 'LOSS' | 'DRAW';
 

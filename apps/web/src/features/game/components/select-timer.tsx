@@ -1,7 +1,8 @@
 import { cn } from "@/lib/utils"
-import parseTimerOption from "@/features/game/utils/parse-timer-option"
+import { parseTimerOption, TIMER_OPTIONS, TimerOption } from "@bchess/shared"
+// import parseTimerOption from "@/features/game/utils/parse-timer-option"
 import { Clock, Coffee, Zap } from "lucide-react"
-import { TIMER_OPTIONS, TimerOption } from "@/features/game/types"
+// import { TIMER_OPTIONS, TimerOption } from "@/features/game/types"
 
 type Props = (
     | {

@@ -11,7 +11,7 @@ import { relations } from "drizzle-orm"
 import { timestamps } from "../timestamps"
 import { DEFAULT_POSITION } from "chess.js"
 import { moves, user } from "."
-import { GAMEOVER_REASONS, TIMER_OPTIONS } from "../constantes"
+import { GAMEOVER_REASONS, TIMER_OPTIONS } from "./constants"
 export const resultEnum = pgEnum("result", ["draw", "white_won", "black_won"])
 export const statusEnum = pgEnum("status", [
     "matching",

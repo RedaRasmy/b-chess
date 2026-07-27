@@ -21,7 +21,8 @@
     },
     "pnpm": {
         "overrides": {
-            "drizzle-orm": "0.45.2"
+            "drizzle-orm": "0.45.2",
+            "typescript": "^5.7.3"
         }
     }
 }
