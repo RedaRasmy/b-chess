@@ -3,7 +3,7 @@ import { CreateGameDto } from './dto/create-game.dto';
 import { DATABASE_CONNECTION } from '../database/database.module';
 import { type Database } from '@bchess/db';
 import { games } from '@bchess/db/tables';
-import { and, eq, inArray, or } from 'drizzle-orm';
+import { and, eq, inArray, or, sql } from 'drizzle-orm';
 import { parseTimerOption } from '@bchess/shared';
 
 @Injectable()
@@ -50,6 +50,40 @@ export class MultiplayerService {
           inArray(games.status, ['preparing', 'playing']),
           or(eq(games.whiteId, userId), eq(games.blackId, userId)),
         ),
+    });
+  }
+
+  async setReady(gameId: string, userId: string) {
+    return await this.db.transaction(async (tx) => {
+      const [existingGame] = await tx
+        .select()
+        .from(games)
+        .where(eq(games.id, gameId))
+        .for('update');
+
+      if (!existingGame || existingGame.status !== 'preparing') {
+        return existingGame;
+      }
+
+      const isWhite = existingGame.whiteId === userId;
+      const isBlack = existingGame.blackId === userId;
+
+      const whiteReady = isWhite ? true : existingGame.whiteReady;
+      const blackReady = isBlack ? true : existingGame.blackReady;
+      const isBothReady = whiteReady && blackReady;
+
+      const [updatedGame] = await tx
+        .update(games)
+        .set({
+          whiteReady,
+          blackReady,
+          status: isBothReady ? 'playing' : 'preparing',
+          gameStartedAt: isBothReady ? Date.now() : existingGame.gameStartedAt,
+        })
+        .where(eq(games.id, gameId))
+        .returning();
+
+      return updatedGame;
     });
   }
 }

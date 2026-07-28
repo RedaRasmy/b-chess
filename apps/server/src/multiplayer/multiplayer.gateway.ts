@@ -100,12 +100,30 @@ export class MultiplayerGateway
 
     if (result.status === 'MATCH_FOUND') {
       result.players.forEach((userId) => {
-        this.server
-          .to(`user:${userId}`)
-          .emit('game_found', result.game);
+        this.server.to(`user:${userId}`).emit('game_found', result.game);
       });
     } else {
       socket.emit('queue_joined', { gameId: result.game.id });
+    }
+  }
+
+  @SubscribeMessage('join_game')
+  async joinGame(@ConnectedSocket() socket: TypedSocket) {
+    const userId = socket.data.user.id;
+    const ongoingGame = await this.multiplayerService.getOngoingGame(userId);
+
+    if (!ongoingGame) return;
+
+    socket.join(`game:${ongoingGame.id}`);
+
+    if (ongoingGame.status === 'preparing') {
+      const newGame = await this.multiplayerService.setReady(
+        ongoingGame.id,
+        userId,
+      );
+      this.server
+        .to([`user:${newGame.whiteId}`, `user:${newGame.blackId}`])
+        .emit('current_state', newGame);
     }
   }
 
@@ -114,16 +132,6 @@ export class MultiplayerGateway
     @MessageBody() moveDto: MoveDto,
     @ConnectedSocket() socket: TypedSocket,
   ) {}
-
-  @SubscribeMessage('join_game')
-  async joinGame(@ConnectedSocket() socket: TypedSocket) {
-    const userId = socket.data.user.id;
-    const ongoingGame = await this.multiplayerService.getOngoingGame(userId);
-
-    if (ongoingGame) {
-      socket.join(`game:${ongoingGame.id}`);
-    }
-  }
 
   @SubscribeMessage('sync_game')
   async sync(@ConnectedSocket() socket: TypedSocket) {
