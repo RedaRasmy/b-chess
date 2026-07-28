@@ -1,4 +1,5 @@
 import { Game, IGame } from "../validation"
+import { GameWithPlayers, OngoingGame } from "./types"
 
 export const CLIENT_EVENTS = {
     MOVE: "move",
@@ -27,8 +28,6 @@ export type ServerEvent = ServerEvents[keyof ServerEvents]
 type ClientEvents = typeof CLIENT_EVENTS
 export type ClientEvent = ClientEvents[keyof ClientEvents]
 
-//
-
 export type ServerToClientEvents = {
     [SERVER_EVENTS.EXCEPTION]: (payload: {
         status?: string
@@ -38,7 +37,7 @@ export type ServerToClientEvents = {
     ///
     [SERVER_EVENTS.GAME_FOUND]: (p: Game) => void
     [SERVER_EVENTS.NEW_MOVE]: () => void
-    [SERVER_EVENTS.CURRENT_STATE]: (game: Game) => void
+    [SERVER_EVENTS.CURRENT_STATE]: (game: GameWithPlayers) => void
     [SERVER_EVENTS.OPPONENT_STATUS_CHANGED]: (p: {
         status: "connected" | "disconnected"
     }) => void

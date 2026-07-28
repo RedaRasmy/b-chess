@@ -13,13 +13,17 @@ export default function Layout({ children }: { children: ReactNode }) {
         if (!isPending && !session) {
             router.replace("/auth/login")
         }
+
+        if (!isPending && session && !session.user.username) {
+            router.replace("/onboarding")
+        }
     }, [session, isPending, router])
 
     if (isPending) {
         return <LoadingPage />
     }
 
-    if (!session) return null
+    if (!session || !session.user.username) return null
 
     return <SocketProvider>{children}</SocketProvider>
 }

@@ -4,7 +4,11 @@ import { DATABASE_CONNECTION } from '../database/database.module';
 import { type Database } from '@bchess/db';
 import { games } from '@bchess/db/tables';
 import { and, eq, inArray, or, sql } from 'drizzle-orm';
-import { parseTimerOption } from '@bchess/shared';
+import {
+  OngoingGame,
+  OngoingGameWithPlayers,
+  parseTimerOption,
+} from '@bchess/shared';
 
 @Injectable()
 export class MultiplayerService {
@@ -43,18 +47,37 @@ export class MultiplayerService {
     } as const;
   }
 
-  async getOngoingGame(userId: string) {
-    return await this.db.query.games.findFirst({
+  async getOngoingGame(userId: string): Promise<OngoingGameWithPlayers | null> {
+    const game = await this.db.query.games.findFirst({
       where: (games) =>
         and(
           inArray(games.status, ['preparing', 'playing']),
           or(eq(games.whiteId, userId), eq(games.blackId, userId)),
         ),
+
+      with: {
+        white: {
+          columns: {
+            username: true,
+            image: true,
+          },
+        },
+        black: {
+          columns: {
+            username: true,
+            image: true,
+          },
+        },
+      },
     });
+
+    if (!game) return null;
+
+    return game as OngoingGameWithPlayers;
   }
 
-  async setReady(gameId: string, userId: string) {
-    return await this.db.transaction(async (tx) => {
+  async setReady(gameId: string, userId: string): Promise<OngoingGame> {
+    const game = await this.db.transaction(async (tx) => {
       const [existingGame] = await tx
         .select()
         .from(games)
@@ -85,5 +108,7 @@ export class MultiplayerService {
 
       return updatedGame;
     });
+
+    return game as OngoingGame;
   }
 }

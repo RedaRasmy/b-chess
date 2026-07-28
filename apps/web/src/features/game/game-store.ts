@@ -244,14 +244,14 @@ export const useGameStore = create<GameState>((set, get) => ({
             set({ clock: null })
             return
         }
-        const { increment, initial } = timeControl
+        const { increment, initial, lastTickAt } = timeControl
         set({
             clock: {
                 white: initial,
                 black: initial,
                 increment,
                 activeColor: "white",
-                lastTickAt: Date.now(),
+                lastTickAt: lastTickAt ?? Date.now(),
             },
         })
 
@@ -304,4 +304,8 @@ export const useGameStore = create<GameState>((set, get) => ({
             get().goToMove(next)
         }
     },
+
+    // syncGame: (game) => {
+    //     // TODO
+    // },
 }))

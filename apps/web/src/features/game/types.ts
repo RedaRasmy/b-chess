@@ -1,3 +1,4 @@
+import { Game } from "@bchess/shared"
 import { Chess, Move, Square } from "chess.js"
 
 export type GameMode = "bot" | "multiplayer" | "idle"
@@ -84,7 +85,11 @@ export interface GameState {
     setStatus: (status: GameStatus) => void
     setMode: (mode: GameMode) => void
     endGame: (result: GameResult, reason: GameEndReason) => void
-    startClock: (timeControl?: { initial: number; increment: number }) => void
+    startClock: (timeControl?: {
+        initial: number
+        increment: number
+        lastTickAt?: number
+    }) => void
     pauseClock: () => void
     goToMove: (index: number) => void
     goToStart: () => void
@@ -92,24 +97,5 @@ export interface GameState {
     stepBack: () => void
     stepForward: () => void
     undo: () => void
+    // syncGame: (game: Game) => void
 }
-
-// export type ChessTimer = {
-//     type: "bullet" | "blitz" | "rapid"
-//     base: number
-//     plus: number
-// }
-
-// export const TIMER_OPTIONS = [
-//     "bullet 1+0",
-//     "bullet 2+1",
-//     "blitz 3+0",
-//     "blitz 3+2",
-//     "blitz 5+0",
-//     "blitz 5+3",
-//     "rapid 10+0",
-//     "rapid 10+5",
-//     "rapid 15+10",
-// ] as const
-
-// export type TimerOption = (typeof TIMER_OPTIONS)[number]

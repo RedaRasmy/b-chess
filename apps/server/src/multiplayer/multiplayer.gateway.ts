@@ -120,6 +120,13 @@ export class MultiplayerGateway
       });
     }
 
+    // if (ongoingGame.status === 'matching') {
+    //   throw new WsException({
+    //     code : "STILL_MATCHING",
+    //     message : "Game is still matching"
+    //   })
+    // }
+
     socket.join(`game:${ongoingGame.id}`);
 
     if (ongoingGame.status === 'preparing') {
@@ -129,7 +136,13 @@ export class MultiplayerGateway
       );
       this.server
         .to([`user:${newGame.whiteId}`, `user:${newGame.blackId}`])
-        .emit('current_state', newGame);
+        .emit('current_state', {
+          ...newGame,
+          white: ongoingGame.white,
+          black: ongoingGame.black,
+        });
+    } else {
+      this.server.to(`user:${userId}`).emit('current_state', ongoingGame);
     }
   }
 
