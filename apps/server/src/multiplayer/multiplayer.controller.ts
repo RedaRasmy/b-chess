@@ -16,4 +16,13 @@ export class MultiplayerController {
       isPlaying: !!ongoingGame,
     };
   }
+
+  @Get('isMatching')
+  async isMatching(@Session() session: UserSession) {
+    const match = await this.multiplayerService.getMatch(session.user.id);
+
+    return {
+      isMatching: !!match,
+    };
+  }
 }

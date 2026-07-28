@@ -108,6 +108,12 @@ export class MultiplayerGateway
     }
   }
 
+  @SubscribeMessage('cancel_match')
+  async handleCancelMatch(@ConnectedSocket() socket: TypedSocket) {
+    await this.multiplayerService.deleteMatch(socket.data.user.id);
+    console.log('match deleted');
+  }
+
   @SubscribeMessage('join_game')
   async joinGame(@ConnectedSocket() socket: TypedSocket) {
     const userId = socket.data.user.id;
@@ -119,13 +125,6 @@ export class MultiplayerGateway
         message: 'Game not found!',
       });
     }
-
-    // if (ongoingGame.status === 'matching') {
-    //   throw new WsException({
-    //     code : "STILL_MATCHING",
-    //     message : "Game is still matching"
-    //   })
-    // }
 
     socket.join(`game:${ongoingGame.id}`);
 

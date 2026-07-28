@@ -127,4 +127,17 @@ export class MultiplayerService {
 
     return game as OngoingGame;
   }
+
+  async deleteMatch(userId: string) {
+    await this.db
+      .delete(games)
+      .where(and(eq(games.status, 'matching'), eq(games.whiteId, userId)));
+  }
+
+  async getMatch(userId: string) {
+    return await this.db.query.games.findFirst({
+      where: (games) =>
+        and(eq(games.status, 'matching'), eq(games.whiteId, userId)),
+    });
+  }
 }

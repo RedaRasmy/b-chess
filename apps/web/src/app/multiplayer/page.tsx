@@ -4,12 +4,15 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import SelectTimer from "@/features/game/components/select-timer"
 import { useSocket } from "@/features/multiplayer/hooks/use-socket"
 import { useSocketListener } from "@/features/multiplayer/hooks/use-socket-listener"
+import { fetchIsMatching } from "@/features/multiplayer/requests"
 import { TimerOption } from "@bchess/shared"
+import { useQuery } from "@tanstack/react-query"
 import { Timer, Users } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 export default function Page() {
+    const [isMatching, setIsMatching] = useState(false)
     const socket = useSocket()
     const [timer, setTimer] = useState<TimerOption>("rapid 10+0")
     const router = useRouter()
@@ -18,7 +21,24 @@ export default function Page() {
         socket.emit("join_queue", {
             timer,
         })
+        setIsMatching(true)
     }
+
+    function handleCancel() {
+        socket.emit("cancel_match")
+        setIsMatching(false)
+    }
+
+    const { data, isPending } = useQuery({
+        queryKey: ["isMatching"],
+        queryFn: fetchIsMatching,
+    })
+
+    useEffect(() => {
+        if (!isPending && data !== undefined) {
+            setIsMatching(data)
+        }
+    }, [data, isPending])
 
     useSocketListener("queue_joined", ({ gameId }) => {
         console.log("queue joined")
@@ -51,18 +71,31 @@ export default function Page() {
                                     value={timer}
                                     onChange={setTimer}
                                     required
+                                    disabled={isMatching}
                                 />
                             </div>
                         </div>
                         <div className="flex flex-col items-center gap-5 w-full md:space-y-3">
                             <div className="flex bg-red- h-full items-center justify-center w-full ">
-                                <Button
-                                    className="w-full lg:text-xl max-w-md py-7 lg:py-10 cursor-pointer"
-                                    onClick={handleStart}
-                                    variant={"destructive"}
-                                >
-                                    Start
-                                </Button>
+                                {isMatching ? (
+                                    <Button
+                                        className="w-full lg:text-xl max-w-md py-7 lg:py-10 cursor-pointer"
+                                        onClick={handleCancel}
+                                        variant={"outline"}
+                                        disabled={isPending}
+                                    >
+                                        Cancel
+                                    </Button>
+                                ) : (
+                                    <Button
+                                        className="w-full lg:text-xl max-w-md py-7 lg:py-10 cursor-pointer"
+                                        onClick={handleStart}
+                                        variant={"destructive"}
+                                        disabled={isPending}
+                                    >
+                                        Start
+                                    </Button>
+                                )}
                             </div>
                         </div>
                     </div>

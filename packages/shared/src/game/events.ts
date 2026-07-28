@@ -1,11 +1,12 @@
 import { Game, IGame } from "../validation"
-import { GameWithPlayers, OngoingGame } from "./types"
+import { GameWithPlayers } from "./types"
 
 export const CLIENT_EVENTS = {
     MOVE: "move",
     SYNC_GAME: "sync_game",
     JOIN_GAME: "join_game",
     JOIN_QUEUE: "join_queue",
+    CANCEL_MATCH: "cancel_match",
 } as const
 
 export const SERVER_EVENTS = {
@@ -49,6 +50,7 @@ export type ClientToServerEvents = {
     [CLIENT_EVENTS.SYNC_GAME]: () => void
     [CLIENT_EVENTS.JOIN_GAME]: () => void
     [CLIENT_EVENTS.JOIN_QUEUE]: (p: IGame) => void
+    [CLIENT_EVENTS.CANCEL_MATCH]: () => void
 }
 
 // Utility Types
