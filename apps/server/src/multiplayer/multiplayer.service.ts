@@ -25,6 +25,18 @@ export class MultiplayerService {
     });
 
     if (!match) {
+      const alreadyCreatedMatch = await this.db.query.games.findFirst({
+        where: (games) =>
+          and(eq(games.status, 'matching'), eq(games.whiteId, userId)),
+      });
+
+      if (alreadyCreatedMatch) {
+        return {
+          status: 'QUEUED',
+          game: alreadyCreatedMatch,
+        } as const;
+      }
+
       const { base } = parseTimerOption(dto.timer);
       const [newGame] = await this.db
         .insert(games)
