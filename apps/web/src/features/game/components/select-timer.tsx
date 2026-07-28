@@ -1,8 +1,6 @@
 import { cn } from "@/lib/utils"
 import { parseTimerOption, TIMER_OPTIONS, TimerOption } from "@bchess/shared"
-// import parseTimerOption from "@/features/game/utils/parse-timer-option"
 import { Clock, Coffee, Zap } from "lucide-react"
-// import { TIMER_OPTIONS, TimerOption } from "@/features/game/types"
 
 type Props = (
     | {
@@ -17,6 +15,7 @@ type Props = (
       }
 ) & {
     className?: string
+    disabled?: boolean
 }
 
 export default function SelectTimer({
@@ -24,10 +23,12 @@ export default function SelectTimer({
     onChange,
     required = false,
     className,
+    disabled = false,
 }: Props) {
     const options = [...TIMER_OPTIONS]
 
     function handleClick(op: TimerOption) {
+        if (disabled) return
         if (required) {
             onChange(op)
         } else {
@@ -44,6 +45,7 @@ export default function SelectTimer({
             className={cn(
                 "grid grid-cols-3 grid-rows-3 gap-2 lg:gap-4 ",
                 className,
+                {},
             )}
         >
             {options.map((op, i) => {
@@ -54,14 +56,20 @@ export default function SelectTimer({
                     <div
                         key={i}
                         className={cn(
-                            "rounded-lg hover:bg-accent/10 px-10 md:px-15 lg:px-10 border-2 border-accent/50 cursor-pointer w-full max-w-70 flex items-center gap-1 flex-col  py-2.5 lg:py-6",
+                            "rounded-lg px-10 md:px-15 lg:px-10 border-2 border-accent/50 cursor-pointer w-full max-w-70 flex items-center gap-1 flex-col  py-2.5 lg:py-6",
                             {
                                 "border-primary bg-primary/30": value === op,
+                                "bg-muted/50 text-muted-foreground":
+                                    disabled && value !== op,
                             },
                         )}
                         onClick={() => handleClick(op)}
                     >
-                        <Icon color="red" className="not-md:size-5" />
+                        <Icon
+                            className={cn("not-md:size-5 text-red-500", {
+                                "text-red-500/50": disabled && value !== op,
+                            })}
+                        />
                         <p className="font-semibold md:text-lg">
                             {base / 60}+{plus}
                         </p>
