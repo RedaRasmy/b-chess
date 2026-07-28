@@ -8,6 +8,7 @@ export const CLIENT_EVENTS = {
 } as const
 
 export const SERVER_EVENTS = {
+    EXCEPTION: "exception",
     GAME_FOUND: "game_found",
     NEW_MOVE: "new_move",
     CURRENT_STATE: "current_state",
@@ -29,6 +30,12 @@ export type ClientEvent = ClientEvents[keyof ClientEvents]
 //
 
 export type ServerToClientEvents = {
+    [SERVER_EVENTS.EXCEPTION]: (payload: {
+        status?: string
+        message: string
+        code?: string
+    }) => void
+    ///
     [SERVER_EVENTS.GAME_FOUND]: (p: Game) => void
     [SERVER_EVENTS.NEW_MOVE]: () => void
     [SERVER_EVENTS.CURRENT_STATE]: (game: Game) => void

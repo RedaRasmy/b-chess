@@ -6,6 +6,7 @@ import {
   ConnectedSocket,
   OnGatewayDisconnect,
   WebSocketServer,
+  WsException,
 } from '@nestjs/websockets';
 import { MultiplayerService } from './multiplayer.service';
 import { DefaultEventsMap, Server, Socket } from 'socket.io';
@@ -112,7 +113,12 @@ export class MultiplayerGateway
     const userId = socket.data.user.id;
     const ongoingGame = await this.multiplayerService.getOngoingGame(userId);
 
-    if (!ongoingGame) return;
+    if (!ongoingGame) {
+      throw new WsException({
+        code: 'GAME_NOT_FOUND',
+        message: 'Game not found!',
+      });
+    }
 
     socket.join(`game:${ongoingGame.id}`);
 

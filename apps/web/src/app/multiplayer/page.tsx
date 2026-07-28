@@ -26,7 +26,7 @@ export default function Page() {
 
     useSocketListener("game_found", (game) => {
         console.log("game found: ", game)
-        router.push(`/multiplayer/${game.id}`)
+        router.push(`/multiplayer/play`)
     })
 
     return (
