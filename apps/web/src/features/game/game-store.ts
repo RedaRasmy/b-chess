@@ -66,6 +66,45 @@ export const useGameStore = create<GameState>()(
                 legalMoves: [],
             })
         },
+        rollback: ({
+            blackTimeLeft,
+            gameStartedAt,
+            lastMoveAt,
+            whiteTimeLeft,
+        }) => {
+            const { chess, playerColor, mode, status, clock } = get()
+            if (!playerColor || mode !== "multiplayer" || status !== "playing")
+                return
+
+            chess.undo()
+
+            const newHistory = chess.history({ verbose: true })
+
+            set({
+                fen: chess.fen(),
+                displayFen: chess.fen(),
+                moveHistory: newHistory,
+                lastMove:
+                    newHistory.length > 0
+                        ? {
+                              from: newHistory[newHistory.length - 1]
+                                  .from as Square,
+                              to: newHistory[newHistory.length - 1]
+                                  .to as Square,
+                          }
+                        : null,
+                viewIndex: null,
+                selectedSquare: null,
+                legalMoves: [],
+                clock: {
+                    activeColor: chess.turn() === "w" ? "white" : "black",
+                    white: whiteTimeLeft,
+                    black: blackTimeLeft,
+                    lastTickAt: lastMoveAt ?? gameStartedAt,
+                    increment: clock?.increment ?? 0,
+                },
+            })
+        },
 
         selectSquare: (square) => {
             const { chess, selectedSquare, playerColor, status } = get()
@@ -100,10 +139,14 @@ export const useGameStore = create<GameState>()(
         },
 
         makeMove: (from, to, promotion = "q") => {
-            const { chess, clock } = get()
+            const { chess, clock, playerColor } = get()
+
+            if (!playerColor) return null
 
             try {
                 const move = chess.move({ from, to, promotion })
+
+                const isMyMove = move.color === getColor(playerColor)
 
                 if (chess.isCheck()) {
                     playSound("check")
@@ -150,10 +193,12 @@ export const useGameStore = create<GameState>()(
                     selectedSquare: null,
                     legalMoves: [],
                     clock: newClock,
-                    lastAction: {
-                        type: "move",
-                        move: theMove,
-                    },
+                    lastAction: isMyMove
+                        ? {
+                              type: "move",
+                              move: theMove,
+                          }
+                        : null,
                 })
                 const end = checkGameEnd(chess)
                 if (end) {
@@ -303,8 +348,25 @@ export const useGameStore = create<GameState>()(
             }
         },
 
-        // syncGame: (game) => {
-        //     // TODO
-        // },
+        syncTimer: ({
+            blackTimeLeft,
+            gameStartedAt,
+            lastMoveAt,
+            whiteTimeLeft,
+        }) => {
+            const { clock } = get()
+
+            if (!clock) return
+
+            set({
+                clock: {
+                    activeColor: clock.activeColor,
+                    white: whiteTimeLeft,
+                    black: blackTimeLeft,
+                    lastTickAt: lastMoveAt ?? gameStartedAt,
+                    increment: clock.increment,
+                },
+            })
+        },
     })),
 )

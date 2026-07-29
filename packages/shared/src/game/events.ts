@@ -1,5 +1,5 @@
 import { Game, IGame } from "../validation"
-import { GameWithPlayers, MoveType, SMove } from "./types"
+import { GameTimestamps, GameWithPlayers, MoveType, SMove } from "./types"
 
 export const CLIENT_EVENTS = {
     MOVE: "move",
@@ -51,10 +51,12 @@ export type MoveAck = (
     result:
         | {
               status: "success"
+              timestamps: GameTimestamps
           }
         | {
               status: "error"
               error?: unknown
+              timestamps: GameTimestamps
           },
 ) => void
 

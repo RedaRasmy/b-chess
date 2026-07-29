@@ -23,6 +23,8 @@ export default function Page() {
 
     const userId = session.user.id
 
+    // const isMyTurn = gameState.playerColor === gameState.
+
     useEffect(() => {
         socket.emit("join_game")
     }, [])
@@ -38,8 +40,18 @@ export default function Page() {
                 }
 
                 if (lastAction.type === "move") {
-                    socket.emit("move", lastAction.move, ({ status }) => {
-                        console.log("Move Ack: ", status)
+
+                    socket.emit("move", lastAction.move, (res) => {
+                        console.log("Move Ack: ", res.status)
+
+                        if (res.status == "error") {
+                            console.log("error : ", res.error)
+                            console.log("rollback..")
+
+                            gameState.rollback(res.timestamps)
+                        } else {
+                            gameState.syncTimer(res.timestamps)
+                        }
                     })
                 }
             },

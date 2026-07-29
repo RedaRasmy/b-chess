@@ -1,4 +1,10 @@
-import { Result, Status, Reason, MoveType } from "@bchess/shared"
+import {
+    Result,
+    Status,
+    Reason,
+    MoveType,
+    GameTimestamps,
+} from "@bchess/shared"
 import { Chess, Move, Square } from "chess.js"
 
 export type GameMode = "bot" | "multiplayer" | "idle"
@@ -88,5 +94,6 @@ export interface GameState {
     stepBack: () => void
     stepForward: () => void
     undo: () => void
-    // syncGame: (game: Game) => void
+    rollback: (timestamps: GameTimestamps) => void
+    syncTimer: (game: GameTimestamps) => void
 }

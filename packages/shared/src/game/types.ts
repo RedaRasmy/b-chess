@@ -12,19 +12,27 @@ type Players = {
     black: { username: string; image: string | null }
 }
 
-export type OngoingGame = Omit<
+export type PreparingGame = Omit<
     typeof games.$inferSelect,
-    "status" | "blackId" | "gameStartedAt"
+    "status" | "blackId"
 > & {
-    status: "preparing" | "playing"
+    status: "preparing"
     blackId: string
+}
+
+export type PlayingGame = Omit<PreparingGame, "status" | "gameStartedAt"> & {
+    status: "playing"
     gameStartedAt: number
 }
 
-export type OngoingGameWithPlayers = OngoingGame & Players
+export type MatchedGame = PreparingGame | PlayingGame
+
+export type MatchedGameWithPlayers = MatchedGame & Players
+
+export type PlayingGameWithPlayers = PlayingGame & Players
 
 export type FinishedGame = Omit<
-    OngoingGame,
+    PlayingGame,
     "status" | "gameOverReason" | "result"
 > & {
     status: "finished"
@@ -34,7 +42,7 @@ export type FinishedGame = Omit<
 
 export type FinishedGameWithPlayers = FinishedGame & Players
 
-export type GameWithPlayers = OngoingGameWithPlayers | FinishedGameWithPlayers
+export type GameWithPlayers = (MatchedGame | FinishedGame) & Players
 
 export interface MoveType {
     from: Square
@@ -43,3 +51,10 @@ export interface MoveType {
 }
 
 export type SMove = typeof moves.$inferInsert
+
+export type GameTimestamps = {
+    whiteTimeLeft: number
+    blackTimeLeft: number
+    gameStartedAt: number
+    lastMoveAt: number | null
+}

@@ -6,10 +6,13 @@ import { games, moves, PromotionPiece } from '@bchess/db/tables';
 import { and, asc, eq, inArray, ne, or } from 'drizzle-orm';
 import {
   checkGameEnd,
+  FinishedGame,
   FinishedGameWithPlayers,
-  OngoingGame,
-  OngoingGameWithPlayers,
+  MatchedGame,
+  MatchedGameWithPlayers,
   parseTimerOption,
+  PlayingGame,
+  PlayingGameWithPlayers,
 } from '@bchess/shared';
 import { Chess, Move } from 'chess.js';
 
@@ -66,7 +69,9 @@ export class MultiplayerService {
     } as const;
   }
 
-  async getOngoingGame(userId: string): Promise<OngoingGameWithPlayers | null> {
+  async getMatchedGameWithPlayers(
+    userId: string,
+  ): Promise<MatchedGameWithPlayers | null> {
     const game = await this.db.query.games.findFirst({
       where: (games) =>
         and(
@@ -92,10 +97,10 @@ export class MultiplayerService {
 
     if (!game) return null;
 
-    return game as OngoingGameWithPlayers;
+    return game as MatchedGameWithPlayers;
   }
 
-  async setReady(gameId: string, userId: string): Promise<OngoingGame> {
+  async setReady(gameId: string, userId: string): Promise<MatchedGame> {
     const game = await this.db.transaction(async (tx) => {
       const [existingGame] = await tx
         .select()
@@ -128,7 +133,7 @@ export class MultiplayerService {
       return updatedGame;
     });
 
-    return game as OngoingGame;
+    return game as MatchedGame;
   }
 
   async deleteMatch(userId: string) {
@@ -144,7 +149,9 @@ export class MultiplayerService {
     });
   }
 
-  async getPlayingGame(userId: string): Promise<OngoingGameWithPlayers | null> {
+  async getPlayingGameWithPlayers(
+    userId: string,
+  ): Promise<PlayingGameWithPlayers | null> {
     const playingGame = await this.db.query.games.findFirst({
       where: (games) =>
         and(
@@ -167,11 +174,11 @@ export class MultiplayerService {
       },
     });
 
-    return (playingGame as OngoingGameWithPlayers) ?? null;
+    return (playingGame as PlayingGameWithPlayers) ?? null;
   }
 
   async resign(userId: string): Promise<FinishedGameWithPlayers | null> {
-    const playingGame = await this.getPlayingGame(userId);
+    const playingGame = await this.getPlayingGameWithPlayers(userId);
 
     if (!playingGame) return null;
 
@@ -193,7 +200,7 @@ export class MultiplayerService {
   }
 
   async timeout(userId: string): Promise<FinishedGameWithPlayers | null> {
-    const playingGame = await this.getPlayingGame(userId);
+    const playingGame = await this.getPlayingGameWithPlayers(userId);
 
     if (!playingGame) return null;
 
@@ -229,7 +236,7 @@ export class MultiplayerService {
     } as FinishedGameWithPlayers;
   }
 
-  async addMove(game: OngoingGameWithPlayers, move: Move, chess: Chess) {
+  async addMove(game: PlayingGame, move: Move, chess: Chess) {
     return await this.db.transaction(async (tx) => {
       const lastTimestamp = game.lastMoveAt ?? game.gameStartedAt;
 
@@ -285,7 +292,7 @@ export class MultiplayerService {
         .where(eq(games.id, game.id))
         .returning();
 
-      return { savedMove, newGame };
+      return { savedMove, newGame: newGame as PlayingGame | FinishedGame };
     });
   }
 
