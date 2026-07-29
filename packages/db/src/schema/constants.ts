@@ -25,6 +25,9 @@ export const RESULT = ["draw", "white_won", "black_won"] as const
 
 export const STATUS = ["matching", "preparing", "playing", "finished"] as const
 
+export const PROMOTION = ["q", "r", "n", "b"] as const
+
+export type PromotionPiece = (typeof PROMOTION)[number]
 export type TimerOption = (typeof TIMER_OPTIONS)[number]
 export type Reason = (typeof GAMEOVER_REASONS)[number]
 export type Result = (typeof RESULT)[number]

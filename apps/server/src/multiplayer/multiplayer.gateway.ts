@@ -7,6 +7,7 @@ import {
   OnGatewayDisconnect,
   WebSocketServer,
   WsException,
+  Ack,
 } from '@nestjs/websockets';
 import { MultiplayerService } from './multiplayer.service';
 import { DefaultEventsMap, Server, Socket } from 'socket.io';
@@ -14,8 +15,14 @@ import { fromNodeHeaders } from 'better-auth/node';
 import { auth } from '../auth/auth';
 import { MoveDto } from './dto/move.dto';
 import { CreateGameDto } from './dto/create-game.dto';
-import { ClientToServerEvents, ServerToClientEvents } from '@bchess/shared';
+import {
+  checkGameEnd,
+  type ClientToServerEvents,
+  type MoveAck,
+  type ServerToClientEvents,
+} from '@bchess/shared';
 import { UserSession } from '@thallesp/nestjs-better-auth';
+import { Chess } from 'chess.js';
 
 type TypedSocket = Socket<
   ClientToServerEvents,
@@ -25,6 +32,8 @@ type TypedSocket = Socket<
     user: UserSession['user'];
   }
 >;
+
+const currentGames = new Map<string, Chess>();
 
 @WebSocketGateway({ cors: { origin: true, credentials: true } })
 export class MultiplayerGateway
@@ -140,16 +149,81 @@ export class MultiplayerGateway
           white: ongoingGame.white,
           black: ongoingGame.black,
         });
+      if (newGame.status === 'playing') {
+        currentGames.set(newGame.id, new Chess());
+      }
     } else {
       this.server.to(`user:${userId}`).emit('current_state', ongoingGame);
     }
   }
 
   @SubscribeMessage('move')
-  move(
+  async handleMove(
     @MessageBody() moveDto: MoveDto,
     @ConnectedSocket() socket: TypedSocket,
-  ) {}
+    @Ack() ack: MoveAck,
+  ) {
+    const userId = socket.data.user.id;
+    const ongoingGame = await this.multiplayerService.getOngoingGame(userId);
+
+    if (!ongoingGame) {
+      ack({
+        status: 'error',
+        error: 'Game not found',
+      });
+      return;
+    }
+    if (ongoingGame.status === 'preparing') {
+      ack({
+        status: 'error',
+        error: 'Game has not started yet',
+      });
+      return;
+    }
+
+    const gameId = ongoingGame.id;
+
+    try {
+      let chess = currentGames.get(gameId);
+
+      if (!chess) {
+        console.log('Memory: game lost');
+        console.log('reconstructing the chess instance..');
+        const newChess = new Chess();
+
+        const moves = await this.multiplayerService.getMoves(gameId);
+
+        moves.forEach((move) => {
+          newChess.move({
+            from: move.from,
+            to: move.to,
+            promotion: move.promotion ?? undefined,
+          });
+        });
+
+        chess = newChess;
+      }
+
+      const move = chess.move(moveDto);
+
+      const { savedMove } = await this.multiplayerService.addMove(
+        ongoingGame,
+        move,
+        chess,
+      );
+
+      this.server.to(`game:${gameId}`).emit('new_move', savedMove);
+
+      ack({
+        status: 'success',
+      });
+    } catch (error) {
+      ack({
+        status: 'error',
+        error: error,
+      });
+    }
+  }
 
   @SubscribeMessage('sync_game')
   async sync(@ConnectedSocket() socket: TypedSocket) {
@@ -171,6 +245,8 @@ export class MultiplayerGateway
       this.server
         .to(`game:${finishedGame.id}`)
         .emit('current_state', finishedGame);
+
+      currentGames.delete(finishedGame.id);
     }
   }
 
@@ -184,6 +260,8 @@ export class MultiplayerGateway
       this.server
         .to(`game:${finishedGame.id}`)
         .emit('current_state', finishedGame);
+
+      currentGames.delete(finishedGame.id);
     }
   }
 }

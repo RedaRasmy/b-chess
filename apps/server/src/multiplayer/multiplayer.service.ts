@@ -2,14 +2,16 @@ import { Inject, Injectable } from '@nestjs/common';
 import { CreateGameDto } from './dto/create-game.dto';
 import { DATABASE_CONNECTION } from '../database/database.module';
 import { type Database } from '@bchess/db';
-import { games } from '@bchess/db/tables';
-import { and, eq, inArray, ne, or } from 'drizzle-orm';
+import { games, moves, PromotionPiece } from '@bchess/db/tables';
+import { and, asc, eq, inArray, ne, or } from 'drizzle-orm';
 import {
+  checkGameEnd,
   FinishedGameWithPlayers,
   OngoingGame,
   OngoingGameWithPlayers,
   parseTimerOption,
 } from '@bchess/shared';
+import { Chess, Move } from 'chess.js';
 
 @Injectable()
 export class MultiplayerService {
@@ -180,6 +182,7 @@ export class MultiplayerService {
         gameOverReason: 'Resignation',
         result: playingGame.whiteId === userId ? 'black_won' : 'white_won',
       })
+      .where(eq(games.id, playingGame.id))
       .returning();
 
     return {
@@ -216,6 +219,7 @@ export class MultiplayerService {
         gameOverReason: 'Timeout',
         result: playingGame.currentTurn === 'w' ? 'black_won' : 'white_won',
       })
+      .where(eq(games.id, playingGame.id))
       .returning();
 
     return {
@@ -223,5 +227,77 @@ export class MultiplayerService {
       white: playingGame.white,
       black: playingGame.black,
     } as FinishedGameWithPlayers;
+  }
+
+  async addMove(game: OngoingGameWithPlayers, move: Move, chess: Chess) {
+    return await this.db.transaction(async (tx) => {
+      const lastTimestamp = game.lastMoveAt ?? game.gameStartedAt;
+
+      const currentMoveAt = Date.now();
+      const moveTime = currentMoveAt - lastTimestamp;
+
+      const [savedMove] = await tx
+        .insert(moves)
+        .values({
+          from: move.from,
+          to: move.to,
+          promotion: move.promotion as PromotionPiece,
+          fenAfter: move.after,
+          gameId: game.id,
+          moveTime,
+          playerColor: move.color,
+          piece: move.piece,
+          san: move.san,
+          capturedPiece: move.captured,
+          isCheck: chess.isCheck(),
+          isCheckmate: chess.isCheckmate(),
+        })
+        .returning();
+
+      const end = checkGameEnd(chess);
+
+      const reason = end?.reason ?? null;
+      const result = end?.result ?? null;
+
+      const timeLeft =
+        game.currentTurn === 'w' ? game.whiteTimeLeft : game.blackTimeLeft;
+
+      const newTimeLeft = timeLeft - moveTime;
+
+      const newTimestamps = {
+        whiteTimeLeft:
+          game.currentTurn === 'w' ? newTimeLeft : game.whiteTimeLeft,
+        blackTimeLeft:
+          game.currentTurn === 'b' ? newTimeLeft : game.blackTimeLeft,
+        lastMoveAt: currentMoveAt,
+      };
+
+      const [newGame] = await tx
+        .update(games)
+        .set({
+          status: end ? 'finished' : 'playing',
+          gameOverReason: reason,
+          result: result,
+          currentFen: chess.fen(),
+          currentTurn: chess.turn(),
+          ...newTimestamps,
+        })
+        .where(eq(games.id, game.id))
+        .returning();
+
+      return { savedMove, newGame };
+    });
+  }
+
+  async getMoves(gameId: string) {
+    return await this.db.query.moves.findMany({
+      where: (moves) => eq(moves.gameId, gameId),
+      orderBy: asc(moves.createdAt),
+      columns: {
+        from: true,
+        to: true,
+        promotion: true,
+      },
+    });
   }
 }

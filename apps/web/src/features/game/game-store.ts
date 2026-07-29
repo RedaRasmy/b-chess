@@ -1,7 +1,7 @@
-import { ClockState, GameState, PromotionPiece } from "@/features/game/types"
+import { ClockState, GameState } from "@/features/game/types"
 import { getColor } from "@/features/game/utils/get-color"
 import { playSound } from "@/lib/sounds"
-import { Reason, Result } from "@bchess/shared"
+import { checkGameEnd, PromotionPiece, Reason, Result } from "@bchess/shared"
 import { Chess, Square } from "chess.js"
 import { create } from "zustand"
 import { subscribeWithSelector } from "zustand/middleware"
@@ -155,37 +155,9 @@ export const useGameStore = create<GameState>()(
                         move: theMove,
                     },
                 })
-
-                if (chess.isGameOver()) {
-                    let result: Result | null = null
-                    let reason: Reason | null = null
-
-                    if (chess.isCheckmate()) {
-                        result =
-                            chess.turn() === "w" ? "black_won" : "white_won"
-                        reason = "Checkmate"
-                    } else if (chess.isStalemate()) {
-                        result = "draw"
-                        reason = "Stalemate"
-                    } else if (chess.isInsufficientMaterial()) {
-                        result = "draw"
-                        reason = "Insufficient material"
-                    } else if (chess.isThreefoldRepetition()) {
-                        result = "draw"
-                        reason = "Threefold repetition"
-                    } else if (chess.isDraw()) {
-                        result = "draw"
-                        reason = "Agreement"
-                    } else if (chess.isDrawByFiftyMoves()) {
-                        result = "draw"
-                        reason = "Fifty moves rule"
-                    }
-
-                    if (!result || !reason) {
-                        throw new Error("GameStore: Unhandled game-over case")
-                    }
-
-                    get().endGame(result, reason)
+                const end = checkGameEnd(chess)
+                if (end) {
+                    get().endGame(end.result, end.reason)
                 }
 
                 return move

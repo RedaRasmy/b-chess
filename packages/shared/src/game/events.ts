@@ -1,5 +1,5 @@
 import { Game, IGame } from "../validation"
-import { GameWithPlayers } from "./types"
+import { GameWithPlayers, MoveType, SMove } from "./types"
 
 export const CLIENT_EVENTS = {
     MOVE: "move",
@@ -39,7 +39,7 @@ export type ServerToClientEvents = {
     }) => void
     ///
     [SERVER_EVENTS.GAME_FOUND]: (p: Game) => void
-    [SERVER_EVENTS.NEW_MOVE]: () => void
+    [SERVER_EVENTS.NEW_MOVE]: (move: SMove) => void
     [SERVER_EVENTS.CURRENT_STATE]: (game: GameWithPlayers) => void
     [SERVER_EVENTS.OPPONENT_STATUS_CHANGED]: (p: {
         status: "connected" | "disconnected"
@@ -47,8 +47,19 @@ export type ServerToClientEvents = {
     [SERVER_EVENTS.QUEUE_JOINED]: (p: { gameId: string }) => void
 }
 
+export type MoveAck = (
+    result:
+        | {
+              status: "success"
+          }
+        | {
+              status: "error"
+              error?: unknown
+          },
+) => void
+
 export type ClientToServerEvents = {
-    [CLIENT_EVENTS.MOVE]: () => void
+    [CLIENT_EVENTS.MOVE]: (p: MoveType, callback: MoveAck) => void
     [CLIENT_EVENTS.SYNC_GAME]: () => void
     [CLIENT_EVENTS.JOIN_GAME]: () => void
     [CLIENT_EVENTS.JOIN_QUEUE]: (p: IGame) => void

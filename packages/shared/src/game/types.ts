@@ -1,4 +1,5 @@
-import { Reason, games, Result } from "@bchess/db/tables"
+import { Reason, games, Result, PromotionPiece, moves } from "@bchess/db/tables"
+import { Square } from "chess.js"
 
 export type ChessTimer = {
     type: "bullet" | "blitz" | "rapid"
@@ -34,3 +35,11 @@ export type FinishedGame = Omit<
 export type FinishedGameWithPlayers = FinishedGame & Players
 
 export type GameWithPlayers = OngoingGameWithPlayers | FinishedGameWithPlayers
+
+export interface MoveType {
+    from: Square
+    to: Square
+    promotion?: PromotionPiece
+}
+
+export type SMove = typeof moves.$inferInsert

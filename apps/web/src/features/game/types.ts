@@ -1,4 +1,4 @@
-import { Result, Status, Reason } from "@bchess/shared"
+import { Result, Status, Reason, MoveType } from "@bchess/shared"
 import { Chess, Move, Square } from "chess.js"
 
 export type GameMode = "bot" | "multiplayer" | "idle"
@@ -18,14 +18,6 @@ export interface ClockState {
     increment: number
     activeColor: PieceColor | null
     lastTickAt: number | null
-}
-
-export type PromotionPiece = "q" | "r" | "b" | "n"
-
-export interface MoveType {
-    from: Square
-    to: Square
-    promotion?: PromotionPiece
 }
 
 export type CapturedPiece = "p" | "n" | "b" | "r" | "q"

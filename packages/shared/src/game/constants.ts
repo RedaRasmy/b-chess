@@ -7,4 +7,6 @@ export {
     STATUS,
     type Status,
     type Reason,
+    PROMOTION,
+    type PromotionPiece,
 } from "@bchess/db/tables"

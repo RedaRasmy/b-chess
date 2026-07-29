@@ -9,6 +9,7 @@ import { useSocket } from "@/features/multiplayer/hooks/use-socket"
 import { useSocketListener } from "@/features/multiplayer/hooks/use-socket-listener"
 import { authClient } from "@/lib/auth-client"
 import { parseTimerOption } from "@bchess/shared"
+import { Square } from "chess.js"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 import { toast } from "sonner"
@@ -37,7 +38,9 @@ export default function Page() {
                 }
 
                 if (lastAction.type === "move") {
-                    // TODO
+                    socket.emit("move", lastAction.move, ({ status }) => {
+                        console.log("Move Ack: ", status)
+                    })
                 }
             },
         )
@@ -90,6 +93,22 @@ export default function Page() {
             richColors: true,
         })
         router.replace("/multiplayer")
+    })
+
+    useSocketListener("new_move", (move) => {
+        console.log("new move: ", move)
+        if (!gameState.playerColor) {
+            throw new Error("Game is not initialized")
+        }
+        const isOwnMove = getColor(gameState.playerColor) === move.playerColor
+
+        if (isOwnMove) return
+
+        gameState.makeMove(
+            move.from as Square,
+            move.to as Square,
+            move.promotion ?? undefined,
+        )
     })
 
     const playerColor = gameState.playerColor
