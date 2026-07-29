@@ -160,4 +160,17 @@ export class MultiplayerGateway
       this.server.to(`user:${userId}`).emit('current_state', ongoingGame);
     }
   }
+
+  @SubscribeMessage('resign')
+  async handleResign(@ConnectedSocket() socket: TypedSocket) {
+    const userId = socket.data.user.id;
+
+    const finishedGame = await this.multiplayerService.resign(userId);
+
+    if (finishedGame) {
+      this.server
+        .to(`game:${finishedGame.id}`)
+        .emit('current_state', finishedGame);
+    }
+  }
 }

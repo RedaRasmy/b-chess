@@ -3,6 +3,8 @@ import GameBoard from "@/features/game/components/game-board"
 import PlayerInfo from "@/features/game/components/player-info"
 import { useGameStore } from "@/features/game/game-store"
 import { getColor } from "@/features/game/utils/get-color"
+import MultiplayerEndDialog from "@/features/multiplayer/components/multiplayer-end-dialog"
+import MultiplayerControls from "@/features/multiplayer/components/mutiplayer-controls"
 import { useSocket } from "@/features/multiplayer/hooks/use-socket"
 import { useSocketListener } from "@/features/multiplayer/hooks/use-socket-listener"
 import { authClient } from "@/lib/auth-client"
@@ -43,8 +45,7 @@ export default function Page() {
         gameState.setPlayerColor(playerColor)
         gameState.setPosition(game.currentFen)
 
-        const status = game.status === "preparing" ? "paused" : game.status
-        gameState.setStatus(status)
+        gameState.setStatus(game.status)
 
         gameState.setPlayers(
             {
@@ -56,6 +57,10 @@ export default function Page() {
                 username: game.black.username,
             },
         )
+
+        if (game.status === "finished") {
+            gameState.endGame(game.result, game.gameOverReason)
+        }
     })
 
     useSocketListener("exception", ({ message }) => {
@@ -74,7 +79,7 @@ export default function Page() {
 
     return (
         <div className="flex flex-wrap w-full h-full gap-3 lg:gap-5 xl:gap-8">
-            {/* <MultiplayerEndDialog /> */}
+            <MultiplayerEndDialog />
             <div className="flex-auto flex justify-center items-center">
                 <div className="flex flex-col w-full max-w-[75vh] gap-2 px-1">
                     <PlayerInfo color={opponentColor} />
@@ -82,7 +87,7 @@ export default function Page() {
                     <PlayerInfo color={color} />
                 </div>
             </div>
-            {/* <MultiplayerControls /> */}
+            <MultiplayerControls />
         </div>
     )
 }

@@ -5,6 +5,7 @@ import { type Database } from '@bchess/db';
 import { games } from '@bchess/db/tables';
 import { and, eq, inArray, ne, or } from 'drizzle-orm';
 import {
+  FinishedGameWithPlayers,
   OngoingGame,
   OngoingGameWithPlayers,
   parseTimerOption,
@@ -139,5 +140,46 @@ export class MultiplayerService {
       where: (games) =>
         and(eq(games.status, 'matching'), eq(games.whiteId, userId)),
     });
+  }
+
+  async resign(userId: string): Promise<FinishedGameWithPlayers | null> {
+    const playingGame = await this.db.query.games.findFirst({
+      where: (games) =>
+        and(
+          eq(games.status, 'playing'),
+          or(eq(games.whiteId, userId), eq(games.blackId, userId)),
+        ),
+      with: {
+        white: {
+          columns: {
+            username: true,
+            image: true,
+          },
+        },
+        black: {
+          columns: {
+            username: true,
+            image: true,
+          },
+        },
+      },
+    });
+
+    if (!playingGame) return null;
+
+    const [finishedGame] = await this.db
+      .update(games)
+      .set({
+        status: 'finished',
+        gameOverReason: 'Resignation',
+        result: playingGame.whiteId === userId ? 'black_won' : 'white_won',
+      })
+      .returning();
+
+    return {
+      ...finishedGame,
+      white: playingGame.white,
+      black: playingGame.black,
+    } as FinishedGameWithPlayers;
   }
 }

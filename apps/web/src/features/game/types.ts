@@ -1,18 +1,7 @@
-import { Game } from "@bchess/shared"
+import { Result, Status, Reason } from "@bchess/shared"
 import { Chess, Move, Square } from "chess.js"
 
 export type GameMode = "bot" | "multiplayer" | "idle"
-export type GameStatus = "waiting" | "playing" | "paused" | "finished"
-export type GameResult = "white" | "black" | "draw" | null
-export type GameEndReason =
-    | "checkmate"
-    | "resignation"
-    | "timeout"
-    | "draw_agreement"
-    | "stalemate"
-    | "insufficient_material"
-    | "threefold_repetition"
-    | null
 
 export type PieceColor = "white" | "black"
 
@@ -51,7 +40,7 @@ export interface GameState {
     chess: Chess
     fen: string
     mode: GameMode
-    status: GameStatus
+    status: Status
 
     // players
     playerColor: PieceColor | null
@@ -69,8 +58,8 @@ export interface GameState {
     legalMoves: Square[]
 
     // result
-    result: GameResult
-    endReason: GameEndReason
+    result: Result | null
+    endReason: Reason | null
 
     // clock
     clock: ClockState | null
@@ -82,9 +71,9 @@ export interface GameState {
     resetGame: () => void
     setPlayers: (white: PlayerInfo, black: PlayerInfo) => void
     setPlayerColor: (color: PieceColor) => void
-    setStatus: (status: GameStatus) => void
+    setStatus: (status: Status) => void
     setMode: (mode: GameMode) => void
-    endGame: (result: GameResult, reason: GameEndReason) => void
+    endGame: (result: Result, reason: Reason) => void
     startClock: (timeControl?: {
         initial: number
         increment: number

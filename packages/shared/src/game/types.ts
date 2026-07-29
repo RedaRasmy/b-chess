@@ -1,4 +1,4 @@
-import { games } from "@bchess/db/tables"
+import { Reason, games, Result } from "@bchess/db/tables"
 
 export type ChessTimer = {
     type: "bullet" | "blitz" | "rapid"
@@ -22,8 +22,13 @@ export type OngoingGame = Omit<
 
 export type OngoingGameWithPlayers = OngoingGame & Players
 
-export type FinishedGame = Omit<OngoingGame, "status"> & {
+export type FinishedGame = Omit<
+    OngoingGame,
+    "status" | "gameOverReason" | "result"
+> & {
     status: "finished"
+    gameOverReason: Reason
+    result: Result
 }
 
 export type FinishedGameWithPlayers = FinishedGame & Players

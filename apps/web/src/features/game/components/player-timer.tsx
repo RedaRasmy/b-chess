@@ -28,7 +28,10 @@ export function PlayerTimer({ color }: { color: "white" | "black" }) {
             const remaining = Math.max(0, clock[color] - elapsed)
             setMs(remaining)
             if (remaining === 0) {
-                endGame(color === "white" ? "black" : "white", "timeout")
+                endGame(
+                    color === "white" ? "black_won" : "white_won",
+                    "Timeout",
+                )
             }
             if (isPlayer && remaining <= 10000 && !alertedRef.current) {
                 alertedRef.current = true

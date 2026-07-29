@@ -21,5 +21,11 @@ export const GAMEOVER_REASONS = [
     "Agreement",
 ] as const
 
+export const RESULT = ["draw", "white_won", "black_won"] as const
+
+export const STATUS = ["matching", "preparing", "playing", "finished"] as const
+
 export type TimerOption = (typeof TIMER_OPTIONS)[number]
-export type GameoverReason = (typeof GAMEOVER_REASONS)[number]
+export type Reason = (typeof GAMEOVER_REASONS)[number]
+export type Result = (typeof RESULT)[number]
+export type Status = (typeof STATUS)[number]
