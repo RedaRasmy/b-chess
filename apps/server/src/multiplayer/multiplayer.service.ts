@@ -281,7 +281,9 @@ export class MultiplayerService {
                     ? game.whiteTimeLeft
                     : game.blackTimeLeft;
 
-            const newTimeLeft = timeLeft - moveTime;
+            const { plus } = parseTimerOption(game.timer);
+
+            const newTimeLeft = timeLeft - moveTime + plus * 1000;
 
             const newTimestamps = {
                 whiteTimeLeft:
