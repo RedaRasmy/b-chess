@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button"
 import HistoryController from "@/features/game/components/history-controller"
 import { useSocket } from "@/features/multiplayer/hooks/use-socket"
 import { Flag } from "lucide-react"
-import Link from "next/link"
 
 export default function MultiplayerControls() {
     const socket = useSocket()

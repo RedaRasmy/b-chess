@@ -70,10 +70,12 @@ export default function Page() {
             {
                 id: game.whiteId,
                 username: game.white.username,
+                avatar: game.white.image,
             },
             {
                 id: game.blackId,
                 username: game.black.username,
+                avatar: game.black.image,
             },
         )
 

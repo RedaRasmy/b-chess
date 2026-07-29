@@ -9,7 +9,7 @@ export interface PlayerInfo {
     id: string
     username: string
     // rating: number
-    avatar?: string
+    avatar: string | null
 }
 
 export interface ClockState {

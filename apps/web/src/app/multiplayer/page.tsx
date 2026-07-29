@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import SelectTimer from "@/features/game/components/select-timer"
+import { useGameStore } from "@/features/game/game-store"
 import { useSocket } from "@/features/multiplayer/hooks/use-socket"
 import { useSocketListener } from "@/features/multiplayer/hooks/use-socket-listener"
 import { fetchIsMatching } from "@/features/multiplayer/requests"
@@ -16,6 +17,7 @@ export default function Page() {
     const socket = useSocket()
     const [timer, setTimer] = useState<TimerOption>("rapid 10+0")
     const router = useRouter()
+    const gameState = useGameStore()
 
     function handleStart() {
         socket.emit("join_queue", {
@@ -46,6 +48,10 @@ export default function Page() {
 
     useSocketListener("game_found", (game) => {
         console.log("game found: ", game)
+        gameState.resetGame()
+        gameState.setMode("multiplayer")
+        gameState.setStatus(game.status)
+
         router.push(`/multiplayer/play`)
     })
 
