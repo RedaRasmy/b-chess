@@ -9,18 +9,18 @@ import { ProfileModule } from './profile/profile.module';
 import { DatabaseModule } from './database/database.module';
 
 @Module({
-  imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-    }),
-    DatabaseModule,
-    AuthModule.forRoot({
-      auth,
-    }),
-    ProfileModule,
-    MultiplayerModule,
-  ],
-  controllers: [AppController],
-  providers: [AppService],
+    imports: [
+        ConfigModule.forRoot({
+            isGlobal: true,
+        }),
+        DatabaseModule,
+        AuthModule.forRoot({
+            auth,
+        }),
+        ProfileModule,
+        MultiplayerModule,
+    ],
+    controllers: [AppController],
+    providers: [AppService],
 })
 export class AppModule {}

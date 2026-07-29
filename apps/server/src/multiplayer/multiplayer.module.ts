@@ -4,7 +4,7 @@ import { MultiplayerGateway } from './multiplayer.gateway';
 import { MultiplayerController } from './multiplayer.controller';
 
 @Module({
-  providers: [MultiplayerGateway, MultiplayerService],
-  controllers: [MultiplayerController],
+    providers: [MultiplayerGateway, MultiplayerService],
+    controllers: [MultiplayerController],
 })
 export class MultiplayerModule {}

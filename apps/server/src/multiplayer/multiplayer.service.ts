@@ -5,306 +5,321 @@ import { type Database } from '@bchess/db';
 import { games, moves, PromotionPiece } from '@bchess/db/tables';
 import { and, asc, eq, inArray, ne, or } from 'drizzle-orm';
 import {
-  checkGameEnd,
-  FinishedGame,
-  FinishedGameWithPlayers,
-  MatchedGame,
-  MatchedGameWithPlayers,
-  parseTimerOption,
-  PlayingGame,
-  PlayingGameWithPlayers,
+    checkGameEnd,
+    FinishedGame,
+    FinishedGameWithPlayers,
+    MatchedGame,
+    MatchedGameWithPlayers,
+    parseTimerOption,
+    PlayingGame,
+    PlayingGameWithPlayers,
 } from '@bchess/shared';
 import { Chess, Move } from 'chess.js';
 
 @Injectable()
 export class MultiplayerService {
-  constructor(@Inject(DATABASE_CONNECTION) private readonly db: Database) {}
+    constructor(@Inject(DATABASE_CONNECTION) private readonly db: Database) {}
 
-  async findOrCreateMatch(dto: CreateGameDto, userId: string) {
-    const match = await this.db.query.games.findFirst({
-      where: (games) =>
-        and(
-          eq(games.status, 'matching'),
-          eq(games.timer, dto.timer),
-          ne(games.whiteId, userId),
-        ),
-    });
+    async findOrCreateMatch(dto: CreateGameDto, userId: string) {
+        const match = await this.db.query.games.findFirst({
+            where: (games) =>
+                and(
+                    eq(games.status, 'matching'),
+                    eq(games.timer, dto.timer),
+                    ne(games.whiteId, userId),
+                ),
+        });
 
-    if (!match) {
-      const alreadyCreatedMatch = await this.db.query.games.findFirst({
-        where: (games) =>
-          and(eq(games.status, 'matching'), eq(games.whiteId, userId)),
-      });
+        if (!match) {
+            const alreadyCreatedMatch = await this.db.query.games.findFirst({
+                where: (games) =>
+                    and(
+                        eq(games.status, 'matching'),
+                        eq(games.whiteId, userId),
+                    ),
+            });
 
-      if (alreadyCreatedMatch) {
+            if (alreadyCreatedMatch) {
+                return {
+                    status: 'QUEUED',
+                    game: alreadyCreatedMatch,
+                } as const;
+            }
+
+            const { base } = parseTimerOption(dto.timer);
+            const [newGame] = await this.db
+                .insert(games)
+                .values({
+                    timer: dto.timer,
+                    whiteId: userId,
+                    blackTimeLeft: base * 1000, // ms
+                    whiteTimeLeft: base * 1000,
+                })
+                .returning();
+            return { status: 'QUEUED', game: newGame } as const;
+        }
+
+        const [game] = await this.db
+            .update(games)
+            .set({ status: 'preparing', blackId: userId })
+            .where(eq(games.id, match.id))
+            .returning();
+
         return {
-          status: 'QUEUED',
-          game: alreadyCreatedMatch,
+            status: 'MATCH_FOUND',
+            game,
+            players: [match.whiteId, userId],
         } as const;
-      }
-
-      const { base } = parseTimerOption(dto.timer);
-      const [newGame] = await this.db
-        .insert(games)
-        .values({
-          timer: dto.timer,
-          whiteId: userId,
-          blackTimeLeft: base * 1000, // ms
-          whiteTimeLeft: base * 1000,
-        })
-        .returning();
-      return { status: 'QUEUED', game: newGame } as const;
     }
 
-    const [game] = await this.db
-      .update(games)
-      .set({ status: 'preparing', blackId: userId })
-      .where(eq(games.id, match.id))
-      .returning();
+    async getMatchedGameWithPlayers(
+        userId: string,
+    ): Promise<MatchedGameWithPlayers | null> {
+        const game = await this.db.query.games.findFirst({
+            where: (games) =>
+                and(
+                    inArray(games.status, ['preparing', 'playing']),
+                    or(eq(games.whiteId, userId), eq(games.blackId, userId)),
+                ),
 
-    return {
-      status: 'MATCH_FOUND',
-      game,
-      players: [match.whiteId, userId],
-    } as const;
-  }
+            with: {
+                white: {
+                    columns: {
+                        username: true,
+                        image: true,
+                    },
+                },
+                black: {
+                    columns: {
+                        username: true,
+                        image: true,
+                    },
+                },
+            },
+        });
 
-  async getMatchedGameWithPlayers(
-    userId: string,
-  ): Promise<MatchedGameWithPlayers | null> {
-    const game = await this.db.query.games.findFirst({
-      where: (games) =>
-        and(
-          inArray(games.status, ['preparing', 'playing']),
-          or(eq(games.whiteId, userId), eq(games.blackId, userId)),
-        ),
+        if (!game) return null;
 
-      with: {
-        white: {
-          columns: {
-            username: true,
-            image: true,
-          },
-        },
-        black: {
-          columns: {
-            username: true,
-            image: true,
-          },
-        },
-      },
-    });
+        return game as MatchedGameWithPlayers;
+    }
 
-    if (!game) return null;
+    async setReady(gameId: string, userId: string): Promise<MatchedGame> {
+        const game = await this.db.transaction(async (tx) => {
+            const [existingGame] = await tx
+                .select()
+                .from(games)
+                .where(eq(games.id, gameId))
+                .for('update');
 
-    return game as MatchedGameWithPlayers;
-  }
+            if (!existingGame || existingGame.status !== 'preparing') {
+                return existingGame;
+            }
 
-  async setReady(gameId: string, userId: string): Promise<MatchedGame> {
-    const game = await this.db.transaction(async (tx) => {
-      const [existingGame] = await tx
-        .select()
-        .from(games)
-        .where(eq(games.id, gameId))
-        .for('update');
+            const isWhite = existingGame.whiteId === userId;
+            const isBlack = existingGame.blackId === userId;
 
-      if (!existingGame || existingGame.status !== 'preparing') {
-        return existingGame;
-      }
+            const whiteReady = isWhite ? true : existingGame.whiteReady;
+            const blackReady = isBlack ? true : existingGame.blackReady;
+            const isBothReady = whiteReady && blackReady;
 
-      const isWhite = existingGame.whiteId === userId;
-      const isBlack = existingGame.blackId === userId;
+            const [updatedGame] = await tx
+                .update(games)
+                .set({
+                    whiteReady,
+                    blackReady,
+                    status: isBothReady ? 'playing' : 'preparing',
+                    gameStartedAt: isBothReady
+                        ? Date.now()
+                        : existingGame.gameStartedAt,
+                })
+                .where(eq(games.id, gameId))
+                .returning();
 
-      const whiteReady = isWhite ? true : existingGame.whiteReady;
-      const blackReady = isBlack ? true : existingGame.blackReady;
-      const isBothReady = whiteReady && blackReady;
+            return updatedGame;
+        });
 
-      const [updatedGame] = await tx
-        .update(games)
-        .set({
-          whiteReady,
-          blackReady,
-          status: isBothReady ? 'playing' : 'preparing',
-          gameStartedAt: isBothReady ? Date.now() : existingGame.gameStartedAt,
-        })
-        .where(eq(games.id, gameId))
-        .returning();
+        return game as MatchedGame;
+    }
 
-      return updatedGame;
-    });
+    async deleteMatch(userId: string) {
+        await this.db
+            .delete(games)
+            .where(
+                and(eq(games.status, 'matching'), eq(games.whiteId, userId)),
+            );
+    }
 
-    return game as MatchedGame;
-  }
+    async getMatch(userId: string) {
+        return await this.db.query.games.findFirst({
+            where: (games) =>
+                and(eq(games.status, 'matching'), eq(games.whiteId, userId)),
+        });
+    }
 
-  async deleteMatch(userId: string) {
-    await this.db
-      .delete(games)
-      .where(and(eq(games.status, 'matching'), eq(games.whiteId, userId)));
-  }
+    async getPlayingGameWithPlayers(
+        userId: string,
+    ): Promise<PlayingGameWithPlayers | null> {
+        const playingGame = await this.db.query.games.findFirst({
+            where: (games) =>
+                and(
+                    eq(games.status, 'playing'),
+                    or(eq(games.whiteId, userId), eq(games.blackId, userId)),
+                ),
+            with: {
+                white: {
+                    columns: {
+                        username: true,
+                        image: true,
+                    },
+                },
+                black: {
+                    columns: {
+                        username: true,
+                        image: true,
+                    },
+                },
+            },
+        });
 
-  async getMatch(userId: string) {
-    return await this.db.query.games.findFirst({
-      where: (games) =>
-        and(eq(games.status, 'matching'), eq(games.whiteId, userId)),
-    });
-  }
+        return (playingGame as PlayingGameWithPlayers) ?? null;
+    }
 
-  async getPlayingGameWithPlayers(
-    userId: string,
-  ): Promise<PlayingGameWithPlayers | null> {
-    const playingGame = await this.db.query.games.findFirst({
-      where: (games) =>
-        and(
-          eq(games.status, 'playing'),
-          or(eq(games.whiteId, userId), eq(games.blackId, userId)),
-        ),
-      with: {
-        white: {
-          columns: {
-            username: true,
-            image: true,
-          },
-        },
-        black: {
-          columns: {
-            username: true,
-            image: true,
-          },
-        },
-      },
-    });
+    async resign(userId: string): Promise<FinishedGameWithPlayers | null> {
+        const playingGame = await this.getPlayingGameWithPlayers(userId);
 
-    return (playingGame as PlayingGameWithPlayers) ?? null;
-  }
+        if (!playingGame) return null;
 
-  async resign(userId: string): Promise<FinishedGameWithPlayers | null> {
-    const playingGame = await this.getPlayingGameWithPlayers(userId);
+        const [finishedGame] = await this.db
+            .update(games)
+            .set({
+                status: 'finished',
+                gameOverReason: 'Resignation',
+                result:
+                    playingGame.whiteId === userId ? 'black_won' : 'white_won',
+            })
+            .where(eq(games.id, playingGame.id))
+            .returning();
 
-    if (!playingGame) return null;
+        return {
+            ...finishedGame,
+            white: playingGame.white,
+            black: playingGame.black,
+        } as FinishedGameWithPlayers;
+    }
 
-    const [finishedGame] = await this.db
-      .update(games)
-      .set({
-        status: 'finished',
-        gameOverReason: 'Resignation',
-        result: playingGame.whiteId === userId ? 'black_won' : 'white_won',
-      })
-      .where(eq(games.id, playingGame.id))
-      .returning();
+    async timeout(userId: string): Promise<FinishedGameWithPlayers | null> {
+        const playingGame = await this.getPlayingGameWithPlayers(userId);
 
-    return {
-      ...finishedGame,
-      white: playingGame.white,
-      black: playingGame.black,
-    } as FinishedGameWithPlayers;
-  }
+        if (!playingGame) return null;
 
-  async timeout(userId: string): Promise<FinishedGameWithPlayers | null> {
-    const playingGame = await this.getPlayingGameWithPlayers(userId);
+        // Validation
 
-    if (!playingGame) return null;
+        const timeLeft =
+            playingGame.currentTurn == 'w'
+                ? playingGame.whiteTimeLeft
+                : playingGame.blackTimeLeft;
 
-    // Validation
+        const lastTimestamp =
+            playingGame.lastMoveAt ?? playingGame.gameStartedAt;
 
-    const timeLeft =
-      playingGame.currentTurn == 'w'
-        ? playingGame.whiteTimeLeft
-        : playingGame.blackTimeLeft;
+        const isFinished = lastTimestamp + timeLeft <= Date.now();
 
-    const lastTimestamp = playingGame.lastMoveAt ?? playingGame.gameStartedAt;
+        if (!isFinished) return null;
 
-    const isFinished = lastTimestamp + timeLeft <= Date.now();
+        // Action
 
-    if (!isFinished) return null;
+        const [finishedGame] = await this.db
+            .update(games)
+            .set({
+                status: 'finished',
+                gameOverReason: 'Timeout',
+                result:
+                    playingGame.currentTurn === 'w' ? 'black_won' : 'white_won',
+            })
+            .where(eq(games.id, playingGame.id))
+            .returning();
 
-    // Action
+        return {
+            ...finishedGame,
+            white: playingGame.white,
+            black: playingGame.black,
+        } as FinishedGameWithPlayers;
+    }
 
-    const [finishedGame] = await this.db
-      .update(games)
-      .set({
-        status: 'finished',
-        gameOverReason: 'Timeout',
-        result: playingGame.currentTurn === 'w' ? 'black_won' : 'white_won',
-      })
-      .where(eq(games.id, playingGame.id))
-      .returning();
+    async addMove(game: PlayingGame, move: Move, chess: Chess) {
+        return await this.db.transaction(async (tx) => {
+            const lastTimestamp = game.lastMoveAt ?? game.gameStartedAt;
 
-    return {
-      ...finishedGame,
-      white: playingGame.white,
-      black: playingGame.black,
-    } as FinishedGameWithPlayers;
-  }
+            const currentMoveAt = Date.now();
+            const moveTime = currentMoveAt - lastTimestamp;
 
-  async addMove(game: PlayingGame, move: Move, chess: Chess) {
-    return await this.db.transaction(async (tx) => {
-      const lastTimestamp = game.lastMoveAt ?? game.gameStartedAt;
+            const [savedMove] = await tx
+                .insert(moves)
+                .values({
+                    from: move.from,
+                    to: move.to,
+                    promotion: move.promotion as PromotionPiece,
+                    fenAfter: move.after,
+                    gameId: game.id,
+                    moveTime,
+                    playerColor: move.color,
+                    piece: move.piece,
+                    san: move.san,
+                    capturedPiece: move.captured,
+                    isCheck: chess.isCheck(),
+                    isCheckmate: chess.isCheckmate(),
+                })
+                .returning();
 
-      const currentMoveAt = Date.now();
-      const moveTime = currentMoveAt - lastTimestamp;
+            const end = checkGameEnd(chess);
 
-      const [savedMove] = await tx
-        .insert(moves)
-        .values({
-          from: move.from,
-          to: move.to,
-          promotion: move.promotion as PromotionPiece,
-          fenAfter: move.after,
-          gameId: game.id,
-          moveTime,
-          playerColor: move.color,
-          piece: move.piece,
-          san: move.san,
-          capturedPiece: move.captured,
-          isCheck: chess.isCheck(),
-          isCheckmate: chess.isCheckmate(),
-        })
-        .returning();
+            const reason = end?.reason ?? null;
+            const result = end?.result ?? null;
 
-      const end = checkGameEnd(chess);
+            const timeLeft =
+                game.currentTurn === 'w'
+                    ? game.whiteTimeLeft
+                    : game.blackTimeLeft;
 
-      const reason = end?.reason ?? null;
-      const result = end?.result ?? null;
+            const newTimeLeft = timeLeft - moveTime;
 
-      const timeLeft =
-        game.currentTurn === 'w' ? game.whiteTimeLeft : game.blackTimeLeft;
+            const newTimestamps = {
+                whiteTimeLeft:
+                    game.currentTurn === 'w' ? newTimeLeft : game.whiteTimeLeft,
+                blackTimeLeft:
+                    game.currentTurn === 'b' ? newTimeLeft : game.blackTimeLeft,
+                lastMoveAt: currentMoveAt,
+            };
 
-      const newTimeLeft = timeLeft - moveTime;
+            const [newGame] = await tx
+                .update(games)
+                .set({
+                    status: end ? 'finished' : 'playing',
+                    gameOverReason: reason,
+                    result: result,
+                    currentFen: chess.fen(),
+                    currentTurn: chess.turn(),
+                    ...newTimestamps,
+                })
+                .where(eq(games.id, game.id))
+                .returning();
 
-      const newTimestamps = {
-        whiteTimeLeft:
-          game.currentTurn === 'w' ? newTimeLeft : game.whiteTimeLeft,
-        blackTimeLeft:
-          game.currentTurn === 'b' ? newTimeLeft : game.blackTimeLeft,
-        lastMoveAt: currentMoveAt,
-      };
+            return {
+                savedMove,
+                newGame: newGame as PlayingGame | FinishedGame,
+            };
+        });
+    }
 
-      const [newGame] = await tx
-        .update(games)
-        .set({
-          status: end ? 'finished' : 'playing',
-          gameOverReason: reason,
-          result: result,
-          currentFen: chess.fen(),
-          currentTurn: chess.turn(),
-          ...newTimestamps,
-        })
-        .where(eq(games.id, game.id))
-        .returning();
-
-      return { savedMove, newGame: newGame as PlayingGame | FinishedGame };
-    });
-  }
-
-  async getMoves(gameId: string) {
-    return await this.db.query.moves.findMany({
-      where: (moves) => eq(moves.gameId, gameId),
-      orderBy: asc(moves.createdAt),
-      columns: {
-        from: true,
-        to: true,
-        promotion: true,
-      },
-    });
-  }
+    async getMoves(gameId: string) {
+        return await this.db.query.moves.findMany({
+            where: (moves) => eq(moves.gameId, gameId),
+            orderBy: asc(moves.createdAt),
+            columns: {
+                from: true,
+                to: true,
+                promotion: true,
+            },
+        });
+    }
 }
