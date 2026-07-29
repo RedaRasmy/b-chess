@@ -26,6 +26,25 @@ export default function Page() {
         socket.emit("join_game")
     }, [])
 
+    useEffect(() => {
+        const unsubscribe = useGameStore.subscribe(
+            (state) => state.lastAction,
+            (lastAction) => {
+                if (!lastAction) return
+
+                if (lastAction.type === "timeout") {
+                    socket.emit("timeout")
+                }
+
+                if (lastAction.type === "move") {
+                    // TODO
+                }
+            },
+        )
+
+        return () => unsubscribe()
+    }, [socket])
+
     useSocketListener("current_state", (game) => {
         console.log("sync/ current state : ", game)
 

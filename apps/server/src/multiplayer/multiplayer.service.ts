@@ -142,7 +142,7 @@ export class MultiplayerService {
     });
   }
 
-  async resign(userId: string): Promise<FinishedGameWithPlayers | null> {
+  async getPlayingGame(userId: string): Promise<OngoingGameWithPlayers | null> {
     const playingGame = await this.db.query.games.findFirst({
       where: (games) =>
         and(
@@ -165,6 +165,12 @@ export class MultiplayerService {
       },
     });
 
+    return (playingGame as OngoingGameWithPlayers) ?? null;
+  }
+
+  async resign(userId: string): Promise<FinishedGameWithPlayers | null> {
+    const playingGame = await this.getPlayingGame(userId);
+
     if (!playingGame) return null;
 
     const [finishedGame] = await this.db
@@ -173,6 +179,42 @@ export class MultiplayerService {
         status: 'finished',
         gameOverReason: 'Resignation',
         result: playingGame.whiteId === userId ? 'black_won' : 'white_won',
+      })
+      .returning();
+
+    return {
+      ...finishedGame,
+      white: playingGame.white,
+      black: playingGame.black,
+    } as FinishedGameWithPlayers;
+  }
+
+  async timeout(userId: string): Promise<FinishedGameWithPlayers | null> {
+    const playingGame = await this.getPlayingGame(userId);
+
+    if (!playingGame) return null;
+
+    // Validation
+
+    const timeLeft =
+      playingGame.currentTurn == 'w'
+        ? playingGame.whiteTimeLeft
+        : playingGame.blackTimeLeft;
+
+    const lastTimestamp = playingGame.lastMoveAt ?? playingGame.gameStartedAt;
+
+    const isFinished = lastTimestamp + timeLeft <= Date.now();
+
+    if (!isFinished) return null;
+
+    // Action
+
+    const [finishedGame] = await this.db
+      .update(games)
+      .set({
+        status: 'finished',
+        gameOverReason: 'Timeout',
+        result: playingGame.currentTurn === 'w' ? 'black_won' : 'white_won',
       })
       .returning();
 

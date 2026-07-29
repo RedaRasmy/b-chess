@@ -173,4 +173,17 @@ export class MultiplayerGateway
         .emit('current_state', finishedGame);
     }
   }
+
+  @SubscribeMessage('timeout')
+  async handleTimeout(@ConnectedSocket() socket: TypedSocket) {
+    const userId = socket.data.user.id;
+
+    const finishedGame = await this.multiplayerService.timeout(userId);
+
+    if (finishedGame) {
+      this.server
+        .to(`game:${finishedGame.id}`)
+        .emit('current_state', finishedGame);
+    }
+  }
 }

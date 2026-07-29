@@ -8,6 +8,7 @@ export const CLIENT_EVENTS = {
     JOIN_QUEUE: "join_queue",
     CANCEL_MATCH: "cancel_match",
     RESIGN: "resign",
+    TIMEOUT: "timeout",
 } as const
 
 export const SERVER_EVENTS = {
@@ -53,6 +54,7 @@ export type ClientToServerEvents = {
     [CLIENT_EVENTS.JOIN_QUEUE]: (p: IGame) => void
     [CLIENT_EVENTS.CANCEL_MATCH]: () => void
     [CLIENT_EVENTS.RESIGN]: () => void
+    [CLIENT_EVENTS.TIMEOUT]: () => void
 }
 
 // Utility Types

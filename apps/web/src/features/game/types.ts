@@ -22,7 +22,7 @@ export interface ClockState {
 
 export type PromotionPiece = "q" | "r" | "b" | "n"
 
-export interface LastMove {
+export interface MoveType {
     from: Square
     to: Square
     promotion?: PromotionPiece
@@ -35,12 +35,22 @@ export interface CapturedPieces {
     black: CapturedPiece[]
 }
 
+type Action =
+    | {
+          type: "move"
+          move: MoveType
+      }
+    | {
+          type: "timeout"
+      }
+
 export interface GameState {
     // core
     chess: Chess
     fen: string
     mode: GameMode
     status: Status
+    lastAction: null | Action
 
     // players
     playerColor: PieceColor | null
@@ -49,7 +59,7 @@ export interface GameState {
 
     // moves
     moveHistory: Move[]
-    lastMove: LastMove | null
+    lastMove: MoveType | null
     viewIndex: number | null
     displayFen: string
 
