@@ -1,13 +1,21 @@
 import { ActionButton } from "@/components/ui/action-button"
 import HistoryController from "@/features/game/components/history-controller"
 import { useSocket } from "@/features/multiplayer/hooks/use-socket"
-import { Flag } from "lucide-react"
+import { Flag, Handshake } from "lucide-react"
 
 export default function MultiplayerControls() {
     const socket = useSocket()
 
     async function handleResign() {
         socket.emit("resign")
+
+        return {
+            error: false,
+        }
+    }
+
+    async function handleDraw() {
+        socket.emit("request_draw")
 
         return {
             error: false,
@@ -35,6 +43,17 @@ export default function MultiplayerControls() {
                 >
                     <Flag />
                     Resign
+                </ActionButton>
+                <ActionButton
+                    className="cursor-pointer font-semibold max-w-70 w-full"
+                    action={handleDraw}
+                    requireAreYouSure
+                    areYouSureTitle="Request A Draw"
+                    areYouSureDescription="Are you sure?"
+                    variant={"outline"}
+                >
+                    <Handshake />
+                    Draw
                 </ActionButton>
             </div>
             <HistoryController />

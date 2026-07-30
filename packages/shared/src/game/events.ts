@@ -1,5 +1,11 @@
 import { Game, IGame } from "../validation"
-import { GameTimestamps, GameWithPlayers, MoveType, SMove } from "./types"
+import {
+    DrawRequest,
+    GameTimestamps,
+    GameWithPlayers,
+    MoveType,
+    SMove,
+} from "./types"
 
 export const CLIENT_EVENTS = {
     MOVE: "move",
@@ -9,6 +15,9 @@ export const CLIENT_EVENTS = {
     CANCEL_MATCH: "cancel_match",
     RESIGN: "resign",
     TIMEOUT: "timeout",
+    RQUEST_DRAW: "request_draw",
+    ACCEPT_DRAW: "accept_draw",
+    REJECT_DRAW: "reject_draw",
 } as const
 
 export const SERVER_EVENTS = {
@@ -18,6 +27,7 @@ export const SERVER_EVENTS = {
     CURRENT_STATE: "current_state",
     OPPONENT_STATUS_CHANGED: "opponent_status_changed",
     QUEUE_JOINED: "queue_joined",
+    DRAW_REQUEST: "draw_request",
 } as const
 
 export const SOCKET_EVENTS = {
@@ -45,6 +55,7 @@ export type ServerToClientEvents = {
         status: "connected" | "disconnected"
     }) => void
     [SERVER_EVENTS.QUEUE_JOINED]: (p: { gameId: string }) => void
+    [SERVER_EVENTS.DRAW_REQUEST]: (p: DrawRequest) => void
 }
 
 export type MoveAck = (
@@ -68,6 +79,9 @@ export type ClientToServerEvents = {
     [CLIENT_EVENTS.CANCEL_MATCH]: () => void
     [CLIENT_EVENTS.RESIGN]: () => void
     [CLIENT_EVENTS.TIMEOUT]: () => void
+    [CLIENT_EVENTS.RQUEST_DRAW]: () => void
+    [CLIENT_EVENTS.ACCEPT_DRAW]: () => void
+    [CLIENT_EVENTS.REJECT_DRAW]: () => void
 }
 
 // Utility Types

@@ -12,6 +12,11 @@ type Players = {
     black: { username: string; image: string | null }
 }
 
+export type DrawRequest = {
+    requestDraw: "w" | "b"
+    requestedDrawAt: Date
+}
+
 export type PreparingGame = Omit<
     typeof games.$inferSelect,
     "status" | "blackId"
@@ -25,11 +30,16 @@ export type PlayingGame = Omit<PreparingGame, "status" | "gameStartedAt"> & {
     gameStartedAt: number
 }
 
+export type DrawingGame = Omit<PlayingGame, "requestDraw" | "requestDrawAt"> &
+    DrawRequest
+
 export type MatchedGame = PreparingGame | PlayingGame
 
 export type MatchedGameWithPlayers = MatchedGame & Players
 
 export type PlayingGameWithPlayers = PlayingGame & Players
+
+export type DrawingGameWithPlayers = DrawingGame & Players
 
 export type FinishedGame = Omit<
     PlayingGame,

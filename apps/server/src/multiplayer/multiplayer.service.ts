@@ -6,6 +6,7 @@ import { games, moves, PromotionPiece, userStats } from '@bchess/db/tables';
 import { and, asc, eq, inArray, ne, or, sql } from 'drizzle-orm';
 import {
     checkGameEnd,
+    DrawingGameWithPlayers,
     FinishedGame,
     FinishedGameWithPlayers,
     MatchedGame,
@@ -230,6 +231,107 @@ export class MultiplayerService {
         });
     }
 
+    async requestDraw(userId: string): Promise<DrawingGameWithPlayers | null> {
+        const playingGame = await this.getPlayingGameWithPlayers(userId);
+
+        if (!playingGame) return null;
+
+        // validation
+
+        const requestDrawAt = playingGame.requestedDrawAt?.getTime() ?? null;
+        const now = Date.now();
+        const COOLDOWN_MS = 30_000;
+
+        const isCooldown = requestDrawAt
+            ? requestDrawAt + COOLDOWN_MS < now
+            : false;
+
+        if (playingGame.requestDraw || isCooldown) return null;
+
+        const requester = playingGame.whiteId === userId ? 'w' : 'b';
+
+        return await this.db.transaction(async (tx) => {
+            const [newGame] = await tx
+                .update(games)
+                .set({
+                    requestDraw: requester,
+                    requestedDrawAt: new Date(),
+                })
+                .where(eq(games.id, playingGame.id))
+                .returning();
+
+            return {
+                ...newGame,
+                white: playingGame.white,
+                black: playingGame.black,
+            } as DrawingGameWithPlayers;
+        });
+    }
+
+    async draw(userId: string): Promise<FinishedGameWithPlayers | null> {
+        const playingGame = await this.getPlayingGameWithPlayers(userId);
+
+        if (!playingGame || !playingGame.requestDraw) return null;
+
+        const userColor = playingGame.whiteId === userId ? 'w' : 'b';
+
+        if (playingGame.requestDraw === userColor) {
+            throw new Error("You can't accept your own draw request!");
+        }
+
+        return await this.db.transaction(async (tx) => {
+            const [finishedGame] = await tx
+                .update(games)
+                .set({
+                    status: 'finished',
+                    gameOverReason: 'Agreement',
+                    result: 'draw',
+                })
+                .where(eq(games.id, playingGame.id))
+                .returning();
+
+            await tx
+                .update(userStats)
+                .set({
+                    draws: sql`${userStats.draws} + 1`,
+                })
+                .where(
+                    inArray(userStats.userId, [
+                        playingGame.whiteId,
+                        playingGame.blackId,
+                    ]),
+                );
+
+            return {
+                ...finishedGame,
+                white: playingGame.white,
+                black: playingGame.black,
+            } as FinishedGameWithPlayers;
+        });
+    }
+
+    async rejectDraw(userId: string): Promise<PlayingGameWithPlayers | null> {
+        const playingGame = await this.getPlayingGameWithPlayers(userId);
+
+        if (!playingGame || !playingGame.requestDraw) return null;
+
+        return await this.db.transaction(async (tx) => {
+            const [newGame] = await tx
+                .update(games)
+                .set({
+                    requestDraw: null,
+                })
+                .where(eq(games.id, playingGame.id))
+                .returning();
+
+            return {
+                ...newGame,
+                white: playingGame.white,
+                black: playingGame.black,
+            } as PlayingGameWithPlayers;
+        });
+    }
+
     async timeout(userId: string): Promise<FinishedGameWithPlayers | null> {
         const playingGame = await this.getPlayingGameWithPlayers(userId);
 
@@ -354,6 +456,8 @@ export class MultiplayerService {
                     result: result,
                     currentFen: chess.fen(),
                     currentTurn: chess.turn(),
+                    requestDraw: null,
+                    requestedDrawAt: null,
                     ...newTimestamps,
                 })
                 .where(eq(games.id, game.id))

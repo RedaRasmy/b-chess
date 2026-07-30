@@ -16,6 +16,7 @@ import { auth } from '../auth/auth';
 import { MoveDto } from './dto/move.dto';
 import { CreateGameDto } from './dto/create-game.dto';
 import {
+    CLIENT_EVENTS,
     type ClientToServerEvents,
     type MoveAck,
     type ServerToClientEvents,
@@ -101,7 +102,7 @@ export class MultiplayerGateway
         }
     }
 
-    @SubscribeMessage('join_queue')
+    @SubscribeMessage(CLIENT_EVENTS.JOIN_QUEUE)
     async handleJoinQueue(
         @ConnectedSocket() socket: TypedSocket,
         @MessageBody() payload: CreateGameDto,
@@ -124,13 +125,13 @@ export class MultiplayerGateway
         }
     }
 
-    @SubscribeMessage('cancel_match')
+    @SubscribeMessage(CLIENT_EVENTS.CANCEL_MATCH)
     async handleCancelMatch(@ConnectedSocket() socket: TypedSocket) {
         await this.multiplayerService.deleteMatch(socket.data.user.id);
         console.log('match deleted');
     }
 
-    @SubscribeMessage('join_game')
+    @SubscribeMessage(CLIENT_EVENTS.JOIN_GAME)
     async joinGame(@ConnectedSocket() socket: TypedSocket) {
         const userId = socket.data.user.id;
         const ongoingGame =
@@ -165,7 +166,7 @@ export class MultiplayerGateway
         }
     }
 
-    @SubscribeMessage('move')
+    @SubscribeMessage(CLIENT_EVENTS.MOVE)
     async handleMove(
         @MessageBody() moveDto: MoveDto,
         @ConnectedSocket() socket: TypedSocket,
@@ -235,7 +236,7 @@ export class MultiplayerGateway
         }
     }
 
-    @SubscribeMessage('sync_game')
+    @SubscribeMessage(CLIENT_EVENTS.SYNC_GAME)
     async sync(@ConnectedSocket() socket: TypedSocket) {
         const userId = socket.data.user.id;
         const ongoingGame =
@@ -246,7 +247,7 @@ export class MultiplayerGateway
         }
     }
 
-    @SubscribeMessage('resign')
+    @SubscribeMessage(CLIENT_EVENTS.RESIGN)
     async handleResign(@ConnectedSocket() socket: TypedSocket) {
         const userId = socket.data.user.id;
 
@@ -261,7 +262,7 @@ export class MultiplayerGateway
         }
     }
 
-    @SubscribeMessage('timeout')
+    @SubscribeMessage(CLIENT_EVENTS.TIMEOUT)
     async handleTimeout(@ConnectedSocket() socket: TypedSocket) {
         const userId = socket.data.user.id;
 
@@ -273,6 +274,44 @@ export class MultiplayerGateway
                 .emit('current_state', finishedGame);
 
             currentGames.delete(finishedGame.id);
+        }
+    }
+
+    @SubscribeMessage(CLIENT_EVENTS.RQUEST_DRAW)
+    async handleDrawRequest(@ConnectedSocket() socket: TypedSocket) {
+        const userId = socket.data.user.id;
+
+        const newGame = await this.multiplayerService.requestDraw(userId);
+
+        if (newGame) {
+            this.server.to(`game:${newGame.id}`).emit('draw_request', {
+                requestDraw: newGame.requestDraw,
+                requestedDrawAt: newGame.requestedDrawAt,
+            });
+        }
+    }
+
+    @SubscribeMessage(CLIENT_EVENTS.ACCEPT_DRAW)
+    async handleDraw(@ConnectedSocket() socket: TypedSocket) {
+        const userId = socket.data.user.id;
+
+        const finishedGame = await this.multiplayerService.draw(userId);
+
+        if (finishedGame) {
+            this.server
+                .to(`game:${finishedGame.id}`)
+                .emit('current_state', finishedGame);
+        }
+    }
+
+    @SubscribeMessage(CLIENT_EVENTS.REJECT_DRAW)
+    async handleDrawRejection(@ConnectedSocket() socket: TypedSocket) {
+        const userId = socket.data.user.id;
+
+        const newGame = await this.multiplayerService.rejectDraw(userId);
+
+        if (newGame) {
+            // this.server.to(`game:${newGame.id}`).emit('current_state', newGame);
         }
     }
 }

@@ -3,6 +3,7 @@ import GameBoard from "@/features/game/components/game-board"
 import PlayerInfo from "@/features/game/components/player-info"
 import { useGameStore } from "@/features/game/game-store"
 import { getColor } from "@/features/game/utils/get-color"
+import DrawRequestDialog from "@/features/multiplayer/components/draw-request-dialog"
 import MultiplayerEndDialog from "@/features/multiplayer/components/multiplayer-end-dialog"
 import MultiplayerControls from "@/features/multiplayer/components/mutiplayer-controls"
 import { useSocket } from "@/features/multiplayer/hooks/use-socket"
@@ -129,6 +130,7 @@ export default function Page() {
     return (
         <div className="flex flex-wrap w-full h-full gap-3 lg:gap-5 xl:gap-8">
             <MultiplayerEndDialog />
+            <DrawRequestDialog />
             <div className="flex-auto flex justify-center items-center">
                 <div className="flex flex-col w-full max-w-[75vh] gap-2 px-1">
                     <PlayerInfo color={opponentColor} />

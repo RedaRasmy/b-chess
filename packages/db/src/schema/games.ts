@@ -6,6 +6,7 @@ import {
     text,
     integer,
     bigint,
+    timestamp,
 } from "drizzle-orm/pg-core"
 import { relations } from "drizzle-orm"
 import { timestamps } from "../timestamps"
@@ -36,6 +37,8 @@ export const games = pgTable("games", {
     gameStartedAt: bigint("game_started_at", { mode: "number" }),
     whiteReady: boolean("white_ready").default(false).notNull(),
     blackReady: boolean("black_ready").default(false).notNull(),
+    requestDraw: colorsEnum("request_draw"),
+    requestedDrawAt: timestamp("requested_draw_at"),
     ...timestamps,
 })
 
