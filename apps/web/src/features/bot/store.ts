@@ -140,6 +140,7 @@ export const useBotStore = create<BotState>((set, get) => ({
         const humanPlayer = player ?? {
             id: "player",
             username: "You",
+            avatar: null,
         }
 
         game.resetGame()
