@@ -55,7 +55,7 @@ export default function BotOptions() {
     }
 
     return (
-        <div className="grid py-2 items-center overflow-auto w-full px-2 xl:px-20 ">
+        <div className="grid py-2 items-center overflow-auto w-full px-2 xl:px-20 h-full">
             <Card className="px-4 py-6 md:space-y-2 w-full xl:px-10 ">
                 <CardHeader>
                     <h1 className="text-2xl font-semibold flex gap-3 items-center">
