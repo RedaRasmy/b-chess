@@ -2,8 +2,8 @@ import { Inject, Injectable } from '@nestjs/common';
 import { CreateGameDto } from './dto/create-game.dto';
 import { DATABASE_CONNECTION } from '../database/database.module';
 import { type Database } from '@bchess/db';
-import { games, moves, PromotionPiece } from '@bchess/db/tables';
-import { and, asc, eq, inArray, ne, or } from 'drizzle-orm';
+import { games, moves, PromotionPiece, userStats } from '@bchess/db/tables';
+import { and, asc, eq, inArray, ne, or, sql } from 'drizzle-orm';
 import {
     checkGameEnd,
     FinishedGame,
@@ -189,22 +189,45 @@ export class MultiplayerService {
 
         if (!playingGame) return null;
 
-        const [finishedGame] = await this.db
-            .update(games)
-            .set({
-                status: 'finished',
-                gameOverReason: 'Resignation',
-                result:
-                    playingGame.whiteId === userId ? 'black_won' : 'white_won',
-            })
-            .where(eq(games.id, playingGame.id))
-            .returning();
+        return await this.db.transaction(async (tx) => {
+            const [finishedGame] = await tx
+                .update(games)
+                .set({
+                    status: 'finished',
+                    gameOverReason: 'Resignation',
+                    result:
+                        playingGame.whiteId === userId
+                            ? 'black_won'
+                            : 'white_won',
+                })
+                .where(eq(games.id, playingGame.id))
+                .returning();
 
-        return {
-            ...finishedGame,
-            white: playingGame.white,
-            black: playingGame.black,
-        } as FinishedGameWithPlayers;
+            const winnerId =
+                playingGame.whiteId === userId
+                    ? playingGame.blackId
+                    : playingGame.whiteId;
+
+            await tx
+                .update(userStats)
+                .set({
+                    wins: sql`${userStats.wins} + 1`,
+                })
+                .where(eq(userStats.userId, winnerId));
+
+            await tx
+                .update(userStats)
+                .set({
+                    losses: sql`${userStats.losses} + 1`,
+                })
+                .where(eq(userStats.userId, userId));
+
+            return {
+                ...finishedGame,
+                white: playingGame.white,
+                black: playingGame.black,
+            } as FinishedGameWithPlayers;
+        });
     }
 
     async timeout(userId: string): Promise<FinishedGameWithPlayers | null> {
@@ -228,22 +251,52 @@ export class MultiplayerService {
 
         // Action
 
-        const [finishedGame] = await this.db
-            .update(games)
-            .set({
-                status: 'finished',
-                gameOverReason: 'Timeout',
-                result:
-                    playingGame.currentTurn === 'w' ? 'black_won' : 'white_won',
-            })
-            .where(eq(games.id, playingGame.id))
-            .returning();
+        return await this.db.transaction(async (tx) => {
+            // Update Game
 
-        return {
-            ...finishedGame,
-            white: playingGame.white,
-            black: playingGame.black,
-        } as FinishedGameWithPlayers;
+            const [finishedGame] = await tx
+                .update(games)
+                .set({
+                    status: 'finished',
+                    gameOverReason: 'Timeout',
+                    result:
+                        playingGame.currentTurn === 'w'
+                            ? 'black_won'
+                            : 'white_won',
+                })
+                .where(eq(games.id, playingGame.id))
+                .returning();
+
+            // Update Stats
+
+            const loserId =
+                playingGame.currentTurn === 'w'
+                    ? playingGame.whiteId
+                    : playingGame.blackId;
+            const winnerId =
+                playingGame.currentTurn === 'w'
+                    ? playingGame.blackId
+                    : playingGame.whiteId;
+
+            await tx
+                .update(userStats)
+                .set({
+                    wins: sql`${userStats.wins} + 1`,
+                })
+                .where(eq(userStats.userId, winnerId));
+
+            await tx
+                .update(userStats)
+                .set({
+                    losses: sql`${userStats.losses} + 1`,
+                })
+                .where(eq(userStats.userId, loserId));
+            return {
+                ...finishedGame,
+                white: playingGame.white,
+                black: playingGame.black,
+            } as FinishedGameWithPlayers;
+        });
     }
 
     async addMove(game: PlayingGame, move: Move, chess: Chess) {
@@ -305,6 +358,43 @@ export class MultiplayerService {
                 })
                 .where(eq(games.id, game.id))
                 .returning();
+
+            if (end) {
+                // Update Stats
+                const { result } = end;
+
+                const whiteChanges = {
+                    win: result === 'draw' ? 0 : result === 'white_won' ? 1 : 0,
+                    loss:
+                        result === 'draw' ? 0 : result === 'black_won' ? 1 : 0,
+                    draw: result === 'draw' ? 1 : 0,
+                };
+
+                const blackChanges = {
+                    win: result === 'draw' ? 0 : result === 'black_won' ? 1 : 0,
+                    loss:
+                        result === 'draw' ? 0 : result === 'white_won' ? 1 : 0,
+                    draw: result === 'draw' ? 1 : 0,
+                };
+
+                await tx
+                    .update(userStats)
+                    .set({
+                        wins: sql`${userStats.wins} + ${whiteChanges.win}`,
+                        losses: sql`${userStats.losses} + ${whiteChanges.loss}`,
+                        draws: sql`${userStats.draws} + ${whiteChanges.draw}`,
+                    })
+                    .where(eq(userStats.userId, game.whiteId));
+
+                await tx
+                    .update(userStats)
+                    .set({
+                        wins: sql`${userStats.wins} + ${blackChanges.win}`,
+                        losses: sql`${userStats.losses} + ${blackChanges.loss}`,
+                        draws: sql`${userStats.draws} + ${blackChanges.draw}`,
+                    })
+                    .where(eq(userStats.userId, game.blackId));
+            }
 
             return {
                 savedMove,
