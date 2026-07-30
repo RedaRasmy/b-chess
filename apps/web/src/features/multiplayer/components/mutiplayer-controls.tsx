@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button"
+import { ActionButton } from "@/components/ui/action-button"
 import HistoryController from "@/features/game/components/history-controller"
 import { useSocket } from "@/features/multiplayer/hooks/use-socket"
 import { Flag } from "lucide-react"
@@ -6,8 +6,12 @@ import { Flag } from "lucide-react"
 export default function MultiplayerControls() {
     const socket = useSocket()
 
-    function handleResign() {
+    async function handleResign() {
         socket.emit("resign")
+
+        return {
+            error: false,
+        }
     }
 
     return (
@@ -21,14 +25,17 @@ export default function MultiplayerControls() {
                     <RotateCcw />
                     Rematch
                 </Button> */}
-                <Button
+                <ActionButton
                     className="cursor-pointer font-semibold max-w-70 w-full"
-                    onClick={handleResign}
+                    action={handleResign}
+                    requireAreYouSure
+                    areYouSureTitle="Resignation"
+                    areYouSureDescription="Are you sure you want to resign?"
                     variant={"outline"}
                 >
                     <Flag />
                     Resign
-                </Button>
+                </ActionButton>
             </div>
             <HistoryController />
         </div>
