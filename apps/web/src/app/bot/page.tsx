@@ -26,7 +26,7 @@ export default function BotOptions() {
     const player = user
         ? {
               id: user.id,
-              avatar: user.image ?? undefined,
+              avatar: user.image ?? null,
               username: user.username ?? "You",
           }
         : undefined
