@@ -153,16 +153,22 @@ export class MultiplayerGateway
             );
             this.server
                 .to([`user:${newGame.whiteId}`, `user:${newGame.blackId}`])
-                .emit('current_state', {
+                .emit('sync', {
                     ...newGame,
                     white: ongoingGame.white,
                     black: ongoingGame.black,
+                    moves: [],
                 });
             if (newGame.status === 'playing') {
                 currentGames.set(newGame.id, new Chess());
             }
         } else {
-            this.server.to(`user:${userId}`).emit('current_state', ongoingGame);
+            const moves = await this.multiplayerService.getMoves(
+                ongoingGame.id,
+            );
+            this.server
+                .to(`user:${userId}`)
+                .emit('sync', { ...ongoingGame, moves });
         }
     }
 
@@ -236,17 +242,6 @@ export class MultiplayerGateway
         }
     }
 
-    @SubscribeMessage(CLIENT_EVENTS.SYNC_GAME)
-    async sync(@ConnectedSocket() socket: TypedSocket) {
-        const userId = socket.data.user.id;
-        const ongoingGame =
-            await this.multiplayerService.getMatchedGameWithPlayers(userId);
-
-        if (ongoingGame) {
-            this.server.to(`user:${userId}`).emit('current_state', ongoingGame);
-        }
-    }
-
     @SubscribeMessage(CLIENT_EVENTS.RESIGN)
     async handleResign(@ConnectedSocket() socket: TypedSocket) {
         const userId = socket.data.user.id;
@@ -256,7 +251,7 @@ export class MultiplayerGateway
         if (finishedGame) {
             this.server
                 .to(`game:${finishedGame.id}`)
-                .emit('current_state', finishedGame);
+                .emit('game_finished', finishedGame);
 
             currentGames.delete(finishedGame.id);
         }
@@ -271,7 +266,7 @@ export class MultiplayerGateway
         if (finishedGame) {
             this.server
                 .to(`game:${finishedGame.id}`)
-                .emit('current_state', finishedGame);
+                .emit('game_finished', finishedGame);
 
             currentGames.delete(finishedGame.id);
         }
@@ -300,7 +295,7 @@ export class MultiplayerGateway
         if (finishedGame) {
             this.server
                 .to(`game:${finishedGame.id}`)
-                .emit('current_state', finishedGame);
+                .emit('game_finished', finishedGame);
         }
     }
 
@@ -308,10 +303,6 @@ export class MultiplayerGateway
     async handleDrawRejection(@ConnectedSocket() socket: TypedSocket) {
         const userId = socket.data.user.id;
 
-        const newGame = await this.multiplayerService.rejectDraw(userId);
-
-        if (newGame) {
-            // this.server.to(`game:${newGame.id}`).emit('current_state', newGame);
-        }
+        await this.multiplayerService.rejectDraw(userId);
     }
 }

@@ -11,6 +11,7 @@ import {
     FinishedGameWithPlayers,
     MatchedGame,
     MatchedGameWithPlayers,
+    MoveType,
     parseTimerOption,
     PlayingGame,
     PlayingGameWithPlayers,
@@ -507,8 +508,8 @@ export class MultiplayerService {
         });
     }
 
-    async getMoves(gameId: string) {
-        return await this.db.query.moves.findMany({
+    async getMoves(gameId: string): Promise<MoveType[]> {
+        const data = await this.db.query.moves.findMany({
             where: (moves) => eq(moves.gameId, gameId),
             orderBy: asc(moves.createdAt),
             columns: {
@@ -517,5 +518,6 @@ export class MultiplayerService {
                 promotion: true,
             },
         });
+        return data as MoveType[];
     }
 }

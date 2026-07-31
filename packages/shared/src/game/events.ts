@@ -1,6 +1,8 @@
 import { Game, IGame } from "../validation"
 import {
     DrawRequest,
+    FinishedGame,
+    FullGame,
     GameTimestamps,
     GameWithPlayers,
     MoveType,
@@ -9,7 +11,6 @@ import {
 
 export const CLIENT_EVENTS = {
     MOVE: "move",
-    SYNC_GAME: "sync_game",
     JOIN_GAME: "join_game",
     JOIN_QUEUE: "join_queue",
     CANCEL_MATCH: "cancel_match",
@@ -24,10 +25,11 @@ export const SERVER_EVENTS = {
     EXCEPTION: "exception",
     GAME_FOUND: "game_found",
     NEW_MOVE: "new_move",
-    CURRENT_STATE: "current_state",
     OPPONENT_STATUS_CHANGED: "opponent_status_changed",
     QUEUE_JOINED: "queue_joined",
     DRAW_REQUEST: "draw_request",
+    SYNC: "sync",
+    GAME_FINISHED: "game_finished",
 } as const
 
 export const SOCKET_EVENTS = {
@@ -50,12 +52,13 @@ export type ServerToClientEvents = {
     ///
     [SERVER_EVENTS.GAME_FOUND]: (p: Game) => void
     [SERVER_EVENTS.NEW_MOVE]: (move: SMove) => void
-    [SERVER_EVENTS.CURRENT_STATE]: (game: GameWithPlayers) => void
+    [SERVER_EVENTS.SYNC]: (game: FullGame) => void
     [SERVER_EVENTS.OPPONENT_STATUS_CHANGED]: (p: {
         status: "connected" | "disconnected"
     }) => void
     [SERVER_EVENTS.QUEUE_JOINED]: (p: { gameId: string }) => void
     [SERVER_EVENTS.DRAW_REQUEST]: (p: DrawRequest) => void
+    [SERVER_EVENTS.GAME_FINISHED]: (p: FinishedGame) => void
 }
 
 export type MoveAck = (
@@ -73,7 +76,6 @@ export type MoveAck = (
 
 export type ClientToServerEvents = {
     [CLIENT_EVENTS.MOVE]: (p: MoveType, callback: MoveAck) => void
-    [CLIENT_EVENTS.SYNC_GAME]: () => void
     [CLIENT_EVENTS.JOIN_GAME]: () => void
     [CLIENT_EVENTS.JOIN_QUEUE]: (p: IGame) => void
     [CLIENT_EVENTS.CANCEL_MATCH]: () => void

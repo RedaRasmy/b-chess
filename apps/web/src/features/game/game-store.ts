@@ -1,7 +1,7 @@
 import { ClockState, GameState } from "@/features/game/types"
-import { getColor } from "@/features/game/utils/get-color"
+import { getColor, getColorName } from "@/features/game/utils/get-color"
 import { playSound } from "@/lib/sounds"
-import { checkGameEnd, PromotionPiece, Reason, Result } from "@bchess/shared"
+import { checkGameEnd, parseTimerOption, PromotionPiece } from "@bchess/shared"
 import { Chess, Square } from "chess.js"
 import { create } from "zustand"
 import { subscribeWithSelector } from "zustand/middleware"
@@ -138,7 +138,7 @@ export const useGameStore = create<GameState>()(
             set({ selectedSquare: square, legalMoves: moves })
         },
 
-        makeMove: (from, to, promotion = "q") => {
+        makeMove: (from, to, promotion = "q", ack = true) => {
             const { chess, clock, playerColor } = get()
 
             if (!playerColor) return null
@@ -193,12 +193,13 @@ export const useGameStore = create<GameState>()(
                     selectedSquare: null,
                     legalMoves: [],
                     clock: newClock,
-                    lastAction: isMyMove
-                        ? {
-                              type: "move",
-                              move: theMove,
-                          }
-                        : null,
+                    lastAction:
+                        isMyMove && ack
+                            ? {
+                                  type: "move",
+                                  move: theMove,
+                              }
+                            : null,
                 })
                 const end = checkGameEnd(chess)
                 if (end) {
@@ -367,6 +368,45 @@ export const useGameStore = create<GameState>()(
                     increment: clock.increment,
                 },
             })
+        },
+        syncGame: (game, playerColor) => {
+            get().resetGame()
+            get().setMode("multiplayer")
+            get().setPlayerColor(playerColor)
+            get().setStatus(game.status)
+
+            get().setPlayers(
+                {
+                    id: game.whiteId,
+                    username: game.white.username,
+                    avatar: game.white.image,
+                },
+                {
+                    id: game.blackId,
+                    username: game.black.username,
+                    avatar: game.black.image,
+                },
+            )
+
+            game.moves.forEach(({ from, to, promotion }) => {
+                get().makeMove(from, to, promotion, false)
+            })
+
+            const { plus } = parseTimerOption(game.timer)
+
+            set({
+                clock: {
+                    activeColor: getColorName(game.currentTurn),
+                    white: game.whiteTimeLeft,
+                    black: game.blackTimeLeft,
+                    lastTickAt: game.lastMoveAt ?? game.gameStartedAt,
+                    increment: plus * 1000,
+                },
+            })
+
+            if (game.gameOverReason && game.result) {
+                get().endGame(game.result, game.gameOverReason)
+            }
         },
     })),
 )

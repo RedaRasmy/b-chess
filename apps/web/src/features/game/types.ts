@@ -4,6 +4,7 @@ import {
     Reason,
     MoveType,
     GameTimestamps,
+    FullGame,
 } from "@bchess/shared"
 import { Chess, Move, Square } from "chess.js"
 
@@ -74,7 +75,12 @@ export interface GameState {
 
     // actions
     selectSquare: (square: Square) => void
-    makeMove: (from: Square, to: Square, promotion?: string) => Move | null
+    makeMove: (
+        from: Square,
+        to: Square,
+        promotion?: string,
+        ack?: boolean,
+    ) => Move | null
     setPosition: (fen: string) => void
     resetGame: () => void
     setPlayers: (white: PlayerInfo, black: PlayerInfo) => void
@@ -96,4 +102,5 @@ export interface GameState {
     undo: () => void
     rollback: (timestamps: GameTimestamps) => void
     syncTimer: (game: GameTimestamps) => void
+    syncGame: (game: FullGame, playerColor: PieceColor) => void
 }

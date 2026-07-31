@@ -1,6 +1,6 @@
 import { Reason, games, Result, PromotionPiece, moves } from "@bchess/db/tables"
 import { Square } from "chess.js"
-import { Merge } from "../types"
+import { Merge, Prettify } from "../types"
 
 export type ChessTimer = {
     type: "bullet" | "blitz" | "rapid"
@@ -64,6 +64,8 @@ export interface MoveType {
 }
 
 export type SMove = typeof moves.$inferInsert
+
+export type FullGame = Prettify<GameWithPlayers & { moves: MoveType[] }>
 
 export type GameTimestamps = {
     whiteTimeLeft: number

@@ -9,7 +9,6 @@ import MultiplayerControls from "@/features/multiplayer/components/mutiplayer-co
 import { useSocket } from "@/features/multiplayer/hooks/use-socket"
 import { useSocketListener } from "@/features/multiplayer/hooks/use-socket-listener"
 import { authClient } from "@/lib/auth-client"
-import { parseTimerOption } from "@bchess/shared"
 import { Square } from "chess.js"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
@@ -58,43 +57,17 @@ export default function Page() {
         return () => unsubscribe()
     }, [socket])
 
-    useSocketListener("current_state", (game) => {
-        console.log("sync/ current state : ", game)
-
-        gameState.setMode("multiplayer")
-
+    useSocketListener("sync", (game) => {
+        console.log("sync/ full game: ", game)
         const playerColor = game.whiteId === userId ? "white" : "black"
 
-        if (game.status === "playing") {
-            const { base, plus } = parseTimerOption(game.timer)
-            gameState.startClock({
-                initial: base * 1000,
-                increment: plus * 1000,
-                lastTickAt: game.gameStartedAt,
-            })
-        }
+        gameState.syncGame(game, playerColor)
+    })
 
-        gameState.setPlayerColor(playerColor)
-        gameState.setPosition(game.currentFen)
+    useSocketListener("game_finished", (game) => {
+        console.log("game finished: ", game.result, game.gameOverReason)
 
-        gameState.setStatus(game.status)
-
-        gameState.setPlayers(
-            {
-                id: game.whiteId,
-                username: game.white.username,
-                avatar: game.white.image,
-            },
-            {
-                id: game.blackId,
-                username: game.black.username,
-                avatar: game.black.image,
-            },
-        )
-
-        if (game.status === "finished") {
-            gameState.endGame(game.result, game.gameOverReason)
-        }
+        gameState.endGame(game.result, game.gameOverReason)
     })
 
     useSocketListener("exception", ({ message }) => {
