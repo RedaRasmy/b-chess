@@ -74,3 +74,37 @@ export function formatMs(ms: number, precise = false) {
         ? `${minutes}:${String(seconds).padStart(2, "0")}.${tenths}`
         : `${minutes}:${String(seconds).padStart(2, "0")}`
 }
+
+export function winProbability(r1: number, r2: number) {
+    const power = (r2 - r1) / 400
+    return 1 / (1 + 10 ** power)
+}
+
+export function calcElo({
+    whiteRank,
+    blackRank,
+    result,
+}: {
+    whiteRank: number
+    blackRank: number
+    result: Result
+}) {
+    const K = 30
+    const pW = winProbability(whiteRank, blackRank)
+    const pB = winProbability(blackRank, whiteRank)
+
+    const sW = result === "draw" ? 0.5 : result === "white_won" ? 1 : 0
+    const sB = result === "draw" ? 0.5 : result === "black_won" ? 1 : 0
+
+    const whiteDiff = K * (sW - pW)
+    const blackDiff = K * (sB - pB)
+    const newWhiteRank = whiteRank + whiteDiff
+    const newBlackRank = blackRank + blackDiff
+
+    return {
+        newWhiteRank,
+        newBlackRank,
+        whiteDiff,
+        blackDiff,
+    }
+}
