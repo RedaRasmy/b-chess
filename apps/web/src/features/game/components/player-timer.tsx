@@ -1,6 +1,7 @@
 import { useGameStore } from "@/features/game/game-store"
 import { playSound } from "@/lib/sounds"
 import { cn } from "@/lib/utils"
+import { formatMs } from "@bchess/shared"
 import { useEffect, useRef, useState } from "react"
 
 export function PlayerTimer({ color }: { color: "white" | "black" }) {
@@ -45,14 +46,7 @@ export function PlayerTimer({ color }: { color: "white" | "black" }) {
         }
     }, [clock, status, color])
 
-    const minutes = Math.floor(ms / 60000)
-    const seconds = Math.floor((ms % 60000) / 1000)
-    const tenths = Math.floor((ms % 1000) / 100)
-
-    const display =
-        ms < 10000
-            ? `${minutes}:${String(seconds).padStart(2, "0")}.${tenths}`
-            : `${minutes}:${String(seconds).padStart(2, "0")}`
+    const display = formatMs(ms, ms < 10000)
 
     return (
         <span

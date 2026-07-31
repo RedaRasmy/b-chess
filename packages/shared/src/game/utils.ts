@@ -58,3 +58,19 @@ export function checkGameEnd(chess: Chess) {
     }
     return null
 }
+
+export function formatMs(ms: number, precise = false) {
+    const minutes = Math.floor(ms / 60000)
+    const seconds = Math.floor((ms % 60000) / 1000)
+    const tenths = Math.floor((ms % 1000) / 100)
+
+    if (minutes >= 60) {
+        const hours = Math.floor(minutes / 60)
+        const mins = minutes % 60
+        return `${hours}h ${mins}m`
+    }
+
+    return precise
+        ? `${minutes}:${String(seconds).padStart(2, "0")}.${tenths}`
+        : `${minutes}:${String(seconds).padStart(2, "0")}`
+}

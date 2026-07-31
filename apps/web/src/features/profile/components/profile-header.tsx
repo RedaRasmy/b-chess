@@ -13,15 +13,8 @@ export default function ProfileHeader({ username, stats }: Props) {
 
     const { losses, wins, draws } = stats
 
-    // const gamesPlayed = losses + wins + draws
-
-    // const winRate =
-    //     wins === 0 || gamesPlayed === 0
-    //         ? 0
-    //         : parseFloat(((wins / gamesPlayed) * 100).toFixed(2))
-
     return (
-        <Card className="px-6 py-5 w-full lg:w-xl my-auto space-y-2">
+        <Card className="px-6 py-5 w-full lg:w-xl xl:w-2xl space-y-2">
             <CardHeader>
                 <div className="flex gap-5 items-center justify-between">
                     <h1 className="text-2xl  font-semibold">{username}</h1>

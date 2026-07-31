@@ -1,5 +1,6 @@
 "use client"
 import LoadingPage from "@/components/loading-page"
+import GameHistory from "@/features/profile/components/game-history"
 import ProfileHeader from "@/features/profile/components/profile-header"
 import { fetchStats } from "@/features/profile/requests"
 import { authClient } from "@/lib/auth-client"
@@ -33,8 +34,9 @@ export default function Page() {
     console.log("session data :", session)
 
     return (
-        <div className="flex flex-col items-center h-full">
+        <div className="flex flex-col items-center overflow-auto gap-3 lg:gap-5 py-2 lg:py-4">
             <ProfileHeader username={session.user.username} stats={stats} />
+            <GameHistory />
         </div>
     )
 }

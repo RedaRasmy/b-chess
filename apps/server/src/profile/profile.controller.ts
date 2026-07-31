@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { ProfileService } from './profile.service';
 import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
 
@@ -7,7 +7,16 @@ export class ProfileController {
     constructor(private readonly profileService: ProfileService) {}
 
     @Get('stats')
-    getStats(@Session() session: UserSession) {
-        return this.profileService.getStats(session);
+    async getStats(@Session() session: UserSession) {
+        return await this.profileService.getStats(session);
+    }
+
+    @Get('/games')
+    async getGames(
+        @Session() session: UserSession,
+        @Query('page') page: number,
+        @Query('limit') limit: number,
+    ) {
+        return await this.profileService.getGames(session.user.id, page, limit);
     }
 }

@@ -1,4 +1,11 @@
-import { Reason, games, Result, PromotionPiece, moves } from "@bchess/db/tables"
+import {
+    Reason,
+    games,
+    Result,
+    PromotionPiece,
+    moves,
+    TimerOption,
+} from "@bchess/db/tables"
 import { Square } from "chess.js"
 import { Merge, Prettify } from "../types"
 
@@ -72,4 +79,17 @@ export type GameTimestamps = {
     blackTimeLeft: number
     gameStartedAt: number
     lastMoveAt: number | null
+}
+
+export type GameSummary = {
+    id: string
+    opponent: {
+        id: string
+        username: string
+        avatar: string | null
+    }
+    result: "win" | "loss" | "draw"
+    duration: number
+    reason: Reason
+    timer: TimerOption
 }
