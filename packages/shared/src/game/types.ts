@@ -1,5 +1,6 @@
 import { Reason, games, Result, PromotionPiece, moves } from "@bchess/db/tables"
 import { Square } from "chess.js"
+import { Merge } from "../types"
 
 export type ChessTimer = {
     type: "bullet" | "blitz" | "rapid"
@@ -17,21 +18,32 @@ export type DrawRequest = {
     requestedDrawAt: Date
 }
 
-export type PreparingGame = Omit<
+export type PreparingGame = Merge<
     typeof games.$inferSelect,
-    "status" | "blackId"
-> & {
-    status: "preparing"
-    blackId: string
-}
+    {
+        status: "preparing"
+        blackId: string
+    }
+>
 
-export type PlayingGame = Omit<PreparingGame, "status" | "gameStartedAt"> & {
-    status: "playing"
-    gameStartedAt: number
-}
+export type PlayingGame = Merge<
+    PreparingGame,
+    {
+        status: "playing"
+        gameStartedAt: number
+    }
+>
 
-export type DrawingGame = Omit<PlayingGame, "requestDraw" | "requestDrawAt"> &
-    DrawRequest
+export type FinishedGame = Merge<
+    PlayingGame,
+    {
+        status: "finished"
+        gameOverReason: Reason
+        result: Result
+    }
+>
+
+export type DrawingGame = Merge<PlayingGame, DrawRequest>
 
 export type MatchedGame = PreparingGame | PlayingGame
 
@@ -40,15 +52,6 @@ export type MatchedGameWithPlayers = MatchedGame & Players
 export type PlayingGameWithPlayers = PlayingGame & Players
 
 export type DrawingGameWithPlayers = DrawingGame & Players
-
-export type FinishedGame = Omit<
-    PlayingGame,
-    "status" | "gameOverReason" | "result"
-> & {
-    status: "finished"
-    gameOverReason: Reason
-    result: Result
-}
 
 export type FinishedGameWithPlayers = FinishedGame & Players
 
