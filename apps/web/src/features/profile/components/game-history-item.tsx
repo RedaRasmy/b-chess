@@ -1,4 +1,4 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import PlayerAvatar from "@/features/profile/components/player-avatar"
 import { cn } from "@/lib/utils"
 import { formatMs, GameSummary } from "@bchess/shared"
 import { Clock, Crown, Equal, Swords, X } from "lucide-react"
@@ -26,10 +26,6 @@ const resultConfig = {
         iconBg: "bg-muted",
     },
 } as const
-
-function initials(name: string) {
-    return name.slice(0, 2).toUpperCase()
-}
 
 function formatRatingDiff(diff: number) {
     if (diff === 0) return "0"
@@ -59,15 +55,10 @@ export function GameHistoryItem({ game }: { game: GameSummary }) {
             />
 
             {/* avatar */}
-            <Avatar className="h-10 w-10 shrink-0">
-                <AvatarImage
-                    src={game.opponent.avatar ?? "/images/default-avatar.jpg"}
-                    alt={game.opponent.username}
-                />
-                <AvatarFallback className="text-xs font-medium">
-                    {initials(game.opponent.username)}
-                </AvatarFallback>
-            </Avatar>
+            <PlayerAvatar
+                username={game.opponent.username}
+                avatar={game.opponent.avatar}
+            />
 
             {/* main content */}
             <div className="flex min-w-0 flex-1 flex-col gap-0.5">

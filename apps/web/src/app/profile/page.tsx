@@ -35,7 +35,11 @@ export default function Page() {
 
     return (
         <div className="flex flex-col items-center overflow-auto gap-3 lg:gap-5 py-2 lg:py-4">
-            <ProfileHeader username={session.user.username} stats={stats} />
+            <ProfileHeader
+                username={session.user.username}
+                stats={stats}
+                avatar={session.user.image}
+            />
             <GameHistory />
         </div>
     )

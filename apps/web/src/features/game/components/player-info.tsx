@@ -1,4 +1,3 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Color, PieceSymbol } from "chess.js"
 import { PlayerTimer } from "./player-timer"
 import { useGameStore } from "@/features/game/game-store"
@@ -6,6 +5,7 @@ import { getMaterialState } from "@/features/game/utils/get-material-state"
 import ChessPieceImage from "@/features/game/components/chess-piece-image"
 import { Skeleton } from "@/components/ui/skeleton"
 import { getOppositeColor } from "@/features/game/utils/get-color"
+import PlayerAvatar from "@/features/profile/components/player-avatar"
 
 export default function PlayerInfo({ color }: { color: Color | null }) {
     const { white, black, fen, clock } = useGameStore()
@@ -36,12 +36,11 @@ export default function PlayerInfo({ color }: { color: Color | null }) {
     return (
         <div className="bg-accent/70 rounded-sm flex items-center justify-between gap-3 px-2 py-2 w-full">
             <div className="flex items-center gap-2">
-                <Avatar>
-                    <AvatarImage
-                        src={player.avatar ?? "/images/default-avatar.jpg"}
-                    />
-                    <AvatarFallback>B</AvatarFallback>
-                </Avatar>
+                <PlayerAvatar
+                    className="size-8"
+                    username={player.username}
+                    avatar={player.avatar}
+                />
                 <p className="text-muted-foreground">{player.username}</p>
                 {player.rating !== undefined && (
                     <span className="text-primary/70 text-sm">
