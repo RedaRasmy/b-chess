@@ -39,6 +39,9 @@ export const games = pgTable("games", {
     blackReady: boolean("black_ready").default(false).notNull(),
     requestDraw: colorsEnum("request_draw"),
     requestedDrawAt: timestamp("requested_draw_at"),
+    whiteRating: integer("white_rating").notNull(),
+    blackRating: integer("black_rating"),
+    eloDiff: integer("elo_diff"),
     ...timestamps,
 })
 

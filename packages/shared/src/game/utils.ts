@@ -103,6 +103,7 @@ export function calcElo({
         newBlackRating,
         whiteDiff,
         blackDiff,
+        diff: Math.abs(whiteDiff),
     }
 }
 

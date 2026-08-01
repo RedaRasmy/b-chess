@@ -1,9 +1,9 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { HttpException, Inject, Injectable } from '@nestjs/common';
 import { CreateGameDto } from './dto/create-game.dto';
 import { DATABASE_CONNECTION } from '../database/database.module';
 import { type Database } from '@bchess/db';
 import { games, moves, PromotionPiece, userStats } from '@bchess/db/tables';
-import { and, asc, eq, inArray, ne, or, sql } from 'drizzle-orm';
+import { and, asc, between, eq, inArray, ne, or, sql } from 'drizzle-orm';
 import {
     calcElo,
     checkGameEnd,
@@ -24,55 +24,74 @@ export class MultiplayerService {
     constructor(@Inject(DATABASE_CONNECTION) private readonly db: Database) {}
 
     async findOrCreateMatch(dto: CreateGameDto, userId: string) {
+        const alreadyCreatedMatch = await this.db.query.games.findFirst({
+            where: (games) =>
+                and(eq(games.status, 'matching'), eq(games.whiteId, userId)),
+        });
+
+        if (alreadyCreatedMatch) {
+            return {
+                status: 'QUEUED',
+                game: alreadyCreatedMatch,
+            } as const;
+        }
+
+        const MAX_RATING_DIFF = 200;
+        const userStats = await this.db.query.userStats.findFirst({
+            where: (stats) => eq(stats.userId, userId),
+            columns: {
+                rating: true,
+            },
+        });
+
+        if (!userStats) throw new HttpException('User stats not found', 404);
+
+        const userRating = userStats.rating;
+
+        const minRating = userRating - MAX_RATING_DIFF;
+        const maxRating = userRating + MAX_RATING_DIFF;
+
         const match = await this.db.query.games.findFirst({
             where: (games) =>
                 and(
                     eq(games.status, 'matching'),
                     eq(games.timer, dto.timer),
                     ne(games.whiteId, userId),
+                    between(games.whiteRating, minRating, maxRating),
                 ),
         });
 
-        if (!match) {
-            const alreadyCreatedMatch = await this.db.query.games.findFirst({
-                where: (games) =>
-                    and(
-                        eq(games.status, 'matching'),
-                        eq(games.whiteId, userId),
-                    ),
-            });
-
-            if (alreadyCreatedMatch) {
-                return {
-                    status: 'QUEUED',
-                    game: alreadyCreatedMatch,
-                } as const;
-            }
-
-            const { base } = parseTimerOption(dto.timer);
-            const [newGame] = await this.db
-                .insert(games)
-                .values({
-                    timer: dto.timer,
-                    whiteId: userId,
-                    blackTimeLeft: base * 1000, // ms
-                    whiteTimeLeft: base * 1000,
+        if (match) {
+            const [game] = await this.db
+                .update(games)
+                .set({
+                    status: 'preparing',
+                    blackId: userId,
+                    blackRating: userRating,
                 })
+                .where(eq(games.id, match.id))
                 .returning();
-            return { status: 'QUEUED', game: newGame } as const;
+
+            return {
+                status: 'MATCH_FOUND',
+                game,
+                players: [match.whiteId, userId],
+            } as const;
         }
 
-        const [game] = await this.db
-            .update(games)
-            .set({ status: 'preparing', blackId: userId })
-            .where(eq(games.id, match.id))
+        const { base } = parseTimerOption(dto.timer);
+        const [newGame] = await this.db
+            .insert(games)
+            .values({
+                timer: dto.timer,
+                whiteId: userId,
+                blackTimeLeft: base * 1000, // ms
+                whiteTimeLeft: base * 1000,
+                whiteRating: userRating,
+            })
             .returning();
 
-        return {
-            status: 'MATCH_FOUND',
-            game,
-            players: [match.whiteId, userId],
-        } as const;
+        return { status: 'QUEUED', game: newGame } as const;
     }
 
     async getMatchedGameWithPlayers(
@@ -91,17 +110,11 @@ export class MultiplayerService {
                         username: true,
                         image: true,
                     },
-                    with: {
-                        stats: true,
-                    },
                 },
                 black: {
                     columns: {
                         username: true,
                         image: true,
-                    },
-                    with: {
-                        stats: true,
                     },
                 },
             },
@@ -180,17 +193,11 @@ export class MultiplayerService {
                         username: true,
                         image: true,
                     },
-                    with: {
-                        stats: true,
-                    },
                 },
                 black: {
                     columns: {
                         username: true,
                         image: true,
-                    },
-                    with: {
-                        stats: true,
                     },
                 },
             },
@@ -208,8 +215,8 @@ export class MultiplayerService {
             playingGame.whiteId === userId ? 'black_won' : 'white_won';
 
         const elo = calcElo({
-            whiteRating: playingGame.white.stats.rating,
-            blackRating: playingGame.black.stats.rating,
+            whiteRating: playingGame.whiteRating,
+            blackRating: playingGame.blackRating,
             result: result,
         });
 
@@ -220,6 +227,7 @@ export class MultiplayerService {
                     status: 'finished',
                     gameOverReason: 'Resignation',
                     result,
+                    eloDiff: elo.diff,
                 })
                 .where(eq(games.id, playingGame.id))
                 .returning();
@@ -314,8 +322,8 @@ export class MultiplayerService {
         const result = 'draw';
 
         const elo = calcElo({
-            whiteRating: playingGame.white.stats.rating,
-            blackRating: playingGame.black.stats.rating,
+            whiteRating: playingGame.whiteRating,
+            blackRating: playingGame.blackRating,
             result: result,
         });
 
@@ -326,6 +334,7 @@ export class MultiplayerService {
                     status: 'finished',
                     gameOverReason: 'Agreement',
                     result,
+                    eloDiff: elo.diff,
                 })
                 .where(eq(games.id, playingGame.id))
                 .returning();
@@ -411,8 +420,8 @@ export class MultiplayerService {
                 playingGame.currentTurn === 'w' ? 'black_won' : 'white_won';
 
             const elo = calcElo({
-                whiteRating: playingGame.white.stats.rating,
-                blackRating: playingGame.black.stats.rating,
+                whiteRating: playingGame.whiteRating,
+                blackRating: playingGame.blackRating,
                 result: result,
             });
 
@@ -422,6 +431,7 @@ export class MultiplayerService {
                     status: 'finished',
                     gameOverReason: 'Timeout',
                     result,
+                    eloDiff: elo.diff,
                 })
                 .where(eq(games.id, playingGame.id))
                 .returning();
@@ -517,6 +527,17 @@ export class MultiplayerService {
                 lastMoveAt: currentMoveAt,
             };
 
+            const whiteRating = game.whiteRating;
+            const blackRating = game.blackRating;
+
+            const elo =
+                result &&
+                calcElo({
+                    whiteRating,
+                    blackRating,
+                    result,
+                });
+
             const [newGame] = await tx
                 .update(games)
                 .set({
@@ -527,6 +548,7 @@ export class MultiplayerService {
                     currentTurn: chess.turn(),
                     requestDraw: null,
                     requestedDrawAt: null,
+                    eloDiff: elo?.diff,
                     ...newTimestamps,
                 })
                 .where(eq(games.id, game.id))
@@ -535,15 +557,6 @@ export class MultiplayerService {
             if (end) {
                 // Update Stats
                 const { result } = end;
-
-                const whiteRating = game.white.stats.rating;
-                const blackRating = game.black.stats.rating;
-
-                const elo = calcElo({
-                    whiteRating,
-                    blackRating,
-                    result,
-                });
 
                 const whiteChanges = {
                     win: result === 'draw' ? 0 : result === 'white_won' ? 1 : 0,
@@ -565,7 +578,7 @@ export class MultiplayerService {
                         wins: sql`${userStats.wins} + ${whiteChanges.win}`,
                         losses: sql`${userStats.losses} + ${whiteChanges.loss}`,
                         draws: sql`${userStats.draws} + ${whiteChanges.draw}`,
-                        rating: elo.newWhiteRating,
+                        rating: elo!.newWhiteRating,
                     })
                     .where(eq(userStats.userId, game.whiteId));
 
@@ -575,7 +588,7 @@ export class MultiplayerService {
                         wins: sql`${userStats.wins} + ${blackChanges.win}`,
                         losses: sql`${userStats.losses} + ${blackChanges.loss}`,
                         draws: sql`${userStats.draws} + ${blackChanges.draw}`,
-                        rating: elo.newBlackRating,
+                        rating: elo!.newBlackRating,
                     })
                     .where(eq(userStats.userId, game.blackId));
 

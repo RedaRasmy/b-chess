@@ -19,8 +19,8 @@ export type ChessTimer = {
 export type Stats = typeof userStats.$inferSelect
 
 type Players = {
-    white: { username: string; image: string | null; stats: Stats }
-    black: { username: string; image: string | null; stats: Stats }
+    white: { username: string; image: string | null }
+    black: { username: string; image: string | null }
 }
 
 export type DrawRequest = {
@@ -33,6 +33,7 @@ export type PreparingGame = Merge<
     {
         status: "preparing"
         blackId: string
+        blackRating: number
     }
 >
 
@@ -50,6 +51,7 @@ export type FinishedGame = Merge<
         status: "finished"
         gameOverReason: Reason
         result: Result
+        eloDiff: number
     }
 >
 
