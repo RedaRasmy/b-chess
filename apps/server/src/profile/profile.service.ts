@@ -76,6 +76,8 @@ export class ProfileService {
                 updatedAt: true,
                 gameStartedAt: true,
                 timer: true,
+                whiteEloDiff: true,
+                blackEloDiff: true,
             },
             with: {
                 white: {
@@ -106,6 +108,8 @@ export class ProfileService {
                 updatedAt,
                 result,
                 gameOverReason,
+                whiteEloDiff,
+                blackEloDiff,
                 ...game
             }) => {
                 const isWhite = userId === whiteId;
@@ -119,6 +123,8 @@ export class ProfileService {
                           ? 'win'
                           : 'loss';
 
+                const ratingDiff = isWhite ? whiteEloDiff! : blackEloDiff!;
+
                 return {
                     ...game,
                     opponent: {
@@ -129,6 +135,7 @@ export class ProfileService {
                     result: cleanResult,
                     duration,
                     reason: gameOverReason!,
+                    ratingDiff,
                 } as GameSummary;
             },
         );

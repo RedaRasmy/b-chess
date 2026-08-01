@@ -31,9 +31,21 @@ function initials(name: string) {
     return name.slice(0, 2).toUpperCase()
 }
 
+function formatRatingDiff(diff: number) {
+    if (diff === 0) return "0"
+    return diff > 0 ? `+${diff}` : `${diff}`
+}
+
 export function GameHistoryItem({ game }: { game: GameSummary }) {
     const config = resultConfig[game.result]
     const Icon = config.icon
+
+    const diffColor =
+        game.ratingDiff > 0
+            ? "text-emerald-600 dark:text-emerald-400"
+            : game.ratingDiff < 0
+              ? "text-rose-600 dark:text-rose-400"
+              : "text-muted-foreground"
 
     return (
         <div className="group relative flex items-center gap-4 overflow-hidden rounded-lg border bg-card py-3 pl-4 pr-4 transition-colors hover:bg-accent/50">
@@ -70,10 +82,10 @@ export function GameHistoryItem({ game }: { game: GameSummary }) {
                         {game.timer}
                     </span>
 
-                    <>
+                    <div className="hidden xs:flex">
                         <span className="text-muted-foreground/40">·</span>
                         <span className="truncate">{game.reason}</span>
-                    </>
+                    </div>
                 </div>
             </div>
 
@@ -82,6 +94,16 @@ export function GameHistoryItem({ game }: { game: GameSummary }) {
                 <Clock className="h-3 w-3" />
                 {formatMs(game.duration)}
             </div>
+
+            {/* rating diff */}
+            <span
+                className={cn(
+                    "shrink-0 text-xs font-semibold tabular-nums",
+                    diffColor,
+                )}
+            >
+                {formatRatingDiff(game.ratingDiff)}
+            </span>
 
             {/* result */}
             <div
@@ -92,7 +114,7 @@ export function GameHistoryItem({ game }: { game: GameSummary }) {
                 )}
             >
                 <Icon className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">{config.label}</span>
+                <span className="hidden xxs:inline">{config.label}</span>
             </div>
         </div>
     )

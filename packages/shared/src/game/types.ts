@@ -51,7 +51,8 @@ export type FinishedGame = Merge<
         status: "finished"
         gameOverReason: Reason
         result: Result
-        eloDiff: number
+        whiteEloDiff: number
+        blackEloDiff: number
     }
 >
 
@@ -97,4 +98,5 @@ export type GameSummary = {
     duration: number
     reason: Reason
     timer: TimerOption
+    ratingDiff: number
 }

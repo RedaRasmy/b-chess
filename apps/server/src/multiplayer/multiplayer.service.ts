@@ -227,7 +227,8 @@ export class MultiplayerService {
                     status: 'finished',
                     gameOverReason: 'Resignation',
                     result,
-                    eloDiff: elo.diff,
+                    whiteEloDiff: elo.whiteDiff,
+                    blackEloDiff: elo.blackDiff,
                 })
                 .where(eq(games.id, playingGame.id))
                 .returning();
@@ -334,7 +335,8 @@ export class MultiplayerService {
                     status: 'finished',
                     gameOverReason: 'Agreement',
                     result,
-                    eloDiff: elo.diff,
+                    whiteEloDiff: elo.whiteDiff,
+                    blackEloDiff: elo.blackDiff,
                 })
                 .where(eq(games.id, playingGame.id))
                 .returning();
@@ -431,7 +433,8 @@ export class MultiplayerService {
                     status: 'finished',
                     gameOverReason: 'Timeout',
                     result,
-                    eloDiff: elo.diff,
+                    whiteEloDiff: elo.whiteDiff,
+                    blackEloDiff: elo.blackDiff,
                 })
                 .where(eq(games.id, playingGame.id))
                 .returning();
@@ -541,6 +544,7 @@ export class MultiplayerService {
             const [newGame] = await tx
                 .update(games)
                 .set({
+                    ...newTimestamps,
                     status: end ? 'finished' : 'playing',
                     gameOverReason: reason,
                     result: result,
@@ -548,8 +552,8 @@ export class MultiplayerService {
                     currentTurn: chess.turn(),
                     requestDraw: null,
                     requestedDrawAt: null,
-                    eloDiff: elo?.diff,
-                    ...newTimestamps,
+                    whiteEloDiff: elo?.whiteDiff,
+                    blackEloDiff: elo?.blackDiff,
                 })
                 .where(eq(games.id, game.id))
                 .returning();

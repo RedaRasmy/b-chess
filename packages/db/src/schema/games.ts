@@ -41,7 +41,8 @@ export const games = pgTable("games", {
     requestedDrawAt: timestamp("requested_draw_at"),
     whiteRating: integer("white_rating").notNull(),
     blackRating: integer("black_rating"),
-    eloDiff: integer("elo_diff"),
+    whiteEloDiff: integer("white_elo_diff"),
+    blackEloDiff: integer("black_elo_diff"),
     ...timestamps,
 })
 
