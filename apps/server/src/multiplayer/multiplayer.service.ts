@@ -208,8 +208,8 @@ export class MultiplayerService {
             playingGame.whiteId === userId ? 'black_won' : 'white_won';
 
         const elo = calcElo({
-            whiteRank: playingGame.white.stats.rank,
-            blackRank: playingGame.black.stats.rank,
+            whiteRating: playingGame.white.stats.rating,
+            blackRating: playingGame.black.stats.rating,
             result: result,
         });
 
@@ -240,7 +240,7 @@ export class MultiplayerService {
                 .update(userStats)
                 .set({
                     wins: sql`${userStats.wins} + 1`,
-                    rank: sql`GREATEST(0, ${userStats.rank} + ${winnerDiff})`,
+                    rating: sql`GREATEST(0, ${userStats.rating} + ${winnerDiff})`,
                 })
                 .where(eq(userStats.userId, winnerId));
 
@@ -248,7 +248,7 @@ export class MultiplayerService {
                 .update(userStats)
                 .set({
                     losses: sql`${userStats.losses} + 1`,
-                    rank: sql`GREATEST(0, ${userStats.rank} + ${userDiff})`,
+                    rating: sql`GREATEST(0, ${userStats.rating} + ${userDiff})`,
                 })
                 .where(eq(userStats.userId, userId));
 
@@ -314,8 +314,8 @@ export class MultiplayerService {
         const result = 'draw';
 
         const elo = calcElo({
-            whiteRank: playingGame.white.stats.rank,
-            blackRank: playingGame.black.stats.rank,
+            whiteRating: playingGame.white.stats.rating,
+            blackRating: playingGame.black.stats.rating,
             result: result,
         });
 
@@ -334,9 +334,9 @@ export class MultiplayerService {
                 .update(userStats)
                 .set({
                     draws: sql`${userStats.draws} + 1`,
-                    rank: sql`GREATEST(
+                    rating: sql`GREATEST(
                         0,
-                        ${userStats.rank} + CASE
+                        ${userStats.rating} + CASE
                             WHEN ${userStats.userId} = ${playingGame.whiteId}
                             THEN ${elo.whiteDiff}
                             ELSE ${elo.blackDiff}
@@ -411,8 +411,8 @@ export class MultiplayerService {
                 playingGame.currentTurn === 'w' ? 'black_won' : 'white_won';
 
             const elo = calcElo({
-                whiteRank: playingGame.white.stats.rank,
-                blackRank: playingGame.black.stats.rank,
+                whiteRating: playingGame.white.stats.rating,
+                blackRating: playingGame.black.stats.rating,
                 result: result,
             });
 
@@ -448,7 +448,7 @@ export class MultiplayerService {
                 .update(userStats)
                 .set({
                     wins: sql`${userStats.wins} + 1`,
-                    rank: sql`GREATEST(0, ${userStats.rank} + ${winnerDiff})`,
+                    rating: sql`GREATEST(0, ${userStats.rating} + ${winnerDiff})`,
                 })
                 .where(eq(userStats.userId, winnerId));
 
@@ -456,7 +456,7 @@ export class MultiplayerService {
                 .update(userStats)
                 .set({
                     losses: sql`${userStats.losses} + 1`,
-                    rank: sql`GREATEST(0, ${userStats.rank} + ${loserDiff})`,
+                    rating: sql`GREATEST(0, ${userStats.rating} + ${loserDiff})`,
                 })
                 .where(eq(userStats.userId, loserId));
             return {
@@ -536,12 +536,12 @@ export class MultiplayerService {
                 // Update Stats
                 const { result } = end;
 
-                const whiteRank = game.white.stats.rank;
-                const blackRank = game.black.stats.rank;
+                const whiteRating = game.white.stats.rating;
+                const blackRating = game.black.stats.rating;
 
                 const elo = calcElo({
-                    whiteRank,
-                    blackRank,
+                    whiteRating,
+                    blackRating,
                     result,
                 });
 
@@ -565,7 +565,7 @@ export class MultiplayerService {
                         wins: sql`${userStats.wins} + ${whiteChanges.win}`,
                         losses: sql`${userStats.losses} + ${whiteChanges.loss}`,
                         draws: sql`${userStats.draws} + ${whiteChanges.draw}`,
-                        rank: sql`GREATEST(0, ${userStats.rank} + ${elo.whiteDiff})`,
+                        rating: elo.newWhiteRating,
                     })
                     .where(eq(userStats.userId, game.whiteId));
 
@@ -575,7 +575,7 @@ export class MultiplayerService {
                         wins: sql`${userStats.wins} + ${blackChanges.win}`,
                         losses: sql`${userStats.losses} + ${blackChanges.loss}`,
                         draws: sql`${userStats.draws} + ${blackChanges.draw}`,
-                        rank: sql`GREATEST(0, ${userStats.rank} + ${elo.blackDiff})`,
+                        rating: elo.newBlackRating,
                     })
                     .where(eq(userStats.userId, game.blackId));
 

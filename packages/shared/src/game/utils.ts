@@ -81,22 +81,22 @@ export function winProbability(r1: number, r2: number) {
 }
 
 export function calcElo({
-    whiteRank,
-    blackRank,
+    whiteRating,
+    blackRating,
     result,
 }: {
-    whiteRank: number
-    blackRank: number
+    whiteRating: number
+    blackRating: number
     result: Result
 }) {
     const K = 30
-    const pW = winProbability(whiteRank, blackRank)
+    const pW = winProbability(whiteRating, blackRating)
     const sW = result === "draw" ? 0.5 : result === "white_won" ? 1 : 0
 
     const whiteDiff = Math.round(K * (sW - pW))
     const blackDiff = -whiteDiff
-    const newWhiteRating = Math.max(0, whiteRank + whiteDiff)
-    const newBlackRating = Math.max(0, blackRank + blackDiff)
+    const newWhiteRating = Math.max(0, whiteRating + whiteDiff)
+    const newBlackRating = Math.max(0, blackRating + blackDiff)
 
     return {
         newWhiteRating,
