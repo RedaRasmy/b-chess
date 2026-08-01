@@ -55,6 +55,8 @@ export interface GameState {
     playerColor: PieceColor | null
     white: PlayerInfo | null
     black: PlayerInfo | null
+    whiteEloDiff: number | null
+    blackEloDiff: number | null
 
     // moves
     moveHistory: Move[]
@@ -87,7 +89,14 @@ export interface GameState {
     setPlayerColor: (color: PieceColor) => void
     setStatus: (status: Status) => void
     setMode: (mode: GameMode) => void
-    endGame: (result: Result, reason: Reason) => void
+    endGame: (
+        result: Result,
+        reason: Reason,
+        elo?: {
+            whiteEloDiff: number
+            blackEloDiff: number
+        },
+    ) => void
     startClock: (timeControl?: {
         initial: number
         increment: number

@@ -33,6 +33,8 @@ export const useGameStore = create<GameState>()(
         clock: DEFAULT_CLOCK,
         viewIndex: null,
         displayFen: new Chess().fen(),
+        whiteEloDiff: null,
+        blackEloDiff: null,
 
         undo: () => {
             const { chess, playerColor, mode, status } = get()
@@ -251,7 +253,7 @@ export const useGameStore = create<GameState>()(
         setStatus: (status) => set({ status }),
         setMode: (mode) => set({ mode }),
 
-        endGame: (result, reason) => {
+        endGame: (result, reason, elo) => {
             const { clock } = get()
 
             const lastActionWrapper =
@@ -267,6 +269,8 @@ export const useGameStore = create<GameState>()(
                 result,
                 endReason: reason,
                 status: "finished",
+                whiteEloDiff: elo?.whiteEloDiff ?? null,
+                blackEloDiff: elo?.blackEloDiff ?? null,
                 clock: clock
                     ? {
                           ...clock,

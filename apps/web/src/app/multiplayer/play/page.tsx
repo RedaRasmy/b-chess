@@ -67,7 +67,10 @@ export default function Page() {
     useSocketListener("game_finished", (game) => {
         console.log("game finished: ", game.result, game.reason)
 
-        gameState.endGame(game.result, game.reason)
+        gameState.endGame(game.result, game.reason, {
+            whiteEloDiff: game.whiteDiff,
+            blackEloDiff: game.blackDiff,
+        })
     })
 
     useSocketListener("exception", ({ message, code }) => {

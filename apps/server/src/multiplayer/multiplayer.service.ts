@@ -249,7 +249,7 @@ export class MultiplayerService {
                 .update(userStats)
                 .set({
                     wins: sql`${userStats.wins} + 1`,
-                    rating: sql`GREATEST(0, ${userStats.rating} + ${winnerDiff})`,
+                    rating: sql`GREATEST(0, ${userStats.rating} + ${winnerDiff}::integer)`,
                 })
                 .where(eq(userStats.userId, winnerId));
 
@@ -257,7 +257,7 @@ export class MultiplayerService {
                 .update(userStats)
                 .set({
                     losses: sql`${userStats.losses} + 1`,
-                    rating: sql`GREATEST(0, ${userStats.rating} + ${userDiff})`,
+                    rating: sql`GREATEST(0, ${userStats.rating} + ${userDiff}::integer)`,
                 })
                 .where(eq(userStats.userId, userId));
 
@@ -341,6 +341,8 @@ export class MultiplayerService {
                 .where(eq(games.id, playingGame.id))
                 .returning();
 
+            console.log(elo);
+
             await tx
                 .update(userStats)
                 .set({
@@ -349,8 +351,8 @@ export class MultiplayerService {
                         0,
                         ${userStats.rating} + CASE
                             WHEN ${userStats.userId} = ${playingGame.whiteId}
-                            THEN ${elo.whiteDiff}
-                            ELSE ${elo.blackDiff}
+                            THEN ${elo.whiteDiff}::integer
+                            ELSE ${elo.blackDiff}::integer
                         END
                     )`,
                 })
@@ -461,7 +463,7 @@ export class MultiplayerService {
                 .update(userStats)
                 .set({
                     wins: sql`${userStats.wins} + 1`,
-                    rating: sql`GREATEST(0, ${userStats.rating} + ${winnerDiff})`,
+                    rating: sql`GREATEST(0, ${userStats.rating} + ${winnerDiff}::integer)`,
                 })
                 .where(eq(userStats.userId, winnerId));
 
@@ -469,7 +471,7 @@ export class MultiplayerService {
                 .update(userStats)
                 .set({
                     losses: sql`${userStats.losses} + 1`,
-                    rating: sql`GREATEST(0, ${userStats.rating} + ${loserDiff})`,
+                    rating: sql`GREATEST(0, ${userStats.rating} + ${loserDiff}::integer)`,
                 })
                 .where(eq(userStats.userId, loserId));
             return {

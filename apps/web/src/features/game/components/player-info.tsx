@@ -6,15 +6,19 @@ import ChessPieceImage from "@/features/game/components/chess-piece-image"
 import { Skeleton } from "@/components/ui/skeleton"
 import { getOppositeColor } from "@/features/game/utils/get-color"
 import PlayerAvatar from "@/features/profile/components/player-avatar"
+import { cn } from "@/lib/utils"
 
 export default function PlayerInfo({ color }: { color: Color | null }) {
-    const { white, black, fen, clock } = useGameStore()
+    const { white, black, fen, clock, whiteEloDiff, blackEloDiff } =
+        useGameStore()
 
     const { captured, advantage } = getMaterialState(fen)
 
     const player = color === "w" ? white : black
     const playerPoints = color === "w" ? advantage.white : advantage.black
     const capturedPieces = color === "w" ? captured.white : captured.black
+
+    const diff = color === "w" ? whiteEloDiff : blackEloDiff
 
     if (!color || !player)
         return (
@@ -45,6 +49,16 @@ export default function PlayerInfo({ color }: { color: Color | null }) {
                 {player.rating !== undefined && (
                     <span className="text-primary/70 text-sm">
                         {player.rating}
+                        {diff !== null && (
+                            <span
+                                className={cn("text-green-500 ml-1 text-xs", {
+                                    "text-destructive": diff < 0,
+                                })}
+                            >
+                                {diff > 0 && "+"}
+                                {diff}
+                            </span>
+                        )}
                     </span>
                 )}
                 <div className="flex items-center h-full ml-2">
