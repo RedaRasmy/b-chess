@@ -2,26 +2,31 @@ import { api } from "@/lib/api"
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
+const EXCLUDED_PREFIXES = ["/auth", "/api", "/multiplayer/play", "/_next"]
+
 export async function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl
 
-    if (pathname === "/multiplayer/play") {
+    if (EXCLUDED_PREFIXES.some((prefix) => pathname.startsWith(prefix))) {
         return NextResponse.next()
     }
 
     const cookieHeader = request.headers.get("cookie") || ""
 
-    const {
-        data: { isPlaying },
-    } = await api.get<{ isPlaying: boolean }>("/multiplayer/isPlaying", {
-        headers: {
-            cookie: cookieHeader,
-        },
-    })
+    try {
+        const {
+            data: { isPlaying },
+        } = await api.get<{ isPlaying: boolean }>("/multiplayer/isPlaying", {
+            headers: { cookie: cookieHeader },
+        })
 
-    if (isPlaying) {
-        console.log("PROXY: user is playing , redirecting to /multiplayer/play")
-        return NextResponse.redirect(new URL("/multiplayer/play", request.url))
+        if (isPlaying) {
+            return NextResponse.redirect(
+                new URL("/multiplayer/play", request.url),
+            )
+        }
+    } catch (err) {
+        console.error("PROXY: isPlaying check failed", err)
     }
 
     return NextResponse.next()
