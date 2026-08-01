@@ -43,6 +43,11 @@ export default function PlayerInfo({ color }: { color: Color | null }) {
                     <AvatarFallback>B</AvatarFallback>
                 </Avatar>
                 <p className="text-muted-foreground">{player.username}</p>
+                {player.rank !== undefined && (
+                    <span className="text-primary/70 text-sm">
+                        {player.rank}
+                    </span>
+                )}
                 <div className="flex items-center h-full ml-2">
                     {pieces.map((type, index) => (
                         <div

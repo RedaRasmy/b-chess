@@ -214,7 +214,7 @@ export class MultiplayerGateway
 
             const move = chess.move(moveDto);
 
-            const { savedMove, newGame } =
+            const { savedMove, newGame, elo } =
                 await this.multiplayerService.addMove(playingGame, move, chess);
 
             this.server.to(`game:${gameId}`).emit('new_move', savedMove);
@@ -228,6 +228,16 @@ export class MultiplayerGateway
                     lastMoveAt: newGame.lastMoveAt,
                 },
             });
+
+            if (elo && newGame.gameOverReason && newGame.result) {
+                this.server.to(`game:${gameId}`).emit('game_finished', {
+                    ...elo,
+                    reason: newGame.gameOverReason,
+                    result: newGame.result,
+                });
+
+                currentGames.delete(newGame.id);
+            }
         } catch (error) {
             ack({
                 status: 'error',
@@ -246,14 +256,17 @@ export class MultiplayerGateway
     async handleResign(@ConnectedSocket() socket: TypedSocket) {
         const userId = socket.data.user.id;
 
-        const finishedGame = await this.multiplayerService.resign(userId);
+        const end = await this.multiplayerService.resign(userId);
 
-        if (finishedGame) {
-            this.server
-                .to(`game:${finishedGame.id}`)
-                .emit('game_finished', finishedGame);
+        if (end) {
+            const { game, elo } = end;
+            this.server.to(`game:${game.id}`).emit('game_finished', {
+                ...elo,
+                reason: game.gameOverReason,
+                result: game.result,
+            });
 
-            currentGames.delete(finishedGame.id);
+            currentGames.delete(game.id);
         }
     }
 
@@ -261,14 +274,17 @@ export class MultiplayerGateway
     async handleTimeout(@ConnectedSocket() socket: TypedSocket) {
         const userId = socket.data.user.id;
 
-        const finishedGame = await this.multiplayerService.timeout(userId);
+        const result = await this.multiplayerService.timeout(userId);
 
-        if (finishedGame) {
-            this.server
-                .to(`game:${finishedGame.id}`)
-                .emit('game_finished', finishedGame);
+        if (result) {
+            const { game, elo } = result;
+            this.server.to(`game:${game.id}`).emit('game_finished', {
+                reason: game.gameOverReason,
+                result: game.result,
+                ...elo,
+            });
 
-            currentGames.delete(finishedGame.id);
+            currentGames.delete(game.id);
         }
     }
 
@@ -290,12 +306,17 @@ export class MultiplayerGateway
     async handleDraw(@ConnectedSocket() socket: TypedSocket) {
         const userId = socket.data.user.id;
 
-        const finishedGame = await this.multiplayerService.draw(userId);
+        const end = await this.multiplayerService.draw(userId);
 
-        if (finishedGame) {
-            this.server
-                .to(`game:${finishedGame.id}`)
-                .emit('game_finished', finishedGame);
+        if (end) {
+            const { game, elo } = end;
+            this.server.to(`game:${game.id}`).emit('game_finished', {
+                reason: game.gameOverReason,
+                result: game.result,
+                ...elo,
+            });
+
+            currentGames.delete(game.id);
         }
     }
 

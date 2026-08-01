@@ -380,11 +380,13 @@ export const useGameStore = create<GameState>()(
                     id: game.whiteId,
                     username: game.white.username,
                     avatar: game.white.image,
+                    rank: game.white.stats.rank,
                 },
                 {
                     id: game.blackId,
                     username: game.black.username,
                     avatar: game.black.image,
+                    rank: game.black.stats.rank,
                 },
             )
 

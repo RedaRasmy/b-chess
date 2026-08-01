@@ -1,4 +1,5 @@
 import { Game, IGame } from "../validation"
+import { Reason, Result } from "./constants"
 import {
     DrawRequest,
     FinishedGame,
@@ -8,6 +9,7 @@ import {
     MoveType,
     SMove,
 } from "./types"
+import { Elo } from "./utils"
 
 export const CLIENT_EVENTS = {
     MOVE: "move",
@@ -58,7 +60,12 @@ export type ServerToClientEvents = {
     }) => void
     [SERVER_EVENTS.QUEUE_JOINED]: (p: { gameId: string }) => void
     [SERVER_EVENTS.DRAW_REQUEST]: (p: DrawRequest) => void
-    [SERVER_EVENTS.GAME_FINISHED]: (p: FinishedGame) => void
+    [SERVER_EVENTS.GAME_FINISHED]: (
+        p: {
+            result: Result
+            reason: Reason
+        } & Elo,
+    ) => void
 }
 
 export type MoveAck = (

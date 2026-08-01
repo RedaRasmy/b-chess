@@ -13,6 +13,7 @@ export const userStats = pgTable(
         wins: integer("wins").default(0).notNull(),
         losses: integer("losses").default(0).notNull(),
         draws: integer("draws").default(0).notNull(),
+        rank: integer("rank").default(1000).notNull(),
         ...timestamps,
     },
     (table) => [uniqueIndex("stats_user_id_index").on(table.userId)],

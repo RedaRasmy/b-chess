@@ -65,17 +65,20 @@ export default function Page() {
     })
 
     useSocketListener("game_finished", (game) => {
-        console.log("game finished: ", game.result, game.gameOverReason)
+        console.log("game finished: ", game.result, game.reason)
 
-        gameState.endGame(game.result, game.gameOverReason)
+        gameState.endGame(game.result, game.reason)
     })
 
-    useSocketListener("exception", ({ message }) => {
+    useSocketListener("exception", ({ message, code }) => {
         console.log("exception: ", message)
-        toast.error("Game Not Found!", {
+        toast.error("Something went wrong!", {
             richColors: true,
+            description: message,
         })
-        router.replace("/multiplayer")
+        if (code === "GAME_NOT_FOUND") {
+            router.replace("/multiplayer")
+        }
     })
 
     useSocketListener("new_move", (move) => {

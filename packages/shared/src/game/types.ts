@@ -5,6 +5,7 @@ import {
     PromotionPiece,
     moves,
     TimerOption,
+    userStats,
 } from "@bchess/db/tables"
 import { Square } from "chess.js"
 import { Merge, Prettify } from "../types"
@@ -15,9 +16,11 @@ export type ChessTimer = {
     plus: number
 }
 
+export type Stats = typeof userStats.$inferSelect
+
 type Players = {
-    white: { username: string; image: string | null }
-    black: { username: string; image: string | null }
+    white: { username: string; image: string | null; stats: Stats }
+    black: { username: string; image: string | null; stats: Stats }
 }
 
 export type DrawRequest = {
@@ -70,7 +73,7 @@ export interface MoveType {
     promotion?: PromotionPiece
 }
 
-export type SMove = typeof moves.$inferInsert
+export type SMove = typeof moves.$inferSelect
 
 export type FullGame = Prettify<GameWithPlayers & { moves: MoveType[] }>
 

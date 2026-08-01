@@ -5,6 +5,7 @@ import { type Database } from '@bchess/db';
 import { games, moves, PromotionPiece, userStats } from '@bchess/db/tables';
 import { and, asc, eq, inArray, ne, or, sql } from 'drizzle-orm';
 import {
+    calcElo,
     checkGameEnd,
     DrawingGameWithPlayers,
     FinishedGame,
@@ -90,11 +91,17 @@ export class MultiplayerService {
                         username: true,
                         image: true,
                     },
+                    with: {
+                        stats: true,
+                    },
                 },
                 black: {
                     columns: {
                         username: true,
                         image: true,
+                    },
+                    with: {
+                        stats: true,
                     },
                 },
             },
@@ -173,11 +180,17 @@ export class MultiplayerService {
                         username: true,
                         image: true,
                     },
+                    with: {
+                        stats: true,
+                    },
                 },
                 black: {
                     columns: {
                         username: true,
                         image: true,
+                    },
+                    with: {
+                        stats: true,
                     },
                 },
             },
@@ -186,10 +199,19 @@ export class MultiplayerService {
         return (playingGame as PlayingGameWithPlayers) ?? null;
     }
 
-    async resign(userId: string): Promise<FinishedGameWithPlayers | null> {
+    async resign(userId: string) {
         const playingGame = await this.getPlayingGameWithPlayers(userId);
 
         if (!playingGame) return null;
+
+        const result =
+            playingGame.whiteId === userId ? 'black_won' : 'white_won';
+
+        const elo = calcElo({
+            whiteRank: playingGame.white.stats.rank,
+            blackRank: playingGame.black.stats.rank,
+            result: result,
+        });
 
         return await this.db.transaction(async (tx) => {
             const [finishedGame] = await tx
@@ -197,10 +219,7 @@ export class MultiplayerService {
                 .set({
                     status: 'finished',
                     gameOverReason: 'Resignation',
-                    result:
-                        playingGame.whiteId === userId
-                            ? 'black_won'
-                            : 'white_won',
+                    result,
                 })
                 .where(eq(games.id, playingGame.id))
                 .returning();
@@ -210,10 +229,18 @@ export class MultiplayerService {
                     ? playingGame.blackId
                     : playingGame.whiteId;
 
+            const winnerDiff =
+                winnerId === playingGame.whiteId
+                    ? elo.whiteDiff
+                    : elo.blackDiff;
+            const userDiff =
+                userId === playingGame.whiteId ? elo.whiteDiff : elo.blackDiff;
+
             await tx
                 .update(userStats)
                 .set({
                     wins: sql`${userStats.wins} + 1`,
+                    rank: sql`GREATEST(0, ${userStats.rank} + ${winnerDiff})`,
                 })
                 .where(eq(userStats.userId, winnerId));
 
@@ -221,14 +248,18 @@ export class MultiplayerService {
                 .update(userStats)
                 .set({
                     losses: sql`${userStats.losses} + 1`,
+                    rank: sql`GREATEST(0, ${userStats.rank} + ${userDiff})`,
                 })
                 .where(eq(userStats.userId, userId));
 
             return {
-                ...finishedGame,
-                white: playingGame.white,
-                black: playingGame.black,
-            } as FinishedGameWithPlayers;
+                game: {
+                    ...finishedGame,
+                    white: playingGame.white,
+                    black: playingGame.black,
+                } as FinishedGameWithPlayers,
+                elo,
+            };
         });
     }
 
@@ -269,7 +300,7 @@ export class MultiplayerService {
         });
     }
 
-    async draw(userId: string): Promise<FinishedGameWithPlayers | null> {
+    async draw(userId: string) {
         const playingGame = await this.getPlayingGameWithPlayers(userId);
 
         if (!playingGame || !playingGame.requestDraw) return null;
@@ -280,13 +311,21 @@ export class MultiplayerService {
             throw new Error("You can't accept your own draw request!");
         }
 
+        const result = 'draw';
+
+        const elo = calcElo({
+            whiteRank: playingGame.white.stats.rank,
+            blackRank: playingGame.black.stats.rank,
+            result: result,
+        });
+
         return await this.db.transaction(async (tx) => {
             const [finishedGame] = await tx
                 .update(games)
                 .set({
                     status: 'finished',
                     gameOverReason: 'Agreement',
-                    result: 'draw',
+                    result,
                 })
                 .where(eq(games.id, playingGame.id))
                 .returning();
@@ -295,6 +334,14 @@ export class MultiplayerService {
                 .update(userStats)
                 .set({
                     draws: sql`${userStats.draws} + 1`,
+                    rank: sql`GREATEST(
+                        0,
+                        ${userStats.rank} + CASE
+                            WHEN ${userStats.userId} = ${playingGame.whiteId}
+                            THEN ${elo.whiteDiff}
+                            ELSE ${elo.blackDiff}
+                        END
+                    )`,
                 })
                 .where(
                     inArray(userStats.userId, [
@@ -304,10 +351,13 @@ export class MultiplayerService {
                 );
 
             return {
-                ...finishedGame,
-                white: playingGame.white,
-                black: playingGame.black,
-            } as FinishedGameWithPlayers;
+                game: {
+                    ...finishedGame,
+                    white: playingGame.white,
+                    black: playingGame.black,
+                } as FinishedGameWithPlayers,
+                elo,
+            };
         });
     }
 
@@ -333,7 +383,7 @@ export class MultiplayerService {
         });
     }
 
-    async timeout(userId: string): Promise<FinishedGameWithPlayers | null> {
+    async timeout(userId: string) {
         const playingGame = await this.getPlayingGameWithPlayers(userId);
 
         if (!playingGame) return null;
@@ -357,15 +407,21 @@ export class MultiplayerService {
         return await this.db.transaction(async (tx) => {
             // Update Game
 
+            const result =
+                playingGame.currentTurn === 'w' ? 'black_won' : 'white_won';
+
+            const elo = calcElo({
+                whiteRank: playingGame.white.stats.rank,
+                blackRank: playingGame.black.stats.rank,
+                result: result,
+            });
+
             const [finishedGame] = await tx
                 .update(games)
                 .set({
                     status: 'finished',
                     gameOverReason: 'Timeout',
-                    result:
-                        playingGame.currentTurn === 'w'
-                            ? 'black_won'
-                            : 'white_won',
+                    result,
                 })
                 .where(eq(games.id, playingGame.id))
                 .returning();
@@ -381,10 +437,18 @@ export class MultiplayerService {
                     ? playingGame.blackId
                     : playingGame.whiteId;
 
+            const winnerDiff =
+                winnerId === playingGame.whiteId
+                    ? elo.whiteDiff
+                    : elo.blackDiff;
+            const loserDiff =
+                loserId === playingGame.whiteId ? elo.whiteDiff : elo.blackDiff;
+
             await tx
                 .update(userStats)
                 .set({
                     wins: sql`${userStats.wins} + 1`,
+                    rank: sql`GREATEST(0, ${userStats.rank} + ${winnerDiff})`,
                 })
                 .where(eq(userStats.userId, winnerId));
 
@@ -392,17 +456,21 @@ export class MultiplayerService {
                 .update(userStats)
                 .set({
                     losses: sql`${userStats.losses} + 1`,
+                    rank: sql`GREATEST(0, ${userStats.rank} + ${loserDiff})`,
                 })
                 .where(eq(userStats.userId, loserId));
             return {
-                ...finishedGame,
-                white: playingGame.white,
-                black: playingGame.black,
-            } as FinishedGameWithPlayers;
+                game: {
+                    ...finishedGame,
+                    white: playingGame.white,
+                    black: playingGame.black,
+                } as FinishedGameWithPlayers,
+                elo,
+            };
         });
     }
 
-    async addMove(game: PlayingGame, move: Move, chess: Chess) {
+    async addMove(game: PlayingGameWithPlayers, move: Move, chess: Chess) {
         return await this.db.transaction(async (tx) => {
             const lastTimestamp = game.lastMoveAt ?? game.gameStartedAt;
 
@@ -468,6 +536,15 @@ export class MultiplayerService {
                 // Update Stats
                 const { result } = end;
 
+                const whiteRank = game.white.stats.rank;
+                const blackRank = game.black.stats.rank;
+
+                const elo = calcElo({
+                    whiteRank,
+                    blackRank,
+                    result,
+                });
+
                 const whiteChanges = {
                     win: result === 'draw' ? 0 : result === 'white_won' ? 1 : 0,
                     loss:
@@ -488,6 +565,7 @@ export class MultiplayerService {
                         wins: sql`${userStats.wins} + ${whiteChanges.win}`,
                         losses: sql`${userStats.losses} + ${whiteChanges.loss}`,
                         draws: sql`${userStats.draws} + ${whiteChanges.draw}`,
+                        rank: sql`GREATEST(0, ${userStats.rank} + ${elo.whiteDiff})`,
                     })
                     .where(eq(userStats.userId, game.whiteId));
 
@@ -497,8 +575,15 @@ export class MultiplayerService {
                         wins: sql`${userStats.wins} + ${blackChanges.win}`,
                         losses: sql`${userStats.losses} + ${blackChanges.loss}`,
                         draws: sql`${userStats.draws} + ${blackChanges.draw}`,
+                        rank: sql`GREATEST(0, ${userStats.rank} + ${elo.blackDiff})`,
                     })
                     .where(eq(userStats.userId, game.blackId));
+
+                return {
+                    savedMove,
+                    newGame: newGame as PlayingGame | FinishedGame,
+                    elo,
+                };
             }
 
             return {

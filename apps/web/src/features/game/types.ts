@@ -15,7 +15,7 @@ export type PieceColor = "white" | "black"
 export interface PlayerInfo {
     id: string
     username: string
-    // rating: number
+    rank?: number
     avatar: string | null
 }
 
