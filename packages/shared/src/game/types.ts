@@ -1,20 +1,34 @@
 import {
     Reason,
     games,
-    Result,
     PromotionPiece,
     moves,
     TimerOption,
     userStats,
+    Status,
 } from "@bchess/db/tables"
 import { Square } from "chess.js"
-import { Merge, Prettify } from "../types"
+import { Narrow, Prettify, Update } from "../types"
 
 export type ChessTimer = {
     type: "bullet" | "blitz" | "rapid"
     base: number
     plus: number
 }
+
+export type DrawReason = Extract<
+    Reason,
+    | "Fifty moves rule"
+    | "Insufficient material"
+    | "Stalemate"
+    | "Threefold repetition"
+    | "Agreement"
+>
+
+export type WinLossReason = Extract<
+    Reason,
+    "Checkmate" | "Timeout" | "Resignation"
+>
 
 export type Stats = typeof userStats.$inferSelect
 
@@ -30,7 +44,7 @@ export type DrawRequest = {
 
 type SGame = typeof games.$inferSelect
 
-export type PreparingGame = Merge<
+export type PreparingGame = Narrow<
     SGame,
     {
         status: "preparing"
@@ -39,7 +53,7 @@ export type PreparingGame = Merge<
     }
 >
 
-export type PlayingGame = Merge<
+export type PlayingGame = Update<
     PreparingGame,
     {
         status: "playing"
@@ -47,18 +61,35 @@ export type PlayingGame = Merge<
     }
 >
 
-export type FinishedGame = Merge<
-    PlayingGame,
+export type EndCase =
+    | {
+          result: "draw"
+          reason: DrawReason
+      }
+    | {
+          result: "white_won" | "black_won"
+          reason: WinLossReason
+      }
+
+export type EndState = Prettify<
     {
         status: "finished"
-        reason: Reason
-        result: Result
         whiteEloDiff: number
         blackEloDiff: number
-    }
+    } & EndCase
 >
 
-export type DrawingGame = Merge<PlayingGame, DrawRequest>
+export type NotEndState = {
+    status: Exclude<Status, "finished">
+    whiteEloDiff: null
+    blackEloDiff: null
+    reason: null
+    result: null
+}
+
+export type FinishedGame = Update<PlayingGame, EndState>
+
+export type DrawingGame = Narrow<PlayingGame, DrawRequest>
 
 export type MatchedGame = PreparingGame | PlayingGame
 
@@ -70,7 +101,7 @@ export type DrawingGameWithPlayers = DrawingGame & Players
 
 export type FinishedGameWithPlayers = FinishedGame & Players
 
-export type GameWithPlayers = (MatchedGame | FinishedGame) & Players
+export type GameWithPlayers = MatchedGameWithPlayers | FinishedGameWithPlayers
 
 export interface MoveType {
     from: Square
