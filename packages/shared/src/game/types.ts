@@ -28,8 +28,10 @@ export type DrawRequest = {
     requestedDrawAt: Date
 }
 
+type SGame = typeof games.$inferSelect
+
 export type PreparingGame = Merge<
-    typeof games.$inferSelect,
+    SGame,
     {
         status: "preparing"
         blackId: string
@@ -49,7 +51,7 @@ export type FinishedGame = Merge<
     PlayingGame,
     {
         status: "finished"
-        gameOverReason: Reason
+        reason: Reason
         result: Result
         whiteEloDiff: number
         blackEloDiff: number

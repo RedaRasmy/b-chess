@@ -16,7 +16,7 @@ import { GAMEOVER_REASONS, RESULT, STATUS, TIMER_OPTIONS } from "./constants"
 export const resultEnum = pgEnum("result", RESULT)
 export const statusEnum = pgEnum("status", STATUS)
 export const timerOptionsEnum = pgEnum("timer_option", TIMER_OPTIONS)
-export const gameOverReasonsEnum = pgEnum("gameover_reason", GAMEOVER_REASONS)
+export const reasonEnum = pgEnum("gameover_reason", GAMEOVER_REASONS)
 export const colorsEnum = pgEnum("color", ["w", "b"])
 
 export const games = pgTable("games", {
@@ -27,7 +27,7 @@ export const games = pgTable("games", {
     blackId: text("black_id").references(() => user.id),
     currentFen: text("current_fen").default(DEFAULT_POSITION).notNull(),
     result: resultEnum(),
-    gameOverReason: gameOverReasonsEnum("game_over_reason"),
+    reason: reasonEnum("game_over_reason"),
     status: statusEnum().default("matching").notNull(),
     timer: timerOptionsEnum().notNull(),
     currentTurn: colorsEnum("current_turn").default("w").notNull(),

@@ -11,8 +11,8 @@ export function EmptyGameHistory() {
             <div className="flex flex-col gap-1.5">
                 <h3 className="text-sm font-semibold">No games yet</h3>
                 <p className="max-w-[26ch] text-sm text-muted-foreground">
-                    Your match history will show up here once you've played your
-                    first game.
+                    Your match history will show up here once you&apos;ve played
+                    your first game.
                 </p>
             </div>
 

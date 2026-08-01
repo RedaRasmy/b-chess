@@ -229,10 +229,10 @@ export class MultiplayerGateway
                 },
             });
 
-            if (elo && newGame.gameOverReason && newGame.result) {
+            if (elo && newGame.reason && newGame.result) {
                 this.server.to(`game:${gameId}`).emit('game_finished', {
                     ...elo,
-                    reason: newGame.gameOverReason,
+                    reason: newGame.reason,
                     result: newGame.result,
                 });
 
@@ -262,7 +262,7 @@ export class MultiplayerGateway
             const { game, elo } = end;
             this.server.to(`game:${game.id}`).emit('game_finished', {
                 ...elo,
-                reason: game.gameOverReason,
+                reason: game.reason,
                 result: game.result,
             });
 
@@ -279,7 +279,7 @@ export class MultiplayerGateway
         if (result) {
             const { game, elo } = result;
             this.server.to(`game:${game.id}`).emit('game_finished', {
-                reason: game.gameOverReason,
+                reason: game.reason,
                 result: game.result,
                 ...elo,
             });
@@ -311,7 +311,7 @@ export class MultiplayerGateway
         if (end) {
             const { game, elo } = end;
             this.server.to(`game:${game.id}`).emit('game_finished', {
-                reason: game.gameOverReason,
+                reason: game.reason,
                 result: game.result,
                 ...elo,
             });

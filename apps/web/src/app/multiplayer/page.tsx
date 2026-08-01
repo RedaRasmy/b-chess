@@ -42,7 +42,7 @@ export default function Page() {
         }
     }, [data, isPending])
 
-    useSocketListener("queue_joined", ({ gameId }) => {
+    useSocketListener("queue_joined", () => {
         console.log("queue joined")
     })
 

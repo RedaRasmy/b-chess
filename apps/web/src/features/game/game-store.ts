@@ -406,8 +406,8 @@ export const useGameStore = create<GameState>()(
                 },
             })
 
-            if (game.gameOverReason && game.result) {
-                get().endGame(game.result, game.gameOverReason)
+            if (game.reason && game.result) {
+                get().endGame(game.result, game.reason)
             }
         },
     })),

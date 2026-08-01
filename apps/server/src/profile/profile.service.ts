@@ -69,7 +69,7 @@ export class ProfileService {
                 ),
             columns: {
                 id: true,
-                gameOverReason: true,
+                reason: true,
                 result: true,
                 whiteId: true,
                 blackId: true,
@@ -107,7 +107,6 @@ export class ProfileService {
                 gameStartedAt,
                 updatedAt,
                 result,
-                gameOverReason,
                 whiteEloDiff,
                 blackEloDiff,
                 ...game
@@ -134,7 +133,6 @@ export class ProfileService {
                     },
                     result: cleanResult,
                     duration,
-                    reason: gameOverReason!,
                     ratingDiff,
                 } as GameSummary;
             },

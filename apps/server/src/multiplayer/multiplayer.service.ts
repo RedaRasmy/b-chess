@@ -225,7 +225,7 @@ export class MultiplayerService {
                 .update(games)
                 .set({
                     status: 'finished',
-                    gameOverReason: 'Resignation',
+                    reason: 'Resignation',
                     result,
                     whiteEloDiff: elo.whiteDiff,
                     blackEloDiff: elo.blackDiff,
@@ -333,7 +333,7 @@ export class MultiplayerService {
                 .update(games)
                 .set({
                     status: 'finished',
-                    gameOverReason: 'Agreement',
+                    reason: 'Agreement',
                     result,
                     whiteEloDiff: elo.whiteDiff,
                     blackEloDiff: elo.blackDiff,
@@ -431,7 +431,7 @@ export class MultiplayerService {
                 .update(games)
                 .set({
                     status: 'finished',
-                    gameOverReason: 'Timeout',
+                    reason: 'Timeout',
                     result,
                     whiteEloDiff: elo.whiteDiff,
                     blackEloDiff: elo.blackDiff,
@@ -546,7 +546,7 @@ export class MultiplayerService {
                 .set({
                     ...newTimestamps,
                     status: end ? 'finished' : 'playing',
-                    gameOverReason: reason,
+                    reason,
                     result: result,
                     currentFen: chess.fen(),
                     currentTurn: chess.turn(),

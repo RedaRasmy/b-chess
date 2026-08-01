@@ -223,7 +223,7 @@ export default function LoginPage() {
                         {/* Sign Up Link */}
                         <div className="text-center text-sm">
                             <span className="text-muted-foreground">
-                                Don't have an account?
+                                Don&apos;t have an account?
                             </span>
                             <Link href="/auth/register">
                                 <Button variant={"link"}>Sign up</Button>
