@@ -96,8 +96,8 @@ export function calcElo({
     const sW = result === "draw" ? 0.5 : result === "white_won" ? 1 : 0
     const sB = result === "draw" ? 0.5 : result === "black_won" ? 1 : 0
 
-    const whiteDiff = K * (sW - pW)
-    const blackDiff = K * (sB - pB)
+    const whiteDiff = Math.round(K * (sW - pW))
+    const blackDiff = Math.round(K * (sB - pB))
     const newWhiteRank = whiteRank + whiteDiff
     const newBlackRank = blackRank + blackDiff
 
@@ -108,3 +108,5 @@ export function calcElo({
         blackDiff,
     }
 }
+
+export type Elo = ReturnType<typeof calcElo>
