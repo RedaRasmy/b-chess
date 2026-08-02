@@ -1,7 +1,9 @@
 // import "dotenv/config"
-import { drizzle } from "drizzle-orm/postgres-js"
+import { drizzle, PostgresJsQueryResultHKT } from "drizzle-orm/postgres-js"
 import postgres from "postgres"
 import * as schema from "./schema"
+import { PgTransaction } from "drizzle-orm/pg-core"
+import { ExtractTablesWithRelations } from "drizzle-orm"
 
 const dbURL = process.env.DATABASE_URL
 
@@ -21,3 +23,9 @@ export const db = drizzle(client, {
 })
 
 export type Database = typeof db
+
+export type Transaction = PgTransaction<
+    PostgresJsQueryResultHKT,
+    typeof schema,
+    ExtractTablesWithRelations<typeof schema>
+>

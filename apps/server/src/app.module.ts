@@ -7,6 +7,8 @@ import { ConfigModule } from '@nestjs/config';
 import { MultiplayerModule } from './multiplayer/multiplayer.module';
 import { ProfileModule } from './profile/profile.module';
 import { DatabaseModule } from './database/database.module';
+import { GamesModule } from './games/games.module';
+import { PlayersModule } from './players/players.module';
 
 @Module({
     imports: [
@@ -19,6 +21,8 @@ import { DatabaseModule } from './database/database.module';
         }),
         ProfileModule,
         MultiplayerModule,
+        GamesModule,
+        PlayersModule,
     ],
     controllers: [AppController],
     providers: [AppService],

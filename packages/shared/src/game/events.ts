@@ -27,7 +27,7 @@ export const SERVER_EVENTS = {
     EXCEPTION: "exception",
     GAME_FOUND: "game_found",
     NEW_MOVE: "new_move",
-    OPPONENT_STATUS_CHANGED: "opponent_status_changed",
+    PLAYER_STATUS_CHANGED: "player_status_changed",
     QUEUE_JOINED: "queue_joined",
     DRAW_REQUEST: "draw_request",
     SYNC: "sync",
@@ -55,8 +55,9 @@ export type ServerToClientEvents = {
     [SERVER_EVENTS.GAME_FOUND]: (p: Game) => void
     [SERVER_EVENTS.NEW_MOVE]: (move: SMove) => void
     [SERVER_EVENTS.SYNC]: (game: FullGame) => void
-    [SERVER_EVENTS.OPPONENT_STATUS_CHANGED]: (p: {
+    [SERVER_EVENTS.PLAYER_STATUS_CHANGED]: (p: {
         status: "connected" | "disconnected"
+        color: "w" | "b"
     }) => void
     [SERVER_EVENTS.QUEUE_JOINED]: (p: { gameId: string }) => void
     [SERVER_EVENTS.DRAW_REQUEST]: (p: DrawRequest) => void

@@ -1,33 +1,30 @@
-import { HttpException, Inject, Injectable } from '@nestjs/common';
-import { CreateGameDto } from './dto/create-game.dto';
+import { Inject, Injectable } from '@nestjs/common';
+import { CreateGameDto } from '../games/dto/create-game.dto';
 import { DATABASE_CONNECTION } from '../database/database.module';
 import { type Database } from '@bchess/db';
-import { games, moves, PromotionPiece, userStats } from '@bchess/db/tables';
-import { and, asc, between, eq, inArray, ne, or, sql } from 'drizzle-orm';
+
 import {
     calcElo,
-    checkGameEnd,
-    DrawingGameWithPlayers,
+    DrawingGame,
     FinishedGame,
     FinishedGameWithPlayers,
-    MatchedGame,
-    MatchedGameWithPlayers,
-    MoveType,
-    parseTimerOption,
     PlayingGame,
-    PlayingGameWithPlayers,
 } from '@bchess/shared';
 import { Chess, Move } from 'chess.js';
+import { GamesService } from '../games/games.service';
+import { PlayersService } from '../players/players.service';
 
 @Injectable()
 export class MultiplayerService {
-    constructor(@Inject(DATABASE_CONNECTION) private readonly db: Database) {}
+    constructor(
+        @Inject(DATABASE_CONNECTION) private readonly db: Database,
+        private readonly gamesService: GamesService,
+        private readonly playersService: PlayersService,
+    ) {}
 
-    async findOrCreateMatch(dto: CreateGameDto, userId: string) {
-        const alreadyCreatedMatch = await this.db.query.games.findFirst({
-            where: (games) =>
-                and(eq(games.status, 'matching'), eq(games.whiteId, userId)),
-        });
+    async findOrCreateMatch(gameDto: CreateGameDto, userId: string) {
+        const alreadyCreatedMatch =
+            await this.gamesService.getCreatedMatch(userId);
 
         if (alreadyCreatedMatch) {
             return {
@@ -37,40 +34,26 @@ export class MultiplayerService {
         }
 
         const MAX_RATING_DIFF = 200;
-        const userStats = await this.db.query.userStats.findFirst({
-            where: (stats) => eq(stats.userId, userId),
-            columns: {
-                rating: true,
-            },
-        });
-
-        if (!userStats) throw new HttpException('User stats not found', 404);
+        const userStats = await this.playersService.getUserStats(userId);
 
         const userRating = userStats.rating;
 
         const minRating = userRating - MAX_RATING_DIFF;
         const maxRating = userRating + MAX_RATING_DIFF;
 
-        const match = await this.db.query.games.findFirst({
-            where: (games) =>
-                and(
-                    eq(games.status, 'matching'),
-                    eq(games.timer, dto.timer),
-                    ne(games.whiteId, userId),
-                    between(games.whiteRating, minRating, maxRating),
-                ),
+        const match = await this.gamesService.findMatch({
+            userId,
+            timer: gameDto.timer,
+            minRating,
+            maxRating,
         });
 
         if (match) {
-            const [game] = await this.db
-                .update(games)
-                .set({
-                    status: 'preparing',
-                    blackId: userId,
-                    blackRating: userRating,
-                })
-                .where(eq(games.id, match.id))
-                .returning();
+            const game = await this.gamesService.match({
+                gameId: match.id,
+                blackId: userId,
+                blackRating: userRating,
+            });
 
             return {
                 status: 'MATCH_FOUND',
@@ -79,135 +62,17 @@ export class MultiplayerService {
             } as const;
         }
 
-        const { base } = parseTimerOption(dto.timer);
-        const [newGame] = await this.db
-            .insert(games)
-            .values({
-                timer: dto.timer,
-                whiteId: userId,
-                blackTimeLeft: base * 1000, // ms
-                whiteTimeLeft: base * 1000,
-                whiteRating: userRating,
-            })
-            .returning();
+        const newGame = await this.gamesService.createMatch({
+            timer: gameDto.timer,
+            whiteId: userId,
+            whiteRating: userRating,
+        });
 
         return { status: 'QUEUED', game: newGame } as const;
     }
 
-    async getMatchedGameWithPlayers(
-        userId: string,
-    ): Promise<MatchedGameWithPlayers | null> {
-        const game = await this.db.query.games.findFirst({
-            where: (games) =>
-                and(
-                    inArray(games.status, ['preparing', 'playing']),
-                    or(eq(games.whiteId, userId), eq(games.blackId, userId)),
-                ),
-
-            with: {
-                white: {
-                    columns: {
-                        username: true,
-                        image: true,
-                    },
-                },
-                black: {
-                    columns: {
-                        username: true,
-                        image: true,
-                    },
-                },
-            },
-        });
-
-        if (!game) return null;
-
-        return game as MatchedGameWithPlayers;
-    }
-
-    async setReady(gameId: string, userId: string): Promise<MatchedGame> {
-        const game = await this.db.transaction(async (tx) => {
-            const [existingGame] = await tx
-                .select()
-                .from(games)
-                .where(eq(games.id, gameId))
-                .for('update');
-
-            if (!existingGame || existingGame.status !== 'preparing') {
-                return existingGame;
-            }
-
-            const isWhite = existingGame.whiteId === userId;
-            const isBlack = existingGame.blackId === userId;
-
-            const whiteReady = isWhite ? true : existingGame.whiteReady;
-            const blackReady = isBlack ? true : existingGame.blackReady;
-            const isBothReady = whiteReady && blackReady;
-
-            const [updatedGame] = await tx
-                .update(games)
-                .set({
-                    whiteReady,
-                    blackReady,
-                    status: isBothReady ? 'playing' : 'preparing',
-                    gameStartedAt: isBothReady
-                        ? Date.now()
-                        : existingGame.gameStartedAt,
-                })
-                .where(eq(games.id, gameId))
-                .returning();
-
-            return updatedGame;
-        });
-
-        return game as MatchedGame;
-    }
-
-    async deleteMatch(userId: string) {
-        await this.db
-            .delete(games)
-            .where(
-                and(eq(games.status, 'matching'), eq(games.whiteId, userId)),
-            );
-    }
-
-    async getMatch(userId: string) {
-        return await this.db.query.games.findFirst({
-            where: (games) =>
-                and(eq(games.status, 'matching'), eq(games.whiteId, userId)),
-        });
-    }
-
-    async getPlayingGameWithPlayers(
-        userId: string,
-    ): Promise<PlayingGameWithPlayers | null> {
-        const playingGame = await this.db.query.games.findFirst({
-            where: (games) =>
-                and(
-                    eq(games.status, 'playing'),
-                    or(eq(games.whiteId, userId), eq(games.blackId, userId)),
-                ),
-            with: {
-                white: {
-                    columns: {
-                        username: true,
-                        image: true,
-                    },
-                },
-                black: {
-                    columns: {
-                        username: true,
-                        image: true,
-                    },
-                },
-            },
-        });
-
-        return (playingGame as PlayingGameWithPlayers) ?? null;
-    }
-
-    async resign(userId: string) {
-        const playingGame = await this.getPlayingGameWithPlayers(userId);
+    async resign(gameId: string, userId: string) {
+        const playingGame = await this.gamesService.getPlayingGame(gameId);
 
         if (!playingGame) return null;
 
@@ -221,59 +86,32 @@ export class MultiplayerService {
         });
 
         return await this.db.transaction(async (tx) => {
-            const [finishedGame] = await tx
-                .update(games)
-                .set({
-                    status: 'finished',
-                    reason: 'Resignation',
-                    result,
-                    whiteEloDiff: elo.whiteDiff,
-                    blackEloDiff: elo.blackDiff,
-                })
-                .where(eq(games.id, playingGame.id))
-                .returning();
+            const finishedGame = await this.gamesService.endGame(tx, {
+                gameId: playingGame.id,
+                reason: 'Resignation',
+                result,
+                elo,
+            });
 
-            const winnerId =
-                playingGame.whiteId === userId
-                    ? playingGame.blackId
-                    : playingGame.whiteId;
-
-            const winnerDiff =
-                winnerId === playingGame.whiteId
-                    ? elo.whiteDiff
-                    : elo.blackDiff;
-            const userDiff =
-                userId === playingGame.whiteId ? elo.whiteDiff : elo.blackDiff;
-
-            await tx
-                .update(userStats)
-                .set({
-                    wins: sql`${userStats.wins} + 1`,
-                    rating: sql`GREATEST(0, ${userStats.rating} + ${winnerDiff}::integer)`,
-                })
-                .where(eq(userStats.userId, winnerId));
-
-            await tx
-                .update(userStats)
-                .set({
-                    losses: sql`${userStats.losses} + 1`,
-                    rating: sql`GREATEST(0, ${userStats.rating} + ${userDiff}::integer)`,
-                })
-                .where(eq(userStats.userId, userId));
+            await this.playersService.updateStats(tx, {
+                whiteId: playingGame.whiteId,
+                blackId: playingGame.blackId,
+                elo,
+                result,
+            });
 
             return {
-                game: {
-                    ...finishedGame,
-                    white: playingGame.white,
-                    black: playingGame.black,
-                } as FinishedGameWithPlayers,
+                game: finishedGame as FinishedGame,
                 elo,
             };
         });
     }
 
-    async requestDraw(userId: string): Promise<DrawingGameWithPlayers | null> {
-        const playingGame = await this.getPlayingGameWithPlayers(userId);
+    async requestDraw(
+        gameId: string,
+        userId: string,
+    ): Promise<DrawingGame | null> {
+        const playingGame = await this.gamesService.getPlayingGame(gameId);
 
         if (!playingGame) return null;
 
@@ -291,26 +129,16 @@ export class MultiplayerService {
 
         const requester = playingGame.whiteId === userId ? 'w' : 'b';
 
-        return await this.db.transaction(async (tx) => {
-            const [newGame] = await tx
-                .update(games)
-                .set({
-                    requestDraw: requester,
-                    requestedDrawAt: new Date(),
-                })
-                .where(eq(games.id, playingGame.id))
-                .returning();
-
-            return {
-                ...newGame,
-                white: playingGame.white,
-                black: playingGame.black,
-            } as DrawingGameWithPlayers;
+        const newGame = await this.gamesService.requestDraw({
+            gameId: playingGame.id,
+            requester,
         });
+
+        return newGame as DrawingGame;
     }
 
-    async draw(userId: string) {
-        const playingGame = await this.getPlayingGameWithPlayers(userId);
+    async draw(gameId: string, userId: string) {
+        const playingGame = await this.gamesService.getPlayingGame(gameId);
 
         if (!playingGame || !playingGame.requestDraw) return null;
 
@@ -329,77 +157,34 @@ export class MultiplayerService {
         });
 
         return await this.db.transaction(async (tx) => {
-            const [finishedGame] = await tx
-                .update(games)
-                .set({
-                    status: 'finished',
-                    reason: 'Agreement',
-                    result,
-                    whiteEloDiff: elo.whiteDiff,
-                    blackEloDiff: elo.blackDiff,
-                })
-                .where(eq(games.id, playingGame.id))
-                .returning();
+            const finishedGame = await this.gamesService.endGame(tx, {
+                gameId: playingGame.id,
+                reason: 'Agreement',
+                result,
+                elo,
+            });
 
-            console.log(elo);
-
-            await tx
-                .update(userStats)
-                .set({
-                    draws: sql`${userStats.draws} + 1`,
-                    rating: sql`GREATEST(
-                        0,
-                        ${userStats.rating} + CASE
-                            WHEN ${userStats.userId} = ${playingGame.whiteId}
-                            THEN ${elo.whiteDiff}::integer
-                            ELSE ${elo.blackDiff}::integer
-                        END
-                    )`,
-                })
-                .where(
-                    inArray(userStats.userId, [
-                        playingGame.whiteId,
-                        playingGame.blackId,
-                    ]),
-                );
+            await this.playersService.updateStats(tx, {
+                whiteId: playingGame.whiteId,
+                blackId: playingGame.blackId,
+                elo,
+                result,
+            });
 
             return {
-                game: {
-                    ...finishedGame,
-                    white: playingGame.white,
-                    black: playingGame.black,
-                } as FinishedGameWithPlayers,
+                game: finishedGame as FinishedGame,
                 elo,
             };
         });
     }
 
-    async rejectDraw(userId: string): Promise<PlayingGameWithPlayers | null> {
-        const playingGame = await this.getPlayingGameWithPlayers(userId);
-
-        if (!playingGame || !playingGame.requestDraw) return null;
-
-        return await this.db.transaction(async (tx) => {
-            const [newGame] = await tx
-                .update(games)
-                .set({
-                    requestDraw: null,
-                })
-                .where(eq(games.id, playingGame.id))
-                .returning();
-
-            return {
-                ...newGame,
-                white: playingGame.white,
-                black: playingGame.black,
-            } as PlayingGameWithPlayers;
-        });
-    }
-
-    async timeout(userId: string) {
-        const playingGame = await this.getPlayingGameWithPlayers(userId);
-
-        if (!playingGame) return null;
+    async timeout(gameId: string) {
+        let playingGame: PlayingGame;
+        try {
+            playingGame = await this.gamesService.getPlayingGame(gameId);
+        } catch (error) {
+            return null;
+        }
 
         // Validation
 
@@ -429,174 +214,47 @@ export class MultiplayerService {
                 result: result,
             });
 
-            const [finishedGame] = await tx
-                .update(games)
-                .set({
-                    status: 'finished',
-                    reason: 'Timeout',
-                    result,
-                    whiteEloDiff: elo.whiteDiff,
-                    blackEloDiff: elo.blackDiff,
-                })
-                .where(eq(games.id, playingGame.id))
-                .returning();
+            const finishedGame = await this.gamesService.endGame(tx, {
+                gameId: playingGame.id,
+                elo,
+                reason: 'Timeout',
+                result,
+            });
 
             // Update Stats
 
-            const loserId =
-                playingGame.currentTurn === 'w'
-                    ? playingGame.whiteId
-                    : playingGame.blackId;
-            const winnerId =
-                playingGame.currentTurn === 'w'
-                    ? playingGame.blackId
-                    : playingGame.whiteId;
+            await this.playersService.updateStats(tx, {
+                whiteId: playingGame.whiteId,
+                blackId: playingGame.blackId,
+                elo,
+                result,
+            });
 
-            const winnerDiff =
-                winnerId === playingGame.whiteId
-                    ? elo.whiteDiff
-                    : elo.blackDiff;
-            const loserDiff =
-                loserId === playingGame.whiteId ? elo.whiteDiff : elo.blackDiff;
-
-            await tx
-                .update(userStats)
-                .set({
-                    wins: sql`${userStats.wins} + 1`,
-                    rating: sql`GREATEST(0, ${userStats.rating} + ${winnerDiff}::integer)`,
-                })
-                .where(eq(userStats.userId, winnerId));
-
-            await tx
-                .update(userStats)
-                .set({
-                    losses: sql`${userStats.losses} + 1`,
-                    rating: sql`GREATEST(0, ${userStats.rating} + ${loserDiff}::integer)`,
-                })
-                .where(eq(userStats.userId, loserId));
             return {
-                game: {
-                    ...finishedGame,
-                    white: playingGame.white,
-                    black: playingGame.black,
-                } as FinishedGameWithPlayers,
+                game: finishedGame as FinishedGame,
                 elo,
             };
         });
     }
 
-    async addMove(game: PlayingGameWithPlayers, move: Move, chess: Chess) {
+    async playMove(game: PlayingGame, move: Move, chess: Chess) {
         return await this.db.transaction(async (tx) => {
-            const lastTimestamp = game.lastMoveAt ?? game.gameStartedAt;
-
-            const currentMoveAt = Date.now();
-            const moveTime = currentMoveAt - lastTimestamp;
-
-            const [savedMove] = await tx
-                .insert(moves)
-                .values({
-                    from: move.from,
-                    to: move.to,
-                    promotion: move.promotion as PromotionPiece,
-                    fenAfter: move.after,
-                    gameId: game.id,
-                    moveTime,
-                    playerColor: move.color,
-                    piece: move.piece,
-                    san: move.san,
-                    capturedPiece: move.captured,
-                    isCheck: chess.isCheck(),
-                    isCheckmate: chess.isCheckmate(),
-                })
-                .returning();
-
-            const end = checkGameEnd(chess);
-
-            const reason = end?.reason ?? null;
-            const result = end?.result ?? null;
-
-            const timeLeft =
-                game.currentTurn === 'w'
-                    ? game.whiteTimeLeft
-                    : game.blackTimeLeft;
-
-            const { plus } = parseTimerOption(game.timer);
-
-            const newTimeLeft = timeLeft - moveTime + plus * 1000;
-
-            const newTimestamps = {
-                whiteTimeLeft:
-                    game.currentTurn === 'w' ? newTimeLeft : game.whiteTimeLeft,
-                blackTimeLeft:
-                    game.currentTurn === 'b' ? newTimeLeft : game.blackTimeLeft,
-                lastMoveAt: currentMoveAt,
-            };
-
-            const whiteRating = game.whiteRating;
-            const blackRating = game.blackRating;
-
-            const elo =
-                result &&
-                calcElo({
-                    whiteRating,
-                    blackRating,
-                    result,
+            const { newGame, savedMove, elo, end } =
+                await this.gamesService.addMove(tx, {
+                    chess,
+                    game,
+                    move,
                 });
 
-            const [newGame] = await tx
-                .update(games)
-                .set({
-                    ...newTimestamps,
-                    status: end ? 'finished' : 'playing',
-                    reason,
-                    result: result,
-                    currentFen: chess.fen(),
-                    currentTurn: chess.turn(),
-                    requestDraw: null,
-                    requestedDrawAt: null,
-                    whiteEloDiff: elo?.whiteDiff,
-                    blackEloDiff: elo?.blackDiff,
-                })
-                .where(eq(games.id, game.id))
-                .returning();
-
-            if (end) {
-                // Update Stats
+            if (end && elo) {
                 const { result } = end;
 
-                const whiteChanges = {
-                    win: result === 'draw' ? 0 : result === 'white_won' ? 1 : 0,
-                    loss:
-                        result === 'draw' ? 0 : result === 'black_won' ? 1 : 0,
-                    draw: result === 'draw' ? 1 : 0,
-                };
-
-                const blackChanges = {
-                    win: result === 'draw' ? 0 : result === 'black_won' ? 1 : 0,
-                    loss:
-                        result === 'draw' ? 0 : result === 'white_won' ? 1 : 0,
-                    draw: result === 'draw' ? 1 : 0,
-                };
-
-                await tx
-                    .update(userStats)
-                    .set({
-                        wins: sql`${userStats.wins} + ${whiteChanges.win}`,
-                        losses: sql`${userStats.losses} + ${whiteChanges.loss}`,
-                        draws: sql`${userStats.draws} + ${whiteChanges.draw}`,
-                        rating: elo!.newWhiteRating,
-                    })
-                    .where(eq(userStats.userId, game.whiteId));
-
-                await tx
-                    .update(userStats)
-                    .set({
-                        wins: sql`${userStats.wins} + ${blackChanges.win}`,
-                        losses: sql`${userStats.losses} + ${blackChanges.loss}`,
-                        draws: sql`${userStats.draws} + ${blackChanges.draw}`,
-                        rating: elo!.newBlackRating,
-                    })
-                    .where(eq(userStats.userId, game.blackId));
+                await this.playersService.updateStats(tx, {
+                    whiteId: game.whiteId,
+                    blackId: game.blackId,
+                    elo,
+                    result,
+                });
 
                 return {
                     savedMove,
@@ -610,18 +268,5 @@ export class MultiplayerService {
                 newGame: newGame as PlayingGame | FinishedGame,
             };
         });
-    }
-
-    async getMoves(gameId: string): Promise<MoveType[]> {
-        const data = await this.db.query.moves.findMany({
-            where: (moves) => eq(moves.gameId, gameId),
-            orderBy: asc(moves.createdAt),
-            columns: {
-                from: true,
-                to: true,
-                promotion: true,
-            },
-        });
-        return data as MoveType[];
     }
 }

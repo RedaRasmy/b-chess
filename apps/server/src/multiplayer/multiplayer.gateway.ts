@@ -13,8 +13,8 @@ import { MultiplayerService } from './multiplayer.service';
 import { DefaultEventsMap, Server, Socket } from 'socket.io';
 import { fromNodeHeaders } from 'better-auth/node';
 import { auth } from '../auth/auth';
-import { MoveDto } from './dto/move.dto';
-import { CreateGameDto } from './dto/create-game.dto';
+import { MoveDto } from '../games/dto/move.dto';
+import { CreateGameDto } from '../games/dto/create-game.dto';
 import {
     CLIENT_EVENTS,
     type ClientToServerEvents,
@@ -23,14 +23,21 @@ import {
 } from '@bchess/shared';
 import { UserSession } from '@thallesp/nestjs-better-auth';
 import { Chess } from 'chess.js';
+import { GamesService } from '../games/games.service';
+
+type Data = {
+    user: UserSession['user'];
+    currentGame: {
+        id: string;
+        playerColor: 'w' | 'b';
+    } | null;
+};
 
 type TypedSocket = Socket<
     ClientToServerEvents,
     ServerToClientEvents,
     DefaultEventsMap,
-    {
-        user: UserSession['user'];
-    }
+    Data
 >;
 
 const currentGames = new Map<string, Chess>();
@@ -39,16 +46,17 @@ const currentGames = new Map<string, Chess>();
 export class MultiplayerGateway
     implements OnGatewayConnection, OnGatewayDisconnect
 {
-    constructor(private readonly multiplayerService: MultiplayerService) {}
+    constructor(
+        private readonly multiplayerService: MultiplayerService,
+        private readonly gamesService: GamesService,
+    ) {}
 
     @WebSocketServer()
     server!: Server<
         ClientToServerEvents,
         ServerToClientEvents,
         DefaultEventsMap,
-        {
-            user: UserSession['user'];
-        }
+        Data
     >;
 
     async handleConnection(socket: TypedSocket) {
@@ -65,8 +73,9 @@ export class MultiplayerGateway
         socket.data.user = user;
         socket.join(`user:${user.id}`);
 
-        const ongoingGame =
-            await this.multiplayerService.getMatchedGameWithPlayers(user.id);
+        const ongoingGame = await this.gamesService.getMatchedGameWithPlayers(
+            user.id,
+        );
 
         if (ongoingGame) {
             const opponentId =
@@ -75,44 +84,45 @@ export class MultiplayerGateway
                     : ongoingGame.whiteId;
 
             socket.join(`game:${ongoingGame.id}`);
-            this.server
-                .to(`user:${opponentId}`)
-                .emit('opponent_status_changed', {
-                    status: 'connected',
-                });
+
+            const playerColor = user.id === ongoingGame.whiteId ? 'w' : 'b';
+
+            socket.data.currentGame = {
+                id: ongoingGame.id,
+                playerColor,
+            };
+
+            this.server.to(`user:${opponentId}`).emit('player_status_changed', {
+                status: 'connected',
+                color: playerColor,
+            });
         }
     }
 
     async handleDisconnect(socket: TypedSocket) {
-        const userId = socket.data.user.id;
-        const ongoingGame =
-            await this.multiplayerService.getMatchedGameWithPlayers(userId);
+        const game = socket.data.currentGame;
 
-        if (ongoingGame) {
-            const opponentId =
-                ongoingGame.whiteId === userId
-                    ? ongoingGame.blackId!
-                    : ongoingGame.whiteId;
-
-            this.server
-                .to(`user:${opponentId}`)
-                .emit('opponent_status_changed', {
-                    status: 'disconnected',
-                });
+        if (game) {
+            this.server.to(`game:${game.id}`).emit('player_status_changed', {
+                status: 'disconnected',
+                color: game.playerColor,
+            });
         }
     }
 
     @SubscribeMessage(CLIENT_EVENTS.JOIN_QUEUE)
     async handleJoinQueue(
         @ConnectedSocket() socket: TypedSocket,
-        @MessageBody() payload: CreateGameDto,
+        @MessageBody() gameDto: CreateGameDto,
     ) {
+        const userId = socket.data.user.id;
         const result = await this.multiplayerService.findOrCreateMatch(
-            payload,
-            socket.data.user.id,
+            gameDto,
+            userId,
         );
 
-        console.log(result);
+        const playerColor = result.game.whiteId === userId ? 'w' : 'b';
+        const gameId = result.game.id;
 
         if (result.status === 'MATCH_FOUND') {
             result.players.forEach((userId) => {
@@ -120,22 +130,34 @@ export class MultiplayerGateway
                     .to(`user:${userId}`)
                     .emit('game_found', result.game);
             });
+
+            currentGames.set(gameId, new Chess());
+
+            socket.data.currentGame = {
+                id: gameId,
+                playerColor,
+            };
+
         } else {
             socket.emit('queue_joined', { gameId: result.game.id });
+
+            socket.data.currentGame = {
+                id: gameId,
+                playerColor,
+            };
         }
     }
 
     @SubscribeMessage(CLIENT_EVENTS.CANCEL_MATCH)
     async handleCancelMatch(@ConnectedSocket() socket: TypedSocket) {
-        await this.multiplayerService.deleteMatch(socket.data.user.id);
-        console.log('match deleted');
+        await this.gamesService.deleteMatch(socket.data.user.id);
     }
 
     @SubscribeMessage(CLIENT_EVENTS.JOIN_GAME)
     async joinGame(@ConnectedSocket() socket: TypedSocket) {
         const userId = socket.data.user.id;
         const ongoingGame =
-            await this.multiplayerService.getMatchedGameWithPlayers(userId);
+            await this.gamesService.getMatchedGameWithPlayers(userId);
 
         if (!ongoingGame) {
             throw new WsException({
@@ -147,7 +169,7 @@ export class MultiplayerGateway
         socket.join(`game:${ongoingGame.id}`);
 
         if (ongoingGame.status === 'preparing') {
-            const newGame = await this.multiplayerService.setReady(
+            const newGame = await this.gamesService.setReady(
                 ongoingGame.id,
                 userId,
             );
@@ -163,9 +185,7 @@ export class MultiplayerGateway
                 currentGames.set(newGame.id, new Chess());
             }
         } else {
-            const moves = await this.multiplayerService.getMoves(
-                ongoingGame.id,
-            );
+            const moves = await this.gamesService.getMoves(ongoingGame.id);
             this.server
                 .to(`user:${userId}`)
                 .emit('sync', { ...ongoingGame, moves });
@@ -179,15 +199,15 @@ export class MultiplayerGateway
         @Ack() ack: MoveAck,
     ) {
         const userId = socket.data.user.id;
-        const playingGame =
-            await this.multiplayerService.getPlayingGameWithPlayers(userId);
-
-        if (!playingGame) {
+        const game = socket.data.currentGame;
+        if (!game) {
             throw new WsException({
                 code: 'GAME_NOT_FOUND',
                 message: 'Game not found!',
             });
         }
+
+        const playingGame = await this.gamesService.getPlayingGame(game.id);
 
         const gameId = playingGame.id;
 
@@ -199,7 +219,7 @@ export class MultiplayerGateway
                 console.log('reconstructing the chess instance..');
                 const newChess = new Chess();
 
-                const moves = await this.multiplayerService.getMoves(gameId);
+                const moves = await this.gamesService.getMoves(gameId);
 
                 moves.forEach((move) => {
                     newChess.move({
@@ -209,13 +229,18 @@ export class MultiplayerGateway
                     });
                 });
 
+                currentGames.set(gameId, newChess);
                 chess = newChess;
             }
 
             const move = chess.move(moveDto);
 
             const { savedMove, newGame, elo } =
-                await this.multiplayerService.addMove(playingGame, move, chess);
+                await this.multiplayerService.playMove(
+                    playingGame,
+                    move,
+                    chess,
+                );
 
             this.server.to(`game:${gameId}`).emit('new_move', savedMove);
 
@@ -255,8 +280,11 @@ export class MultiplayerGateway
     @SubscribeMessage(CLIENT_EVENTS.RESIGN)
     async handleResign(@ConnectedSocket() socket: TypedSocket) {
         const userId = socket.data.user.id;
+        const game = socket.data.currentGame;
 
-        const end = await this.multiplayerService.resign(userId);
+        if (!game) throw new WsException('Game not found!');
+
+        const end = await this.multiplayerService.resign(game.id, userId);
 
         if (end) {
             const { game, elo } = end;
@@ -272,9 +300,11 @@ export class MultiplayerGateway
 
     @SubscribeMessage(CLIENT_EVENTS.TIMEOUT)
     async handleTimeout(@ConnectedSocket() socket: TypedSocket) {
-        const userId = socket.data.user.id;
+        const game = socket.data.currentGame;
 
-        const result = await this.multiplayerService.timeout(userId);
+        if (!game) throw new WsException('Game not found!');
+
+        const result = await this.multiplayerService.timeout(game.id);
 
         if (result) {
             const { game, elo } = result;
@@ -291,8 +321,14 @@ export class MultiplayerGateway
     @SubscribeMessage(CLIENT_EVENTS.RQUEST_DRAW)
     async handleDrawRequest(@ConnectedSocket() socket: TypedSocket) {
         const userId = socket.data.user.id;
+        const game = socket.data.currentGame;
 
-        const newGame = await this.multiplayerService.requestDraw(userId);
+        if (!game) throw new WsException('Game not found!');
+
+        const newGame = await this.multiplayerService.requestDraw(
+            game.id,
+            userId,
+        );
 
         if (newGame) {
             this.server.to(`game:${newGame.id}`).emit('draw_request', {
@@ -305,8 +341,11 @@ export class MultiplayerGateway
     @SubscribeMessage(CLIENT_EVENTS.ACCEPT_DRAW)
     async handleDraw(@ConnectedSocket() socket: TypedSocket) {
         const userId = socket.data.user.id;
+        const game = socket.data.currentGame;
 
-        const end = await this.multiplayerService.draw(userId);
+        if (!game) throw new WsException('Game not found!');
+
+        const end = await this.multiplayerService.draw(game.id, userId);
 
         if (end) {
             const { game, elo } = end;
@@ -324,6 +363,6 @@ export class MultiplayerGateway
     async handleDrawRejection(@ConnectedSocket() socket: TypedSocket) {
         const userId = socket.data.user.id;
 
-        await this.multiplayerService.rejectDraw(userId);
+        await this.gamesService.rejectDraw(userId);
     }
 }

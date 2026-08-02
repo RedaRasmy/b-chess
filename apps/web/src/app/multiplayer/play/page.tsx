@@ -65,7 +65,7 @@ export default function Page() {
     })
 
     useSocketListener("game_finished", (game) => {
-        console.log("game finished: ", game.result, game.reason)
+        console.log("game finished: ", game.result, game.reason, game.diff)
 
         gameState.endGame(game.result, game.reason, {
             whiteEloDiff: game.whiteDiff,

@@ -245,6 +245,8 @@ export const useGameStore = create<GameState>()(
                 result: null,
                 endReason: null,
                 clock: DEFAULT_CLOCK,
+                whiteEloDiff: null,
+                blackEloDiff: null,
             })
         },
 
