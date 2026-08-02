@@ -6,13 +6,13 @@ import {
     checkGameEnd,
     Elo,
     FinishedGame,
+    FinishedGameWithPlayers,
     GameSummary,
     MatchedGame,
     MatchedGameWithPlayers,
     MoveType,
     parseTimerOption,
     PlayingGame,
-    PlayingGameWithPlayers,
     PreparingGame,
 } from '@bchess/shared';
 import {
@@ -22,7 +22,6 @@ import {
     Reason,
     Result,
     TimerOption,
-    userStats,
 } from '@bchess/db/tables';
 import {
     and,
@@ -30,6 +29,7 @@ import {
     between,
     desc,
     eq,
+    gt,
     inArray,
     isNotNull,
     ne,
@@ -62,16 +62,25 @@ export class GamesService {
         });
     }
 
-    async getMatchedGameWithPlayers(
+    async getCurrentGameWithPlayers(
         userId: string,
-    ): Promise<MatchedGameWithPlayers | null> {
+    ): Promise<MatchedGameWithPlayers | FinishedGameWithPlayers | null> {
+        const minuteAgo = new Date(Date.now() - 60 * 1000);
+
         const game = await this.db.query.games.findFirst({
             where: (games) =>
                 and(
-                    inArray(games.status, ['preparing', 'playing']),
+                    or(
+                        inArray(games.status, ['preparing', 'playing']),
+                        and(
+                            eq(games.status, 'finished'),
+                            gt(games.updatedAt, minuteAgo),
+                        ),
+                    ),
                     or(eq(games.whiteId, userId), eq(games.blackId, userId)),
                 ),
 
+            orderBy: desc(games.updatedAt),
             with: {
                 white: {
                     columns: {
@@ -90,7 +99,7 @@ export class GamesService {
 
         if (!game) return null;
 
-        return game as MatchedGameWithPlayers;
+        return game as MatchedGameWithPlayers | FinishedGameWithPlayers;
     }
 
     async getPlayingGame(gameId: string): Promise<PlayingGame> {
@@ -102,34 +111,6 @@ export class GamesService {
         if (!playingGame) throw new Error('Game not found!');
 
         return playingGame as PlayingGame;
-    }
-
-    async getPlayingGameWithPlayers(
-        userId: string,
-    ): Promise<PlayingGameWithPlayers | null> {
-        const playingGame = await this.db.query.games.findFirst({
-            where: (games) =>
-                and(
-                    eq(games.status, 'playing'),
-                    or(eq(games.whiteId, userId), eq(games.blackId, userId)),
-                ),
-            with: {
-                white: {
-                    columns: {
-                        username: true,
-                        image: true,
-                    },
-                },
-                black: {
-                    columns: {
-                        username: true,
-                        image: true,
-                    },
-                },
-            },
-        });
-
-        return (playingGame as PlayingGameWithPlayers) ?? null;
     }
 
     async getCreatedMatch(userId: string) {

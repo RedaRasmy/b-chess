@@ -75,9 +75,8 @@ export default function Page() {
 
     useSocketListener("exception", ({ message, code }) => {
         console.log("exception: ", message)
-        toast.error("Something went wrong!", {
+        toast.error(message, {
             richColors: true,
-            description: message,
         })
         if (code === "GAME_NOT_FOUND") {
             router.replace("/multiplayer")

@@ -12,12 +12,14 @@ export class MultiplayerController {
 
     @Get('isPlaying')
     async isPlaying(@Session() session: UserSession) {
-        const ongoingGame = await this.gamesService.getMatchedGameWithPlayers(
+        const ongoingGame = await this.gamesService.getCurrentGameWithPlayers(
             session.user.id,
         );
 
+        const isPlaying = ongoingGame && ongoingGame.status !== 'finished';
+
         return {
-            isPlaying: !!ongoingGame,
+            isPlaying,
         };
     }
 

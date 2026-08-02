@@ -412,8 +412,11 @@ export const useGameStore = create<GameState>()(
                 },
             })
 
-            if (game.reason && game.result) {
-                get().endGame(game.result, game.reason)
+            if (game.result) {
+                get().endGame(game.result, game.reason!, {
+                    whiteEloDiff: game.whiteEloDiff!,
+                    blackEloDiff: game.blackEloDiff!,
+                })
             }
         },
     })),

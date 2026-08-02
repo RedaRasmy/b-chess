@@ -73,7 +73,7 @@ export class MultiplayerGateway
         socket.data.user = user;
         socket.join(`user:${user.id}`);
 
-        const ongoingGame = await this.gamesService.getMatchedGameWithPlayers(
+        const ongoingGame = await this.gamesService.getCurrentGameWithPlayers(
             user.id,
         );
 
@@ -137,7 +137,6 @@ export class MultiplayerGateway
                 id: gameId,
                 playerColor,
             };
-
         } else {
             socket.emit('queue_joined', { gameId: result.game.id });
 
@@ -157,7 +156,7 @@ export class MultiplayerGateway
     async joinGame(@ConnectedSocket() socket: TypedSocket) {
         const userId = socket.data.user.id;
         const ongoingGame =
-            await this.gamesService.getMatchedGameWithPlayers(userId);
+            await this.gamesService.getCurrentGameWithPlayers(userId);
 
         if (!ongoingGame) {
             throw new WsException({
