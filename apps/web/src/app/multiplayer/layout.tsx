@@ -1,6 +1,5 @@
 "use client"
 import LoadingPage from "@/components/loading-page"
-import SocketProvider from "@/features/multiplayer/components/socket-provider"
 import { authClient } from "@/lib/auth-client"
 import { useRouter } from "next/navigation"
 import { ReactNode, useEffect } from "react"
@@ -25,5 +24,5 @@ export default function Layout({ children }: { children: ReactNode }) {
 
     if (!session || !session.user.username) return null
 
-    return <SocketProvider>{children}</SocketProvider>
+    return children
 }
