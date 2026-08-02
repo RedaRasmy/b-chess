@@ -1,9 +1,9 @@
 import { HttpException, Inject, Injectable } from '@nestjs/common';
 import { DATABASE_CONNECTION } from '../database/database.module';
 import type { Database, Transaction } from '@bchess/db';
-import { eq, sql } from 'drizzle-orm';
-import { Elo, Result } from '@bchess/shared';
-import { userStats } from '@bchess/db/tables';
+import { desc, eq, isNotNull, sql } from 'drizzle-orm';
+import { Elo, Result, TopPlayer } from '@bchess/shared';
+import { user, userStats } from '@bchess/db/tables';
 
 @Injectable()
 export class PlayersService {
@@ -79,5 +79,29 @@ export class PlayersService {
                 rating: elo.newBlackRating,
             })
             .where(eq(userStats.userId, blackId));
+    }
+
+    async getTopPlayers(
+        page: number = 1,
+        limit: number = 10,
+    ): Promise<TopPlayer[]> {
+        const players = await this.db
+            .select({
+                userId: user.id,
+                rating: userStats.rating,
+                wins: userStats.wins,
+                losses: userStats.losses,
+                draws: userStats.draws,
+                username: user.username,
+                image: user.image,
+            })
+            .from(userStats)
+            .innerJoin(user, eq(userStats.userId, user.id))
+            .where(isNotNull(user.username))
+            .orderBy(desc(userStats.rating))
+            .offset((page - 1) * limit)
+            .limit(limit);
+
+        return players as TopPlayer[];
     }
 }

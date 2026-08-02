@@ -1,5 +1,5 @@
 "use client"
-import { Users, Bot, User, Settings } from "lucide-react"
+import { Users, Bot, User, Settings, Trophy } from "lucide-react"
 import {
     Sidebar,
     SidebarContent,
@@ -18,7 +18,7 @@ const items = [
     { title: "Profile", path: "/profile", icon: User },
     { title: "Bot", path: "/bot", icon: Bot },
     { title: "Multiplayer", path: "/multiplayer", icon: Users },
-    //   { title: "Leaderboard", path: "/leaderboard", icon: Trophy },
+    { title: "Leaderboard", path: "/leaderboard", icon: Trophy },
     // { title: "Settings", path: "/settings", icon: Settings },
 ]
 
