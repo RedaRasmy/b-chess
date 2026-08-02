@@ -55,7 +55,7 @@ export default function PlayerInfo({ color }: { color: Color | null }) {
                                     "text-destructive": diff < 0,
                                 })}
                             >
-                                {diff > 0 && "+"}
+                                {diff >= 0 && "+"}
                                 {diff}
                             </span>
                         )}
