@@ -2,10 +2,14 @@ import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ZodValidationPipe } from 'nestjs-zod';
+import { ConsoleLogger } from '@nestjs/common';
 
 async function bootstrap() {
     const app = await NestFactory.create(AppModule, {
         bodyParser: false,
+        logger: new ConsoleLogger({
+            // logLevels: ['log'],
+        }),
     });
 
     app.useGlobalPipes(new ZodValidationPipe());

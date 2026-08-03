@@ -24,6 +24,7 @@ import {
 import { UserSession } from '@thallesp/nestjs-better-auth';
 import { Chess } from 'chess.js';
 import { GamesService } from '../games/games.service';
+import { Logger } from '@nestjs/common';
 
 type Data = {
     user: UserSession['user'];
@@ -50,6 +51,8 @@ export class MultiplayerGateway
         private readonly multiplayerService: MultiplayerService,
         private readonly gamesService: GamesService,
     ) {}
+
+    private readonly logger = new Logger(MultiplayerGateway.name);
 
     @WebSocketServer()
     server!: Server<
@@ -182,6 +185,8 @@ export class MultiplayerGateway
                 });
             if (newGame.status === 'playing') {
                 currentGames.set(newGame.id, new Chess());
+                this.logger.log('New game inserted to memory');
+                this.logger.log(`Games in memory : ${currentGames.size}`);
             }
         } else {
             const moves = await this.gamesService.getMoves(ongoingGame.id);
@@ -197,7 +202,6 @@ export class MultiplayerGateway
         @ConnectedSocket() socket: TypedSocket,
         @Ack() ack: MoveAck,
     ) {
-        const userId = socket.data.user.id;
         const game = socket.data.currentGame;
         if (!game) {
             throw new WsException({
@@ -214,8 +218,7 @@ export class MultiplayerGateway
             let chess = currentGames.get(gameId);
 
             if (!chess) {
-                console.log('Memory: game lost');
-                console.log('reconstructing the chess instance..');
+                this.logger.warn(`Game not found in memory ,games in memory: ${currentGames.size}`);
                 const newChess = new Chess();
 
                 const moves = await this.gamesService.getMoves(gameId);
@@ -261,6 +264,8 @@ export class MultiplayerGateway
                 });
 
                 currentGames.delete(newGame.id);
+                this.logger.log(`Game deleted from memory (${newGame.reason})`);
+                this.logger.log(`Games in memory : ${currentGames.size}`);
             }
         } catch (error) {
             ack({
@@ -294,6 +299,8 @@ export class MultiplayerGateway
             });
 
             currentGames.delete(game.id);
+            this.logger.log('Game deleted from memory (Resignation)');
+            this.logger.log(`Games in memory : ${currentGames.size}`);
         }
     }
 
@@ -314,6 +321,8 @@ export class MultiplayerGateway
             });
 
             currentGames.delete(game.id);
+            this.logger.log('Game deleted from memory (Timeout)');
+            this.logger.log(`Games in memory : ${currentGames.size}`);
         }
     }
 
@@ -355,6 +364,8 @@ export class MultiplayerGateway
             });
 
             currentGames.delete(game.id);
+            this.logger.log('Game deleted from memory (Draw by agreement)');
+            this.logger.log(`Games in memory : ${currentGames.size}`);
         }
     }
 
