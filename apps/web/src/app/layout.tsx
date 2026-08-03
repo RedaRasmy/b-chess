@@ -6,6 +6,7 @@ import { SidebarProvider } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
 import Header from "@/components/header"
 import { Toaster } from "@/components/ui/sonner"
+import GlobalListeners from "@/features/multiplayer/components/global-listeners"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
 
@@ -29,6 +30,7 @@ export default function RootLayout({
 }: Readonly<{
     children: React.ReactNode
 }>) {
+    console.log("layout runs")
     return (
         <html lang="en" className={inter.variable}>
             <body
@@ -36,6 +38,7 @@ export default function RootLayout({
             >
                 <Providers>
                     <SidebarProvider>
+                        <GlobalListeners />
                         <AppSidebar />
                         <div className="w-full grid grid-rows-[auto_1fr] h-screen">
                             <Header />

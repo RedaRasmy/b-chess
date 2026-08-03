@@ -2,22 +2,18 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import SelectTimer from "@/features/game/components/select-timer"
-import { useGameStore } from "@/features/game/game-store"
 import { useSocket } from "@/features/multiplayer/hooks/use-socket"
 import { useSocketListener } from "@/features/multiplayer/hooks/use-socket-listener"
 import { fetchIsMatching } from "@/features/multiplayer/requests"
 import { TimerOption } from "@bchess/shared"
 import { useQuery } from "@tanstack/react-query"
 import { Timer, Users } from "lucide-react"
-import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 
 export default function Page() {
     const [isMatching, setIsMatching] = useState(false)
     const socket = useSocket()
     const [timer, setTimer] = useState<TimerOption>("rapid 10+0")
-    const router = useRouter()
-    const gameState = useGameStore()
 
     function handleStart() {
         socket.emit("join_queue", {
@@ -44,15 +40,6 @@ export default function Page() {
 
     useSocketListener("queue_joined", () => {
         console.log("queue joined")
-    })
-
-    useSocketListener("game_found", (game) => {
-        console.log("game found: ", game)
-        gameState.resetGame()
-        gameState.setMode("multiplayer")
-        gameState.setStatus(game.status)
-
-        router.push(`/multiplayer/play`)
     })
 
     return (
