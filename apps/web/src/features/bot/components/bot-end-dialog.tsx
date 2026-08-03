@@ -17,33 +17,30 @@ export default function BotEndDialog() {
     const endReason = useGameStore((s) => s.endReason)
     const replay = useBotStore((s) => s.replayBotGame)
 
-    const isGameOver = result !== null
-    const isDraw = result === "draw"
-    const isWin = result === playerColor
+    if (!result || !playerColor) return null
 
-    if (isGameOver)
-        return (
-            <Dialog defaultOpen>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>
-                            {isDraw
-                                ? "You Draw"
-                                : isWin
-                                  ? "You Won"
-                                  : "You Lost"}
-                        </DialogTitle>
-                        <DialogDescription>By {endReason}</DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                        <Button asChild variant="outline">
-                            <Link href={"/"}>Home</Link>
-                        </Button>
-                        <Button className="cursor-pointer" onClick={replay}>
-                            Replay
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-        )
+    const isDraw = result === "draw"
+    const isWhite = playerColor === "white"
+    const isWin = isWhite && result === "white_won"
+
+    return (
+        <Dialog defaultOpen>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>
+                        {isDraw ? "You Draw" : isWin ? "You Won" : "You Lost"}
+                    </DialogTitle>
+                    <DialogDescription>By {endReason}</DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                    <Button asChild variant="outline">
+                        <Link href={"/"}>Home</Link>
+                    </Button>
+                    <Button className="cursor-pointer" onClick={replay}>
+                        Replay
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    )
 }
