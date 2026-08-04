@@ -25,6 +25,7 @@ import { UserSession } from '@thallesp/nestjs-better-auth';
 import { GamesService } from '../games/games.service';
 import { Logger } from '@nestjs/common';
 import { LiveGamesService } from './live-games.service';
+import { Rooms } from './rooms';
 
 type Data = {
     user: UserSession['user'];
@@ -49,7 +50,7 @@ type TypedServer = Server<
 >;
 
 async function isConnected(server: TypedServer, userId: string) {
-    const sockets = await server.in(`user:${userId}`).fetchSockets();
+    const sockets = await server.in(Rooms.user(userId)).fetchSockets();
     return sockets.length > 0;
 }
 
@@ -80,17 +81,12 @@ export class MultiplayerGateway
         const user = session.user;
 
         socket.data.user = user;
-        socket.join(`user:${user.id}`);
+        socket.join(Rooms.user(user.id));
 
         const ongoingGame = await this.gamesService.getFullCurrentGame(user.id);
 
         if (ongoingGame && ongoingGame.status !== 'finished') {
-            const opponentId =
-                ongoingGame.whiteId === user.id
-                    ? ongoingGame.blackId!
-                    : ongoingGame.whiteId;
-
-            socket.join(`game:${ongoingGame.id}`);
+            socket.join(Rooms.game(ongoingGame.id));
 
             const playerColor = user.id === ongoingGame.whiteId ? 'w' : 'b';
 
@@ -131,16 +127,18 @@ export class MultiplayerGateway
 
             liveGame.setPlayerConnected(playerColor);
 
-            this.server.to(`user:${user.id}`).emit('sync', {
+            this.server.to(Rooms.user(user.id)).emit('sync', {
                 ...ongoingGame,
                 whiteStatus: liveGame.getWhiteStatus(),
                 blackStatus: liveGame.getBlackStatus(),
             });
 
-            this.server.to(`user:${opponentId}`).emit('player_status_changed', {
-                status: 'connected',
-                color: playerColor,
-            });
+            this.server
+                .to(Rooms.game(ongoingGame.id))
+                .emit('player_status_changed', {
+                    status: 'connected',
+                    color: playerColor,
+                });
         }
     }
 
@@ -148,7 +146,7 @@ export class MultiplayerGateway
         const game = socket.data.currentGame;
 
         if (game) {
-            this.server.to(`game:${game.id}`).emit('player_status_changed', {
+            this.server.to(Rooms.game(game.id)).emit('player_status_changed', {
                 status: 'disconnected',
                 color: game.playerColor,
             });
@@ -183,17 +181,17 @@ export class MultiplayerGateway
         if (result.status === 'MATCH_FOUND') {
             result.players.forEach((userId) => {
                 this.server
-                    .to(`user:${userId}`)
+                    .to(Rooms.user(userId))
                     .emit('game_found', result.game);
             });
 
-            const sockets = await this.server
-                .in(`user:${result.game.whiteId}`)
-                .fetchSockets();
-            const whiteConnected = sockets.length > 0;
-
             const game = this.liveGamesService.createGame(result.game.id);
-            if (!whiteConnected) {
+
+            const isWhiteConnected = await isConnected(
+                this.server,
+                result.game.whiteId,
+            );
+            if (!isWhiteConnected) {
                 game.setBlackDisconnected();
             }
         } else {
@@ -220,7 +218,7 @@ export class MultiplayerGateway
 
         const playerColor = ongoingGame.whiteId === userId ? 'w' : 'b';
 
-        socket.join(`game:${ongoingGame.id}`);
+        socket.join(Rooms.game(ongoingGame.id));
         socket.data.currentGame = {
             id: ongoingGame.id,
             playerColor,
@@ -232,7 +230,7 @@ export class MultiplayerGateway
                 userId,
             );
             this.server
-                .to([`user:${newGame.whiteId}`, `user:${newGame.blackId}`])
+                .to(Rooms.users(newGame.whiteId, newGame.blackId))
                 .emit('sync', {
                     ...newGame,
                     white: ongoingGame.white,
@@ -248,7 +246,7 @@ export class MultiplayerGateway
             const whiteStatus = liveGame?.getWhiteStatus() ?? null;
             const blackStatus = liveGame?.getBlackStatus() ?? null;
 
-            this.server.to(`user:${userId}`).emit('sync', {
+            this.server.to(Rooms.user(userId)).emit('sync', {
                 ...ongoingGame,
                 whiteStatus,
                 blackStatus,
@@ -297,8 +295,10 @@ export class MultiplayerGateway
                     end ?? undefined,
                 );
 
-            this.server.to(`game:${gameId}`).emit('new_move', savedMove);
-            this.server.to(`game:${game.id}`).emit('player_status_changed', {
+            const gameRoom = this.server.to(Rooms.game(gameId));
+
+            gameRoom.emit('new_move', savedMove);
+            gameRoom.emit('player_status_changed', {
                 status: 'connected',
                 color: playerColor,
             });
@@ -314,7 +314,7 @@ export class MultiplayerGateway
             });
 
             if (elo && newGame.reason && newGame.result) {
-                this.server.to(`game:${gameId}`).emit('game_finished', {
+                gameRoom.emit('game_finished', {
                     ...elo,
                     reason: newGame.reason,
                     result: newGame.result,
@@ -348,7 +348,7 @@ export class MultiplayerGateway
 
         if (end) {
             const { game, elo } = end;
-            this.server.to(`game:${game.id}`).emit('game_finished', {
+            this.server.to(Rooms.game(game.id)).emit('game_finished', {
                 ...elo,
                 reason: game.reason,
                 result: game.result,
@@ -368,7 +368,7 @@ export class MultiplayerGateway
 
         if (result) {
             const { game, elo } = result;
-            this.server.to(`game:${game.id}`).emit('game_finished', {
+            this.server.to(Rooms.game(game.id)).emit('game_finished', {
                 reason: game.reason,
                 result: game.result,
                 ...elo,
@@ -391,7 +391,7 @@ export class MultiplayerGateway
         );
 
         if (newGame) {
-            this.server.to(`game:${newGame.id}`).emit('draw_request', {
+            this.server.to(Rooms.game(newGame.id)).emit('draw_request', {
                 requestDraw: newGame.requestDraw,
                 requestedDrawAt: newGame.requestedDrawAt,
             });
@@ -409,7 +409,7 @@ export class MultiplayerGateway
 
         if (end) {
             const { game, elo } = end;
-            this.server.to(`game:${game.id}`).emit('game_finished', {
+            this.server.to(Rooms.game(game.id)).emit('game_finished', {
                 reason: game.reason,
                 result: game.result,
                 ...elo,
