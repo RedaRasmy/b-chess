@@ -1,17 +1,17 @@
 import { useGameStore } from "@/features/game/game-store"
-import { PieceColor, PlayerInfo } from "@/features/game/types"
+import { ColorName, PlayerInfo } from "@/features/game/types"
 import { Square } from "chess.js"
 import { create } from "zustand"
 
 export interface BotState {
     difficulty: number
-    botColor: PieceColor
+    botColor: ColorName
     isThinking: boolean
     engine: Worker | null
     engineReady: boolean
     lastConfig: {
         difficulty: number
-        playerColor: PieceColor
+        playerColor: ColorName
         timeControl?: { initial: number; increment: number }
         player?: PlayerInfo
     } | null
@@ -21,7 +21,7 @@ export interface BotState {
     destroyEngine: () => void
     startBotGame: (opts: {
         difficulty: number
-        playerColor: PieceColor
+        playerColor: ColorName
         timeControl?: { initial: number; increment: number }
         player?: PlayerInfo
     }) => void

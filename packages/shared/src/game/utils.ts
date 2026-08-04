@@ -1,6 +1,6 @@
-import { Chess } from "chess.js"
+import { Chess, Color } from "chess.js"
 import { Reason, Result, TimerOption } from "./constants"
-import { ChessTimer } from "./types"
+import { ChessTimer, ColorName } from "./types"
 
 export function parseTimerOption(timerOption: TimerOption): ChessTimer {
     const [type, time] = timerOption.split(" ")
@@ -108,3 +108,18 @@ export function calcElo({
 }
 
 export type Elo = ReturnType<typeof calcElo>
+
+export function getColorName(color: Color | ColorName): ColorName {
+    if (color === "w" || color === "white") return "white"
+    return "black"
+}
+
+export function getColor(color: Color | ColorName): Color {
+    if (color === "w" || color === "white") return "w"
+    return "b"
+}
+
+export function getOppositeColor(color: Color | ColorName): Color {
+    if (color === "w" || color === "white") return "b"
+    return "w"
+}

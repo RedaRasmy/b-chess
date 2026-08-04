@@ -1,7 +1,6 @@
 import { ClockState, GameState } from "@/features/game/types"
-import { getColor, getColorName } from "@/features/game/utils/get-color"
 import { playSound } from "@/lib/sounds"
-import { checkGameEnd, parseTimerOption, PromotionPiece } from "@bchess/shared"
+import { checkGameEnd, getColor, getColorName, parseTimerOption, PromotionPiece } from "@bchess/shared"
 import { Chess, Square } from "chess.js"
 import { create } from "zustand"
 import { subscribeWithSelector } from "zustand/middleware"

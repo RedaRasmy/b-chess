@@ -8,6 +8,7 @@ import {
     FinishedGame,
     FullGame,
     GameSummary,
+    getOppositeColor,
     MatchedGame,
     MoveType,
     parseTimerOption,
@@ -206,12 +207,15 @@ export class GamesService {
         tx: Transaction,
         {
             game,
-            chess,
             move,
+            end,
         }: {
             game: PlayingGame;
             move: Move;
-            chess: Chess;
+            end?: {
+                result: Result;
+                reason: Reason;
+            };
         },
     ) {
         const lastTimestamp = game.lastMoveAt ?? game.gameStartedAt;
@@ -232,14 +236,10 @@ export class GamesService {
                 piece: move.piece,
                 san: move.san,
                 capturedPiece: move.captured,
-                isCheck: chess.isCheck(),
-                isCheckmate: chess.isCheckmate(),
             })
             .returning();
 
         const savedMove = data[0]!;
-
-        const end = checkGameEnd(chess);
 
         const reason = end?.reason ?? null;
         const result = end?.result ?? null;
@@ -277,8 +277,8 @@ export class GamesService {
                 status: end ? 'finished' : 'playing',
                 reason,
                 result: result,
-                currentFen: chess.fen(),
-                currentTurn: chess.turn(),
+                currentFen: move.after,
+                currentTurn: getOppositeColor(move.color),
                 requestDraw: null,
                 requestedDrawAt: null,
                 whiteEloDiff: elo?.whiteDiff,

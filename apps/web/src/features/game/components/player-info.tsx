@@ -4,9 +4,9 @@ import { useGameStore } from "@/features/game/game-store"
 import { getMaterialState } from "@/features/game/utils/get-material-state"
 import ChessPieceImage from "@/features/game/components/chess-piece-image"
 import { Skeleton } from "@/components/ui/skeleton"
-import { getColor, getOppositeColor } from "@/features/game/utils/get-color"
 import PlayerAvatar from "@/features/profile/components/player-avatar"
 import { cn } from "@/lib/utils"
+import { getColor, getOppositeColor } from "@bchess/shared"
 
 export default function PlayerInfo({ color }: { color: Color | null }) {
     const {

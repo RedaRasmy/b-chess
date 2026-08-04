@@ -5,7 +5,7 @@ import useBot from "@/features/bot/use-bot"
 import GameBoard from "@/features/game/components/game-board"
 import PlayerInfo from "@/features/game/components/player-info"
 import { useGameStore } from "@/features/game/game-store"
-import { getColor } from "@/features/game/utils/get-color"
+import { getColor } from "@bchess/shared"
 
 export default function Page() {
     useBot()

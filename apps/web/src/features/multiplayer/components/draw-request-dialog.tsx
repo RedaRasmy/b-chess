@@ -1,5 +1,4 @@
 import { useGameStore } from "@/features/game/game-store"
-import { getColor } from "@/features/game/utils/get-color"
 import { useSocketListener } from "@/features/multiplayer/hooks/use-socket-listener"
 import { useState } from "react"
 import {
@@ -13,6 +12,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { useSocket } from "@/features/multiplayer/hooks/use-socket"
+import { getColor } from "@bchess/shared"
 
 export default function DrawRequestDialog() {
     const [isOpen, setIsOpen] = useState(false)

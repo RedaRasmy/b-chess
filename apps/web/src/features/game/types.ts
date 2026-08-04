@@ -6,12 +6,12 @@ import {
     GameTimestamps,
     FullGame,
     PlayerStatus,
+    ColorName,
+    SyncGame,
 } from "@bchess/shared"
 import { Chess, Color, Move, Square } from "chess.js"
 
 export type GameMode = "bot" | "multiplayer" | "idle"
-
-export type PieceColor = "white" | "black"
 
 export interface PlayerInfo {
     id: string
@@ -24,7 +24,7 @@ export interface ClockState {
     white: number
     black: number
     increment: number
-    activeColor: PieceColor | null
+    activeColor: ColorName | null
     lastTickAt: number | null
 }
 
@@ -53,7 +53,7 @@ export interface GameState {
     lastAction: null | Action
 
     // players
-    playerColor: PieceColor | null
+    playerColor: ColorName | null
     white: PlayerInfo | null
     black: PlayerInfo | null
     whiteEloDiff: number | null
@@ -81,15 +81,15 @@ export interface GameState {
     // actions
     selectSquare: (square: Square) => void
     makeMove: (
-        from: Square,
-        to: Square,
+        from: string,
+        to: string,
         promotion?: string,
         ack?: boolean,
     ) => Move | null
     setPosition: (fen: string) => void
     resetGame: () => void
     setPlayers: (white: PlayerInfo, black: PlayerInfo) => void
-    setPlayerColor: (color: PieceColor) => void
+    setPlayerColor: (color: ColorName) => void
     setStatus: (status: Status) => void
     setMode: (mode: GameMode) => void
     endGame: (
@@ -114,6 +114,6 @@ export interface GameState {
     undo: () => void
     rollback: (timestamps: GameTimestamps) => void
     syncTimer: (game: GameTimestamps) => void
-    syncGame: (game: FullGame, playerColor: PieceColor) => void
+    syncGame: (game: SyncGame, playerColor: ColorName) => void
     setPlayerStatus: (color: Color, status: PlayerStatus | null) => void
 }

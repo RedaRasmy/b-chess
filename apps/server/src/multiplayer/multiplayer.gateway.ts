@@ -17,15 +17,14 @@ import { MoveDto } from '../games/dto/move.dto';
 import { CreateGameDto } from '../games/dto/create-game.dto';
 import {
     CLIENT_EVENTS,
-    LiveGame,
     type ClientToServerEvents,
     type MoveAck,
     type ServerToClientEvents,
 } from '@bchess/shared';
 import { UserSession } from '@thallesp/nestjs-better-auth';
-import { Chess } from 'chess.js';
 import { GamesService } from '../games/games.service';
 import { Logger } from '@nestjs/common';
+import { LiveGamesService } from './live-games.service';
 
 type Data = {
     user: UserSession['user'];
@@ -42,18 +41,16 @@ type TypedSocket = Socket<
     Data
 >;
 
-const liveGames = new Map<string, LiveGame>();
+type TypedServer = Server<
+    ClientToServerEvents,
+    ServerToClientEvents,
+    DefaultEventsMap,
+    Data
+>;
 
-function initGame(): LiveGame {
-    return {
-        chess: new Chess(),
-        white: {
-            status: 'connected',
-        },
-        black: {
-            status: 'connected',
-        },
-    };
+async function isConnected(server: TypedServer, userId: string) {
+    const sockets = await server.in(`user:${userId}`).fetchSockets();
+    return sockets.length > 0;
 }
 
 @WebSocketGateway({ cors: { origin: true, credentials: true } })
@@ -63,17 +60,13 @@ export class MultiplayerGateway
     constructor(
         private readonly multiplayerService: MultiplayerService,
         private readonly gamesService: GamesService,
+        private readonly liveGamesService: LiveGamesService,
     ) {}
 
     private readonly logger = new Logger(MultiplayerGateway.name);
 
     @WebSocketServer()
-    server!: Server<
-        ClientToServerEvents,
-        ServerToClientEvents,
-        DefaultEventsMap,
-        Data
-    >;
+    server!: TypedServer;
 
     async handleConnection(socket: TypedSocket) {
         const session = await auth.api.getSession({
@@ -91,7 +84,7 @@ export class MultiplayerGateway
 
         const ongoingGame = await this.gamesService.getFullCurrentGame(user.id);
 
-        if (ongoingGame) {
+        if (ongoingGame && ongoingGame.status !== 'finished') {
             const opponentId =
                 ongoingGame.whiteId === user.id
                     ? ongoingGame.blackId!
@@ -107,35 +100,42 @@ export class MultiplayerGateway
             };
 
             const gameId = ongoingGame.id;
-            const liveGame = liveGames.get(gameId);
+
+            let liveGame = this.liveGamesService.getGame(gameId);
+
+            if (!liveGame) {
+                const moves = await this.gamesService.getMoves(gameId);
+                const newLiveGame = this.liveGamesService.createGame(
+                    gameId,
+                    moves,
+                );
+                if (playerColor === 'w') {
+                    const isBlackConnected = await isConnected(
+                        this.server,
+                        ongoingGame.blackId,
+                    );
+                    isBlackConnected
+                        ? newLiveGame.setBlackConnected()
+                        : newLiveGame.setBlackDisconnected();
+                } else {
+                    const isWhiteConnected = await isConnected(
+                        this.server,
+                        ongoingGame.whiteId,
+                    );
+                    isWhiteConnected
+                        ? newLiveGame.setWhiteConnected()
+                        : newLiveGame.setWhiteDisconnected();
+                }
+                liveGame = newLiveGame;
+            }
+
+            liveGame.setPlayerConnected(playerColor);
 
             this.server.to(`user:${user.id}`).emit('sync', {
                 ...ongoingGame,
-                whiteStatus: liveGame?.white.status ?? 'unknown',
-                blackStatus: liveGame?.black.status ?? 'unknown',
+                whiteStatus: liveGame.getWhiteStatus(),
+                blackStatus: liveGame.getBlackStatus(),
             });
-
-            if (liveGame) {
-                const playerColor = user.id === ongoingGame.whiteId ? 'w' : 'b';
-
-                liveGames.set(gameId, {
-                    chess: liveGame.chess,
-                    white: {
-                        ...liveGame.white,
-                        status:
-                            playerColor === 'w'
-                                ? 'connected'
-                                : liveGame.white.status,
-                    },
-                    black: {
-                        ...liveGame.black,
-                        status:
-                            playerColor === 'b'
-                                ? 'connected'
-                                : liveGame.black.status,
-                    },
-                });
-            }
 
             this.server.to(`user:${opponentId}`).emit('player_status_changed', {
                 status: 'connected',
@@ -153,26 +153,10 @@ export class MultiplayerGateway
                 color: game.playerColor,
             });
 
-            const liveGame = liveGames.get(game.id);
+            const liveGame = this.liveGamesService.getGame(game.id);
 
             if (liveGame) {
-                const playerColor = game.playerColor;
-
-                liveGames.set(game.id, {
-                    chess: new Chess(),
-                    white: {
-                        status:
-                            playerColor === 'w'
-                                ? 'disconnected'
-                                : liveGame.white.status,
-                    },
-                    black: {
-                        status:
-                            playerColor === 'b'
-                                ? 'disconnected'
-                                : liveGame.black.status,
-                    },
-                });
+                liveGame.setPlayerDisconnected(game.playerColor);
             }
         }
     }
@@ -202,6 +186,16 @@ export class MultiplayerGateway
                     .to(`user:${userId}`)
                     .emit('game_found', result.game);
             });
+
+            const sockets = await this.server
+                .in(`user:${result.game.whiteId}`)
+                .fetchSockets();
+            const whiteConnected = sockets.length > 0;
+
+            const game = this.liveGamesService.createGame(result.game.id);
+            if (!whiteConnected) {
+                game.setBlackDisconnected();
+            }
         } else {
             socket.emit('queue_joined', { gameId: result.game.id });
         }
@@ -247,16 +241,12 @@ export class MultiplayerGateway
                     whiteStatus: 'connected',
                     blackStatus: 'connected',
                 });
-            if (newGame.status === 'playing') {
-                liveGames.set(newGame.id, initGame());
-                this.logger.log('New game inserted to memory');
-                this.logger.log(`Games in memory : ${liveGames.size}`);
-            }
         } else {
-            const liveGame = liveGames.get(ongoingGame.id);
+            const liveGame = this.liveGamesService.getGame(ongoingGame.id);
+
             // Note: if the game has finished liveGame will be undefined
-            const whiteStatus = liveGame?.white.status ?? null;
-            const blackStatus = liveGame?.black.status ?? null;
+            const whiteStatus = liveGame?.getWhiteStatus() ?? null;
+            const blackStatus = liveGame?.getBlackStatus() ?? null;
 
             this.server.to(`user:${userId}`).emit('sync', {
                 ...ongoingGame,
@@ -282,67 +272,29 @@ export class MultiplayerGateway
         }
 
         const playingGame = await this.gamesService.getPlayingGame(game.id);
-
         const gameId = playingGame.id;
 
         try {
-            let liveGame = liveGames.get(gameId);
-            let chess = liveGame?.chess;
+            let liveGame = this.liveGamesService.getGame(gameId);
 
-            if (!chess) {
+            if (!liveGame) {
                 this.logger.warn(
-                    `Game not found in memory ,games in memory: ${liveGames.size}`,
+                    `Game not found in memory, will get recreated..`,
                 );
-                const newChess = new Chess();
-
                 const moves = await this.gamesService.getMoves(gameId);
 
-                moves.forEach((move) => {
-                    newChess.move({
-                        from: move.from,
-                        to: move.to,
-                        promotion: move.promotion ?? undefined,
-                    });
-                });
-
-                const playerColor = game.playerColor;
-
-                liveGames.set(gameId, {
-                    chess: newChess,
-                    white: {
-                        status: playerColor === 'w' ? 'connected' : 'unknown',
-                    },
-                    black: {
-                        status: playerColor === 'b' ? 'connected' : 'unknown',
-                    },
-                });
-
-                chess = newChess;
+                liveGame = this.liveGamesService.createGame(gameId, moves);
             }
 
-            this.logger.debug('played moves : ', chess.moves().length);
-
-            const move = chess.move(moveDto);
+            const { move, end } = liveGame.move(moveDto);
 
             const playerColor = game.playerColor;
 
-            liveGames.set(gameId, {
-                chess,
-                white: {
-                    status: playerColor === 'w' ? 'connected' : 'unknown',
-                },
-                black: {
-                    status: playerColor === 'b' ? 'connected' : 'unknown',
-                },
-            });
-
-            this.logger.debug('move is valid');
-
             const { savedMove, newGame, elo } =
-                await this.multiplayerService.playMove(
+                await this.multiplayerService.saveMove(
                     playingGame,
                     move,
-                    chess,
+                    end ?? undefined,
                 );
 
             this.server.to(`game:${gameId}`).emit('new_move', savedMove);
@@ -368,9 +320,7 @@ export class MultiplayerGateway
                     result: newGame.result,
                 });
 
-                liveGames.delete(newGame.id);
-                this.logger.log(`Game deleted from memory (${newGame.reason})`);
-                this.logger.log(`Games in memory : ${liveGames.size}`);
+                this.liveGamesService.deleteGame(newGame.id);
             }
         } catch (error) {
             this.logger.error(error);
@@ -404,9 +354,7 @@ export class MultiplayerGateway
                 result: game.result,
             });
 
-            liveGames.delete(game.id);
-            this.logger.log('Game deleted from memory (Resignation)');
-            this.logger.log(`Games in memory : ${liveGames.size}`);
+            this.liveGamesService.deleteGame(game.id);
         }
     }
 
@@ -426,9 +374,7 @@ export class MultiplayerGateway
                 ...elo,
             });
 
-            liveGames.delete(game.id);
-            this.logger.log('Game deleted from memory (Timeout)');
-            this.logger.log(`Games in memory : ${liveGames.size}`);
+            this.liveGamesService.deleteGame(game.id);
         }
     }
 
@@ -469,9 +415,7 @@ export class MultiplayerGateway
                 ...elo,
             });
 
-            liveGames.delete(game.id);
-            this.logger.log('Game deleted from memory (Draw by agreement)');
-            this.logger.log(`Games in memory : ${liveGames.size}`);
+            this.liveGamesService.deleteGame(game.id);
         }
     }
 

@@ -4,6 +4,7 @@ import { MultiplayerGateway } from './multiplayer.gateway';
 import { MultiplayerController } from './multiplayer.controller';
 import { GamesService } from '../games/games.service';
 import { PlayersService } from '../players/players.service';
+import { LiveGamesService } from './live-games.service';
 
 @Module({
     providers: [
@@ -11,6 +12,7 @@ import { PlayersService } from '../players/players.service';
         MultiplayerService,
         GamesService,
         PlayersService,
+        LiveGamesService,
     ],
     controllers: [MultiplayerController],
 })

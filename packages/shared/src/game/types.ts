@@ -41,11 +41,12 @@ type Players = {
     white: { username: string; image: string | null }
     black: { username: string; image: string | null }
 }
+export type ColorName = "white" | "black"
 
 export interface MoveType {
-    from: Square
-    to: Square
-    promotion?: PromotionPiece
+    from: string
+    to: string
+    promotion?: string
 }
 
 export type DrawRequest = {
@@ -142,10 +143,4 @@ export type GameSummary = {
     reason: Reason
     timer: TimerOption
     ratingDiff: number
-}
-
-export type LiveGame = {
-    chess: Chess
-    white: PlayerConnectionState
-    black: PlayerConnectionState
 }
