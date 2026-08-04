@@ -7,3 +7,9 @@ export async function fetchIsMatching() {
 
     return res.data.isMatching
 }
+
+export async function fetchIsPlaying() {
+    const res = await api.get<{ isPlaying: boolean }>("/multiplayer/isPlaying")
+
+    return res.data.isPlaying
+}
