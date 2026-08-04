@@ -7,7 +7,6 @@ import {
     calcElo,
     DrawingGame,
     FinishedGame,
-    FinishedGameWithPlayers,
     PlayingGame,
 } from '@bchess/shared';
 import { Chess, Move } from 'chess.js';

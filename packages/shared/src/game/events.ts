@@ -2,10 +2,8 @@ import { Game, IGame } from "../validation"
 import { Reason, Result } from "./constants"
 import {
     DrawRequest,
-    FinishedGame,
-    FullGame,
+    SyncGame,
     GameTimestamps,
-    GameWithPlayers,
     MoveType,
     SMove,
 } from "./types"
@@ -54,7 +52,7 @@ export type ServerToClientEvents = {
     ///
     [SERVER_EVENTS.GAME_FOUND]: (p: Game) => void
     [SERVER_EVENTS.NEW_MOVE]: (move: SMove) => void
-    [SERVER_EVENTS.SYNC]: (game: FullGame) => void
+    [SERVER_EVENTS.SYNC]: (game: SyncGame) => void
     [SERVER_EVENTS.PLAYER_STATUS_CHANGED]: (p: {
         status: "connected" | "disconnected"
         color: "w" | "b"

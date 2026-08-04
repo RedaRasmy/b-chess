@@ -33,6 +33,7 @@ export default function PlayerAvatar({
                 className={cn({
                     "bg-green-600": status === "connected",
                     "bg-red-600": status === "disconnected",
+                    "bg-orange-500": status === "unknown",
                 })}
             />
         </Avatar>

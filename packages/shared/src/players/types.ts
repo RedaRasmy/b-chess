@@ -8,7 +8,7 @@ export type TopPlayer = {
     username: string
 }
 
-export type PlayerStatus = "connected" | "disconnected"
+export type PlayerStatus = "connected" | "disconnected" | "unknown"
 
 export type PlayerConnectionState = {
     status: PlayerStatus

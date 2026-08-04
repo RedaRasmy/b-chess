@@ -6,10 +6,9 @@ import {
     checkGameEnd,
     Elo,
     FinishedGame,
-    FinishedGameWithPlayers,
+    FullGame,
     GameSummary,
     MatchedGame,
-    MatchedGameWithPlayers,
     MoveType,
     parseTimerOption,
     PlayingGame,
@@ -62,9 +61,7 @@ export class GamesService {
         });
     }
 
-    async getCurrentGameWithPlayers(
-        userId: string,
-    ): Promise<MatchedGameWithPlayers | FinishedGameWithPlayers | null> {
+    async getFullCurrentGame(userId: string): Promise<FullGame | null> {
         const minuteAgo = new Date(Date.now() - 60 * 1000);
 
         const game = await this.db.query.games.findFirst({
@@ -94,12 +91,19 @@ export class GamesService {
                         image: true,
                     },
                 },
+                moves: {
+                    columns: {
+                        from: true,
+                        to: true,
+                        promotion: true,
+                    },
+                },
             },
         });
 
         if (!game) return null;
 
-        return game as MatchedGameWithPlayers | FinishedGameWithPlayers;
+        return game as FullGame;
     }
 
     async getPlayingGame(gameId: string): Promise<PlayingGame> {

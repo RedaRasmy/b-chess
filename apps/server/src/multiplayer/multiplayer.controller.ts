@@ -12,7 +12,7 @@ export class MultiplayerController {
 
     @Get('isPlaying')
     async isPlaying(@Session() session: UserSession) {
-        const ongoingGame = await this.gamesService.getCurrentGameWithPlayers(
+        const ongoingGame = await this.gamesService.getFullCurrentGame(
             session.user.id,
         );
 

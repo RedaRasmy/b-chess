@@ -11,6 +11,12 @@ import { Chess, Square } from "chess.js"
 import { Narrow, Prettify, Update } from "../types"
 import { PlayerConnectionState, PlayerStatus } from "../players"
 
+// Selects
+
+export type Stats = typeof userStats.$inferSelect
+type SGame = typeof games.$inferSelect
+export type SMove = typeof moves.$inferSelect
+
 export type ChessTimer = {
     type: "bullet" | "blitz" | "rapid"
     base: number
@@ -31,19 +37,21 @@ export type WinLossReason = Extract<
     "Checkmate" | "Timeout" | "Resignation"
 >
 
-export type Stats = typeof userStats.$inferSelect
-
 type Players = {
     white: { username: string; image: string | null }
     black: { username: string; image: string | null }
+}
+
+export interface MoveType {
+    from: Square
+    to: Square
+    promotion?: PromotionPiece
 }
 
 export type DrawRequest = {
     requestDraw: "w" | "b"
     requestedDrawAt: Date
 }
-
-type SGame = typeof games.$inferSelect
 
 export type PreparingGame = Narrow<
     SGame,
@@ -94,27 +102,22 @@ export type DrawingGame = Narrow<PlayingGame, DrawRequest>
 
 export type MatchedGame = PreparingGame | PlayingGame
 
-export type MatchedGameWithPlayers = MatchedGame & Players
+export type FullMatchedGame = Prettify<
+    MatchedGame & Players & { moves: MoveType[] }
+>
 
-export type PlayingGameWithPlayers = PlayingGame & Players
+// export type FullPlayingGame = PlayingGame & Players
 
-export type DrawingGameWithPlayers = DrawingGame & Players
+// export type DrawingGameWithPlayers = DrawingGame & Players
 
-export type FinishedGameWithPlayers = FinishedGame & Players
+export type FullFinishedGame = Prettify<
+    FinishedGame & Players & { moves: MoveType[] }
+>
 
-export type GameWithPlayers = MatchedGameWithPlayers | FinishedGameWithPlayers
+export type FullGame = FullMatchedGame | FullFinishedGame
 
-export interface MoveType {
-    from: Square
-    to: Square
-    promotion?: PromotionPiece
-}
-
-export type SMove = typeof moves.$inferSelect
-
-export type FullGame = Prettify<
-    GameWithPlayers & {
-        moves: MoveType[]
+export type SyncGame = Prettify<
+    FullGame & {
         whiteStatus: PlayerStatus | null
         blackStatus: PlayerStatus | null
     }
