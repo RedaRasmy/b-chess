@@ -7,8 +7,9 @@ import {
     userStats,
     Status,
 } from "@bchess/db/tables"
-import { Square } from "chess.js"
+import { Chess, Square } from "chess.js"
 import { Narrow, Prettify, Update } from "../types"
+import { PlayerConnectionState, PlayerStatus } from "../players"
 
 export type ChessTimer = {
     type: "bullet" | "blitz" | "rapid"
@@ -111,7 +112,13 @@ export interface MoveType {
 
 export type SMove = typeof moves.$inferSelect
 
-export type FullGame = Prettify<GameWithPlayers & { moves: MoveType[] }>
+export type FullGame = Prettify<
+    GameWithPlayers & {
+        moves: MoveType[]
+        whiteStatus: PlayerStatus | null
+        blackStatus: PlayerStatus | null
+    }
+>
 
 export type GameTimestamps = {
     whiteTimeLeft: number
@@ -132,4 +139,10 @@ export type GameSummary = {
     reason: Reason
     timer: TimerOption
     ratingDiff: number
+}
+
+export type LiveGame = {
+    chess: Chess
+    white: PlayerConnectionState
+    black: PlayerConnectionState
 }

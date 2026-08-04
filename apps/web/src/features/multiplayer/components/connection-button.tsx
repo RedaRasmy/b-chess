@@ -1,3 +1,4 @@
+"use client"
 import { Button } from "@/components/ui/button"
 import { useSocket } from "@/features/multiplayer/hooks/use-socket"
 import { useEffect, useState } from "react"
@@ -7,22 +8,16 @@ import { useEffect, useState } from "react"
  */
 export default function ConnectionButton() {
     const socket = useSocket()
-    const [_, refrech] = useState(0)
-
-    function handleToggle() {
-        if (socket.connected) {
-            socket.disconnect()
-        } else {
-            socket.connect()
-        }
-    }
+    const [connected, setConnected] = useState(false)
 
     useEffect(() => {
+        setConnected(socket.connected)
+
         function handleConnect() {
-            refrech(1)
+            setConnected(true)
         }
         function handleDisconnect() {
-            refrech(2)
+            setConnected(false)
         }
 
         socket.on("connect", handleConnect)
@@ -34,6 +29,14 @@ export default function ConnectionButton() {
         }
     }, [socket])
 
+    function handleToggle() {
+        if (socket.connected) {
+            socket.disconnect()
+        } else {
+            socket.connect()
+        }
+    }
+
     if (process.env.NODE_ENV === "production") {
         return null
     }
@@ -41,9 +44,9 @@ export default function ConnectionButton() {
     return (
         <Button
             onClick={handleToggle}
-            variant={socket.connected ? "destructive" : "default"}
+            variant={connected ? "destructive" : "default"}
         >
-            {socket.connected ? "Disconnect" : "Connect"}
+            {connected ? "Disconnect" : "Connect"}
         </Button>
     )
 }

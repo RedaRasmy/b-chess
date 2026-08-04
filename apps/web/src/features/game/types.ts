@@ -5,8 +5,9 @@ import {
     MoveType,
     GameTimestamps,
     FullGame,
+    PlayerStatus,
 } from "@bchess/shared"
-import { Chess, Move, Square } from "chess.js"
+import { Chess, Color, Move, Square } from "chess.js"
 
 export type GameMode = "bot" | "multiplayer" | "idle"
 
@@ -57,6 +58,8 @@ export interface GameState {
     black: PlayerInfo | null
     whiteEloDiff: number | null
     blackEloDiff: number | null
+    whiteStatus: PlayerStatus | null
+    blackStatus: PlayerStatus | null
 
     // moves
     moveHistory: Move[]
@@ -112,4 +115,5 @@ export interface GameState {
     rollback: (timestamps: GameTimestamps) => void
     syncTimer: (game: GameTimestamps) => void
     syncGame: (game: FullGame, playerColor: PieceColor) => void
+    setPlayerStatus: (color: Color, status: PlayerStatus | null) => void
 }

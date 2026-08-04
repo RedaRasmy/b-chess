@@ -8,8 +8,6 @@ import MultiplayerEndDialog from "@/features/multiplayer/components/multiplayer-
 import MultiplayerControls from "@/features/multiplayer/components/mutiplayer-controls"
 import { useSocket } from "@/features/multiplayer/hooks/use-socket"
 import { useSocketListener } from "@/features/multiplayer/hooks/use-socket-listener"
-import { authClient } from "@/lib/auth-client"
-import { Square } from "chess.js"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 import { toast } from "sonner"
@@ -18,10 +16,6 @@ export default function Page() {
     const socket = useSocket()
     const router = useRouter()
     const gameState = useGameStore()
-    const { data: session } = authClient.useSession()
-    if (!session) throw new Error("multiplayer/page: unauthorized")
-
-    const userId = session.user.id
 
     useEffect(() => {
         socket.emit("join_game")
@@ -57,22 +51,6 @@ export default function Page() {
         return () => unsubscribe()
     }, [socket])
 
-    useSocketListener("sync", (game) => {
-        console.log("sync/ full game: ", game)
-        const playerColor = game.whiteId === userId ? "white" : "black"
-
-        gameState.syncGame(game, playerColor)
-    })
-
-    useSocketListener("game_finished", (game) => {
-        console.log("game finished: ", game.result, game.reason, game.diff)
-
-        gameState.endGame(game.result, game.reason, {
-            whiteEloDiff: game.whiteDiff,
-            blackEloDiff: game.blackDiff,
-        })
-    })
-
     useSocketListener("exception", ({ message, code }) => {
         console.log("exception: ", message)
         toast.error(message, {
@@ -81,22 +59,6 @@ export default function Page() {
         if (code === "GAME_NOT_FOUND") {
             router.replace("/multiplayer")
         }
-    })
-
-    useSocketListener("new_move", (move) => {
-        console.log("new move: ", move)
-        if (!gameState.playerColor) {
-            throw new Error("Game is not initialized")
-        }
-        const isOwnMove = getColor(gameState.playerColor) === move.playerColor
-
-        if (isOwnMove) return
-
-        gameState.makeMove(
-            move.from as Square,
-            move.to as Square,
-            move.promotion ?? undefined,
-        )
     })
 
     const playerColor = gameState.playerColor

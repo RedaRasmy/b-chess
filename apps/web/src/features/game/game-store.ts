@@ -35,6 +35,8 @@ export const useGameStore = create<GameState>()(
         displayFen: new Chess().fen(),
         whiteEloDiff: null,
         blackEloDiff: null,
+        whiteStatus: null,
+        blackStatus: null,
 
         undo: () => {
             const { chess, playerColor, mode, status } = get()
@@ -410,12 +412,25 @@ export const useGameStore = create<GameState>()(
                     lastTickAt: game.lastMoveAt ?? game.gameStartedAt,
                     increment: plus * 1000,
                 },
+                whiteStatus: game.whiteStatus,
+                blackStatus: game.blackStatus,
             })
 
             if (game.result) {
                 get().endGame(game.result, game.reason!, {
                     whiteEloDiff: game.whiteEloDiff!,
                     blackEloDiff: game.blackEloDiff!,
+                })
+            }
+        },
+        setPlayerStatus: (color, status) => {
+            if (color === "w") {
+                set({
+                    whiteStatus: status,
+                })
+            } else {
+                set({
+                    blackStatus: status,
                 })
             }
         },

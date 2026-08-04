@@ -6,6 +6,7 @@ import {
 } from "@/components/ui/avatar"
 import { initials } from "@/features/profile/utils/initials"
 import { cn } from "@/lib/utils"
+import { PlayerStatus } from "@bchess/shared"
 
 export default function PlayerAvatar({
     username,
@@ -16,7 +17,7 @@ export default function PlayerAvatar({
     username: string
     avatar?: string | null
     className?: string
-    status?: "connected" | "disconnected"
+    status?: PlayerStatus | null
 }) {
     return (
         <Avatar className={cn("h-10 w-10 shrink-0", className)}>

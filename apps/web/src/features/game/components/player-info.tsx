@@ -4,21 +4,24 @@ import { useGameStore } from "@/features/game/game-store"
 import { getMaterialState } from "@/features/game/utils/get-material-state"
 import ChessPieceImage from "@/features/game/components/chess-piece-image"
 import { Skeleton } from "@/components/ui/skeleton"
-import { getOppositeColor } from "@/features/game/utils/get-color"
+import { getColor, getOppositeColor } from "@/features/game/utils/get-color"
 import PlayerAvatar from "@/features/profile/components/player-avatar"
 import { cn } from "@/lib/utils"
 
 export default function PlayerInfo({ color }: { color: Color | null }) {
-    const { white, black, fen, clock, whiteEloDiff, blackEloDiff } =
-        useGameStore()
-
-    const { captured, advantage } = getMaterialState(fen)
+    const {
+        white,
+        black,
+        fen,
+        clock,
+        whiteEloDiff,
+        blackEloDiff,
+        whiteStatus,
+        blackStatus,
+        playerColor,
+    } = useGameStore()
 
     const player = color === "w" ? white : black
-    const playerPoints = color === "w" ? advantage.white : advantage.black
-    const capturedPieces = color === "w" ? captured.white : captured.black
-
-    const diff = color === "w" ? whiteEloDiff : blackEloDiff
 
     if (!color || !player)
         return (
@@ -33,6 +36,21 @@ export default function PlayerInfo({ color }: { color: Color | null }) {
             </div>
         )
 
+    const { captured, advantage } = getMaterialState(fen)
+
+    const playerPoints = color === "w" ? advantage.white : advantage.black
+    const capturedPieces = color === "w" ? captured.white : captured.black
+
+    const diff = color === "w" ? whiteEloDiff : blackEloDiff
+
+    const showStatus = playerColor && color !== getColor(playerColor)
+
+    const status = showStatus
+        ? color === "w"
+            ? whiteStatus
+            : blackStatus
+        : null
+
     const pieces: PieceSymbol[] = ["p", "b", "n", "r", "q"]
 
     const opponentColor = getOppositeColor(color)
@@ -44,6 +62,7 @@ export default function PlayerInfo({ color }: { color: Color | null }) {
                     className="size-8"
                     username={player.username}
                     avatar={player.avatar}
+                    status={status}
                 />
                 <p className="text-muted-foreground">{player.username}</p>
                 {player.rating !== undefined && (

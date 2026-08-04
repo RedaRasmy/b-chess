@@ -17,6 +17,7 @@ import { MoveDto } from '../games/dto/move.dto';
 import { CreateGameDto } from '../games/dto/create-game.dto';
 import {
     CLIENT_EVENTS,
+    LiveGame,
     type ClientToServerEvents,
     type MoveAck,
     type ServerToClientEvents,
@@ -41,7 +42,19 @@ type TypedSocket = Socket<
     Data
 >;
 
-const currentGames = new Map<string, Chess>();
+const liveGames = new Map<string, LiveGame>();
+
+function initGame(): LiveGame {
+    return {
+        chess: new Chess(),
+        white: {
+            status: 'connected',
+        },
+        black: {
+            status: 'connected',
+        },
+    };
+}
 
 @WebSocketGateway({ cors: { origin: true, credentials: true } })
 export class MultiplayerGateway
@@ -95,6 +108,29 @@ export class MultiplayerGateway
                 playerColor,
             };
 
+            const gameId = ongoingGame.id;
+            const liveGame = liveGames.get(gameId);
+
+            if (liveGame) {
+                const playerColor = user.id === ongoingGame.whiteId ? 'w' : 'b';
+
+                liveGames.set(gameId, {
+                    chess: new Chess(),
+                    white: {
+                        status:
+                            playerColor === 'w'
+                                ? 'connected'
+                                : liveGame.white.status,
+                    },
+                    black: {
+                        status:
+                            playerColor === 'b'
+                                ? 'connected'
+                                : liveGame.black.status,
+                    },
+                });
+            }
+
             this.server.to(`user:${opponentId}`).emit('player_status_changed', {
                 status: 'connected',
                 color: playerColor,
@@ -110,6 +146,28 @@ export class MultiplayerGateway
                 status: 'disconnected',
                 color: game.playerColor,
             });
+
+            const liveGame = liveGames.get(game.id);
+
+            if (liveGame) {
+                const playerColor = game.playerColor;
+
+                liveGames.set(game.id, {
+                    chess: new Chess(),
+                    white: {
+                        status:
+                            playerColor === 'w'
+                                ? 'disconnected'
+                                : liveGame.white.status,
+                    },
+                    black: {
+                        status:
+                            playerColor === 'b'
+                                ? 'disconnected'
+                                : liveGame.black.status,
+                    },
+                });
+            }
         }
     }
 
@@ -134,7 +192,15 @@ export class MultiplayerGateway
                     .emit('game_found', result.game);
             });
 
-            currentGames.set(gameId, new Chess());
+            liveGames.set(gameId, {
+                chess: new Chess(),
+                white: {
+                    status: 'connected',
+                },
+                black: {
+                    status: 'connected',
+                },
+            });
 
             socket.data.currentGame = {
                 id: gameId,
@@ -182,17 +248,27 @@ export class MultiplayerGateway
                     white: ongoingGame.white,
                     black: ongoingGame.black,
                     moves: [],
+                    whiteStatus: 'connected',
+                    blackStatus: 'connected',
                 });
             if (newGame.status === 'playing') {
-                currentGames.set(newGame.id, new Chess());
+                liveGames.set(newGame.id, initGame());
                 this.logger.log('New game inserted to memory');
-                this.logger.log(`Games in memory : ${currentGames.size}`);
+                this.logger.log(`Games in memory : ${liveGames.size}`);
             }
         } else {
             const moves = await this.gamesService.getMoves(ongoingGame.id);
-            this.server
-                .to(`user:${userId}`)
-                .emit('sync', { ...ongoingGame, moves });
+            const liveGame = liveGames.get(ongoingGame.id);
+            // Note: if the game has finished liveGame will be undefined
+            const whiteStatus = liveGame?.white.status ?? null;
+            const blackStatus = liveGame?.black.status ?? null;
+
+            this.server.to(`user:${userId}`).emit('sync', {
+                ...ongoingGame,
+                moves,
+                whiteStatus,
+                blackStatus,
+            });
         }
     }
 
@@ -215,10 +291,13 @@ export class MultiplayerGateway
         const gameId = playingGame.id;
 
         try {
-            let chess = currentGames.get(gameId);
+            const liveGame = liveGames.get(gameId);
+            let chess = liveGame?.chess;
 
             if (!chess) {
-                this.logger.warn(`Game not found in memory ,games in memory: ${currentGames.size}`);
+                this.logger.warn(
+                    `Game not found in memory ,games in memory: ${liveGames.size}`,
+                );
                 const newChess = new Chess();
 
                 const moves = await this.gamesService.getMoves(gameId);
@@ -231,7 +310,14 @@ export class MultiplayerGateway
                     });
                 });
 
-                currentGames.set(gameId, newChess);
+                liveGames.set(gameId, {
+                    chess: newChess,
+                    white: {
+                        status: 'connected',
+                    },
+                    black: { status: 'connected' },
+                });
+
                 chess = newChess;
             }
 
@@ -263,9 +349,9 @@ export class MultiplayerGateway
                     result: newGame.result,
                 });
 
-                currentGames.delete(newGame.id);
+                liveGames.delete(newGame.id);
                 this.logger.log(`Game deleted from memory (${newGame.reason})`);
-                this.logger.log(`Games in memory : ${currentGames.size}`);
+                this.logger.log(`Games in memory : ${liveGames.size}`);
             }
         } catch (error) {
             ack({
@@ -298,9 +384,9 @@ export class MultiplayerGateway
                 result: game.result,
             });
 
-            currentGames.delete(game.id);
+            liveGames.delete(game.id);
             this.logger.log('Game deleted from memory (Resignation)');
-            this.logger.log(`Games in memory : ${currentGames.size}`);
+            this.logger.log(`Games in memory : ${liveGames.size}`);
         }
     }
 
@@ -320,9 +406,9 @@ export class MultiplayerGateway
                 ...elo,
             });
 
-            currentGames.delete(game.id);
+            liveGames.delete(game.id);
             this.logger.log('Game deleted from memory (Timeout)');
-            this.logger.log(`Games in memory : ${currentGames.size}`);
+            this.logger.log(`Games in memory : ${liveGames.size}`);
         }
     }
 
@@ -363,9 +449,9 @@ export class MultiplayerGateway
                 ...elo,
             });
 
-            currentGames.delete(game.id);
+            liveGames.delete(game.id);
             this.logger.log('Game deleted from memory (Draw by agreement)');
-            this.logger.log(`Games in memory : ${currentGames.size}`);
+            this.logger.log(`Games in memory : ${liveGames.size}`);
         }
     }
 

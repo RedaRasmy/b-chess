@@ -7,3 +7,10 @@ export type TopPlayer = {
     image: string | null
     username: string
 }
+
+export type PlayerStatus = "connected" | "disconnected"
+
+export type PlayerConnectionState = {
+    status: PlayerStatus
+    disconnectedAt?: number
+}
