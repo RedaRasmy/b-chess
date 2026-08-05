@@ -87,7 +87,7 @@ export default function PlayerInfo({ color }: { color: Color | null }) {
                             className="flex h-full -space-x-3 items-center justify-center"
                         >
                             {Array.from(
-                                { length: capturedPieces[type] },
+                                { length: capturedPieces[type]! },
                                 (_, i) => i,
                             ).map((_, i) => (
                                 <ChessPieceImage

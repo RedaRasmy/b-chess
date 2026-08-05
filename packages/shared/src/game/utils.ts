@@ -123,3 +123,12 @@ export function getOppositeColor(color: Color | ColorName): Color {
     if (color === "w" || color === "white") return "b"
     return "w"
 }
+
+export function validateRatingRange(min: number, max: number): boolean {
+    if (min > max) return false
+    if (min > max - 200) return false
+    if (max < 100) return false
+    if (max + min < 0) return false
+
+    return true
+}

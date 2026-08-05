@@ -3,7 +3,7 @@ import { CreateGameDto } from './dto/create-game.dto';
 import { DATABASE_CONNECTION } from '../database/database.module';
 import type { Database } from '@bchess/db';
 import { PlayersService } from '../players/players.service';
-import { and, between, eq, ne } from 'drizzle-orm';
+import { and, between, eq, ne, sql } from 'drizzle-orm';
 import { games } from '@bchess/db/tables';
 import { parseTimerOption } from '@bchess/shared';
 
@@ -21,7 +21,10 @@ export class MatchmakingService {
         });
     }
 
-    async findOrCreateMatch({ timer }: CreateGameDto, userId: string) {
+    async findOrCreateMatch(
+        { timer, min, max }: CreateGameDto,
+        userId: string,
+    ) {
         const alreadyCreatedMatch = await this.getMatch(userId);
 
         if (alreadyCreatedMatch) {
@@ -31,13 +34,12 @@ export class MatchmakingService {
             } as const;
         }
 
-        const MAX_RATING_DIFF = 200;
         const userStats = await this.playersService.getUserStats(userId);
 
         const userRating = userStats.rating;
 
-        const minRating = userRating - MAX_RATING_DIFF;
-        const maxRating = userRating + MAX_RATING_DIFF;
+        const minRating = userRating + min;
+        const maxRating = userRating + max;
 
         const match = await this.db.query.games.findFirst({
             where: (games) =>
@@ -46,6 +48,11 @@ export class MatchmakingService {
                     eq(games.timer, timer),
                     ne(games.whiteId, userId),
                     between(games.whiteRating, minRating, maxRating),
+                    between(
+                        sql`${userRating}`,
+                        games.minRating,
+                        games.maxRating,
+                    ),
                 ),
         });
 
@@ -76,6 +83,8 @@ export class MatchmakingService {
                 timer: timer,
                 whiteId: userId,
                 whiteRating: userRating,
+                minRating,
+                maxRating,
                 blackTimeLeft: base * 1000, // ms
                 whiteTimeLeft: base * 1000,
             })

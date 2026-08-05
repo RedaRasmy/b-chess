@@ -64,9 +64,9 @@ export const useGameStore = create<GameState>()(
                 lastMove:
                     newHistory.length > 0
                         ? {
-                              from: newHistory[newHistory.length - 1]
+                              from: newHistory[newHistory.length - 1]!
                                   .from as Square,
-                              to: newHistory[newHistory.length - 1]
+                              to: newHistory[newHistory.length - 1]!
                                   .to as Square,
                           }
                         : null,
@@ -96,9 +96,9 @@ export const useGameStore = create<GameState>()(
                 lastMove:
                     newHistory.length > 0
                         ? {
-                              from: newHistory[newHistory.length - 1]
+                              from: newHistory[newHistory.length - 1]!
                                   .from as Square,
-                              to: newHistory[newHistory.length - 1]
+                              to: newHistory[newHistory.length - 1]!
                                   .to as Square,
                           }
                         : null,
@@ -337,7 +337,7 @@ export const useGameStore = create<GameState>()(
 
             const chess = new Chess()
             for (let i = 0; i <= index; i++) {
-                chess.move(moveHistory[i])
+                chess.move(moveHistory[i]!)
             }
             set({ viewIndex: index, displayFen: chess.fen() })
         },

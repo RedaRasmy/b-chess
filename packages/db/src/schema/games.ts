@@ -40,6 +40,8 @@ export const games = pgTable("games", {
     requestDraw: colorsEnum("request_draw"),
     requestedDrawAt: timestamp("requested_draw_at"),
     whiteRating: integer("white_rating").notNull(),
+    minRating: integer("min_rating").notNull(),
+    maxRating: integer("max_rating").notNull(),
     blackRating: integer("black_rating"),
     whiteEloDiff: integer("white_elo_diff"),
     blackEloDiff: integer("black_elo_diff"),

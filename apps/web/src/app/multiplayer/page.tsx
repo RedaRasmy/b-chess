@@ -1,23 +1,28 @@
 "use client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
+import { Slider } from "@/components/ui/slider"
 import SelectTimer from "@/features/game/components/select-timer"
 import { useSocket } from "@/features/multiplayer/hooks/use-socket"
 import { useSocketListener } from "@/features/multiplayer/hooks/use-socket-listener"
 import { fetchIsMatching } from "@/features/multiplayer/requests"
-import { TimerOption } from "@bchess/shared"
+import { TimerOption, validateRatingRange } from "@bchess/shared"
 import { useQuery } from "@tanstack/react-query"
-import { Timer, Users } from "lucide-react"
+import { Timer, TrendingUp, Users, Zap } from "lucide-react"
 import { useEffect, useState } from "react"
 
 export default function Page() {
     const [isMatching, setIsMatching] = useState(false)
     const socket = useSocket()
     const [timer, setTimer] = useState<TimerOption>("rapid 10+0")
+    const [range, setRange] = useState<[number, number]>([-100, 100])
 
     function handleStart() {
         socket.emit("join_queue", {
             timer,
+            min: range[0],
+            max: range[1],
         })
         setIsMatching(true)
     }
@@ -51,8 +56,8 @@ export default function Page() {
                         Multiplayer Configuration
                     </h1>
                 </CardHeader>
-                <CardContent>
-                    <div className="flex flex-col w-full h-full gap-6 lg:gap-10 lg:flex-row">
+                <CardContent className="w-full flex justify-center">
+                    <div className="flex flex-col w-full h-full gap-6 lg:gap-10 lg:flex-row not-lg:max-w-md">
                         <div className="flex flex-col lg:items-center justify-center w-full h-full">
                             <h1 className="text-xl items-center font-semibold mb-4 lg:mb-6 flex gap-2 ">
                                 <Timer />
@@ -68,11 +73,66 @@ export default function Page() {
                                 />
                             </div>
                         </div>
-                        <div className="flex flex-col items-center gap-5 w-full md:space-y-3">
-                            <div className="flex bg-red- h-full items-center justify-center w-full ">
+                        <div className="flex flex-col items-center justify-center gap-5 w-full md:space-y-3 lg:space-5">
+                            <div className="my-5 w-full space-y-5 lg:space-y-6">
+                                <div className="flex items-center justify-between gap-2">
+                                    <div className="flex items-center gap-2">
+                                        <Button
+                                            size={"sm"}
+                                            onClick={() =>
+                                                setRange([-100, 100])
+                                            }
+                                            className="cursor-pointer"
+                                            variant={"outline"}
+                                            disabled={isMatching}
+                                        >
+                                            default
+                                        </Button>
+                                        <Button
+                                            size={"icon-sm"}
+                                            onClick={() =>
+                                                setRange([-200, 400])
+                                            }
+                                            className="cursor-pointer"
+                                            disabled={isMatching}
+                                        >
+                                            <Zap />
+                                        </Button>
+                                        <Button
+                                            size={"icon-sm"}
+                                            onClick={() => setRange([200, 400])}
+                                            className="cursor-pointer"
+                                            disabled={isMatching}
+                                        >
+                                            <TrendingUp />
+                                        </Button>
+                                    </div>
+                                    <span className="text-sm text-muted-foreground">
+                                        {range.join(", ")}
+                                    </span>
+                                </div>
+                                <Slider
+                                    disabled={isMatching}
+                                    value={range}
+                                    max={400}
+                                    min={-200}
+                                    step={50}
+                                    className="w-full"
+                                    onValueChange={([x, y]) => {
+                                        if (!x || !y) return
+
+                                        const isValid = validateRatingRange(
+                                            x,
+                                            y,
+                                        )
+                                        if (isValid) setRange([x, y])
+                                    }}
+                                />
+                            </div>
+                            <div className="flex items-center justify-center w-full ">
                                 {isMatching ? (
                                     <Button
-                                        className="w-full lg:text-xl max-w-md py-7 lg:py-10 cursor-pointer"
+                                        className="w-full lg:text-xl max-w-m py-7 lg:py-10 cursor-pointer"
                                         onClick={handleCancel}
                                         variant={"outline"}
                                         disabled={isPending}
@@ -81,7 +141,7 @@ export default function Page() {
                                     </Button>
                                 ) : (
                                     <Button
-                                        className="w-full lg:text-xl max-w-md py-7 lg:py-10 cursor-pointer"
+                                        className="w-full lg:text-xl max-w-m py-7 lg:py-10 cursor-pointer"
                                         onClick={handleStart}
                                         variant={"destructive"}
                                         disabled={isPending}

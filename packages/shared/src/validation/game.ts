@@ -1,10 +1,20 @@
 import z from "zod"
 import { createInsertSchema, createSelectSchema } from "drizzle-zod"
 import { games } from "@bchess/db/tables"
+import { validateRatingRange } from "../game"
 
-export const InsertGameSchema = createInsertSchema(games).pick({
-    timer: true,
-})
+export const InsertGameSchema = createInsertSchema(games)
+    .pick({
+        timer: true,
+    })
+    .extend({
+        min: z.int(),
+        max: z.int(),
+    })
+    .refine(({ min, max }) => validateRatingRange(min, max), {
+        error: "Invalid rating range",
+    })
+
 export const SelectGameSchema = createSelectSchema(games)
 
 export type Game = z.infer<typeof SelectGameSchema>

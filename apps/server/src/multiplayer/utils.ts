@@ -1,3 +1,5 @@
+import { TypedServer } from './socket.type';
+
 export const Rooms = {
     game: (gameId: string) => `game:${gameId}`,
     user: (userId: string) => `user:${userId}`,
@@ -7,3 +9,8 @@ export const Rooms = {
     ],
     // spectators: (gameId: string) => `game:${gameId}:spectators`,
 };
+
+export async function isConnected(server: TypedServer, userId: string) {
+    const sockets = await server.in(Rooms.user(userId)).fetchSockets();
+    return sockets.length > 0;
+}

@@ -10,52 +10,20 @@ import {
     Ack,
 } from '@nestjs/websockets';
 import { MultiplayerService } from './multiplayer.service';
-import { DefaultEventsMap, Server, Socket } from 'socket.io';
 import { fromNodeHeaders } from 'better-auth/node';
 import { auth } from '../auth/auth';
 import { MoveDto } from './dto/move.dto';
 import { CreateGameDto } from './dto/create-game.dto';
-import {
-    CLIENT_EVENTS,
-    type ClientToServerEvents,
-    type MoveAck,
-    type ServerToClientEvents,
-} from '@bchess/shared';
-import { UserSession } from '@thallesp/nestjs-better-auth';
+import { CLIENT_EVENTS, type MoveAck } from '@bchess/shared';
 import { GamesService } from '../games/games.service';
-import { Logger } from '@nestjs/common';
+import { Logger, UsePipes } from '@nestjs/common';
 import { LiveGamesService } from './live-games.service';
-import { Rooms } from './rooms';
 import { MatchmakingService } from './matchmaking.service';
 import { MoveService } from './move.service';
 import { DrawService } from './draw.service';
-
-type Data = {
-    user: UserSession['user'];
-    currentGame: {
-        id: string;
-        playerColor: 'w' | 'b';
-    } | null;
-};
-
-type TypedSocket = Socket<
-    ClientToServerEvents,
-    ServerToClientEvents,
-    DefaultEventsMap,
-    Data
->;
-
-type TypedServer = Server<
-    ClientToServerEvents,
-    ServerToClientEvents,
-    DefaultEventsMap,
-    Data
->;
-
-async function isConnected(server: TypedServer, userId: string) {
-    const sockets = await server.in(Rooms.user(userId)).fetchSockets();
-    return sockets.length > 0;
-}
+import { ZodValidationPipe } from 'nestjs-zod';
+import type { TypedServer, TypedSocket } from './socket.type';
+import { isConnected, Rooms } from './utils';
 
 @WebSocketGateway({ cors: { origin: true, credentials: true } })
 export class MultiplayerGateway
@@ -165,6 +133,7 @@ export class MultiplayerGateway
         }
     }
 
+    @UsePipes(new ZodValidationPipe())
     @SubscribeMessage(CLIENT_EVENTS.JOIN_QUEUE)
     async handleJoinQueue(
         @ConnectedSocket() socket: TypedSocket,
