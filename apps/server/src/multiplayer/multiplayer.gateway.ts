@@ -26,6 +26,7 @@ import { GamesService } from '../games/games.service';
 import { Logger } from '@nestjs/common';
 import { LiveGamesService } from './live-games.service';
 import { Rooms } from './rooms';
+import { MatchmakingService } from './matchmaking.service';
 
 type Data = {
     user: UserSession['user'];
@@ -62,6 +63,7 @@ export class MultiplayerGateway
         private readonly multiplayerService: MultiplayerService,
         private readonly gamesService: GamesService,
         private readonly liveGamesService: LiveGamesService,
+        private readonly matchmakingService: MatchmakingService,
     ) {}
 
     private readonly logger = new Logger(MultiplayerGateway.name);
@@ -165,7 +167,7 @@ export class MultiplayerGateway
         @MessageBody() gameDto: CreateGameDto,
     ) {
         const userId = socket.data.user.id;
-        const result = await this.multiplayerService.findOrCreateMatch(
+        const result = await this.matchmakingService.findOrCreateMatch(
             gameDto,
             userId,
         );
@@ -201,7 +203,7 @@ export class MultiplayerGateway
 
     @SubscribeMessage(CLIENT_EVENTS.CANCEL_MATCH)
     async handleCancelMatch(@ConnectedSocket() socket: TypedSocket) {
-        await this.gamesService.deleteMatch(socket.data.user.id);
+        await this.matchmakingService.cancelMatch(socket.data.user.id);
     }
 
     @SubscribeMessage(CLIENT_EVENTS.JOIN_GAME)

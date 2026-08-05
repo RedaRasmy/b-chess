@@ -12,7 +12,6 @@ import {
     MoveType,
     parseTimerOption,
     PlayingGame,
-    PreparingGame,
 } from '@bchess/shared';
 import {
     games,
@@ -20,21 +19,9 @@ import {
     PromotionPiece,
     Reason,
     Result,
-    TimerOption,
 } from '@bchess/db/tables';
-import {
-    and,
-    asc,
-    between,
-    desc,
-    eq,
-    gt,
-    inArray,
-    isNotNull,
-    ne,
-    or,
-} from 'drizzle-orm';
-import { Chess, Color, Move } from 'chess.js';
+import { and, asc, desc, eq, gt, inArray, isNotNull, or } from 'drizzle-orm';
+import { Color, Move } from 'chess.js';
 
 @Injectable()
 export class GamesService {
@@ -114,91 +101,6 @@ export class GamesService {
         if (!playingGame) throw new Error('Game not found!');
 
         return playingGame as PlayingGame;
-    }
-
-    async getCreatedMatch(userId: string) {
-        return await this.db.query.games.findFirst({
-            where: (games) =>
-                and(eq(games.status, 'matching'), eq(games.whiteId, userId)),
-        });
-    }
-
-    async findMatch({
-        maxRating,
-        minRating,
-        timer,
-        userId,
-    }: {
-        timer: TimerOption;
-        userId: string;
-        minRating: number;
-        maxRating: number;
-    }) {
-        return await this.db.query.games.findFirst({
-            where: (games) =>
-                and(
-                    eq(games.status, 'matching'),
-                    eq(games.timer, timer),
-                    ne(games.whiteId, userId),
-                    between(games.whiteRating, minRating, maxRating),
-                ),
-        });
-    }
-
-    async match({
-        gameId,
-        blackId,
-        blackRating,
-    }: {
-        gameId: string;
-        blackId: string;
-        blackRating: number;
-    }) {
-        const [game] = await this.db
-            .update(games)
-            .set({
-                status: 'preparing',
-                blackId,
-                blackRating,
-            })
-            .where(eq(games.id, gameId))
-            .returning();
-
-        if (!game) throw new HttpException('Game not found!', 404);
-
-        return game as PreparingGame;
-    }
-
-    async createMatch({
-        timer,
-        whiteId,
-        whiteRating,
-    }: {
-        timer: TimerOption;
-        whiteId: string;
-        whiteRating: number;
-    }) {
-        const { base } = parseTimerOption(timer);
-        const data = await this.db
-            .insert(games)
-            .values({
-                timer: timer,
-                whiteId,
-                blackTimeLeft: base * 1000, // ms
-                whiteTimeLeft: base * 1000,
-                whiteRating,
-            })
-            .returning();
-
-        return data[0]!;
-    }
-
-    async deleteMatch(userId: string) {
-        await this.db
-            .delete(games)
-            .where(
-                and(eq(games.status, 'matching'), eq(games.whiteId, userId)),
-            );
     }
 
     async addMove(

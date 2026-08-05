@@ -1,5 +1,4 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { CreateGameDto } from '../games/dto/create-game.dto';
 import { DATABASE_CONNECTION } from '../database/database.module';
 import { type Database } from '@bchess/db';
 
@@ -22,55 +21,6 @@ export class MultiplayerService {
         private readonly gamesService: GamesService,
         private readonly playersService: PlayersService,
     ) {}
-
-    async findOrCreateMatch(gameDto: CreateGameDto, userId: string) {
-        const alreadyCreatedMatch =
-            await this.gamesService.getCreatedMatch(userId);
-
-        if (alreadyCreatedMatch) {
-            return {
-                status: 'QUEUED',
-                game: alreadyCreatedMatch,
-            } as const;
-        }
-
-        const MAX_RATING_DIFF = 200;
-        const userStats = await this.playersService.getUserStats(userId);
-
-        const userRating = userStats.rating;
-
-        const minRating = userRating - MAX_RATING_DIFF;
-        const maxRating = userRating + MAX_RATING_DIFF;
-
-        const match = await this.gamesService.findMatch({
-            userId,
-            timer: gameDto.timer,
-            minRating,
-            maxRating,
-        });
-
-        if (match) {
-            const game = await this.gamesService.match({
-                gameId: match.id,
-                blackId: userId,
-                blackRating: userRating,
-            });
-
-            return {
-                status: 'MATCH_FOUND',
-                game,
-                players: [match.whiteId, userId],
-            } as const;
-        }
-
-        const newGame = await this.gamesService.createMatch({
-            timer: gameDto.timer,
-            whiteId: userId,
-            whiteRating: userRating,
-        });
-
-        return { status: 'QUEUED', game: newGame } as const;
-    }
 
     async resign(gameId: string, userId: string) {
         const playingGame = await this.gamesService.getPlayingGame(gameId);
