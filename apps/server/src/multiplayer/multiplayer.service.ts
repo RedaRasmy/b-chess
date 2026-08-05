@@ -7,10 +7,7 @@ import {
     DrawingGame,
     FinishedGame,
     PlayingGame,
-    Reason,
-    Result,
 } from '@bchess/shared';
-import { Move } from 'chess.js';
 import { GamesService } from '../games/games.service';
 import { PlayersService } from '../players/players.service';
 
@@ -184,55 +181,6 @@ export class MultiplayerService {
             return {
                 game: finishedGame as FinishedGame,
                 elo,
-            };
-        });
-    }
-
-    async saveMove({
-        game,
-        move,
-        isCheck,
-        end,
-    }: {
-        game: PlayingGame;
-        isCheck: boolean;
-        move: Move;
-        end?: {
-            result: Result;
-            reason: Reason;
-        };
-    }) {
-        return await this.db.transaction(async (tx) => {
-            const { newGame, savedMove, elo } = await this.gamesService.addMove(
-                tx,
-                {
-                    end,
-                    game,
-                    move,
-                    isCheck,
-                },
-            );
-
-            if (end && elo) {
-                const { result } = end;
-
-                await this.playersService.updateStats(tx, {
-                    whiteId: game.whiteId,
-                    blackId: game.blackId,
-                    elo,
-                    result,
-                });
-
-                return {
-                    savedMove,
-                    newGame: newGame as PlayingGame | FinishedGame,
-                    elo,
-                };
-            }
-
-            return {
-                savedMove,
-                newGame: newGame as PlayingGame | FinishedGame,
             };
         });
     }

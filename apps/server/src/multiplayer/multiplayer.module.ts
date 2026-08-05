@@ -6,6 +6,7 @@ import { GamesService } from '../games/games.service';
 import { PlayersService } from '../players/players.service';
 import { LiveGamesService } from './live-games.service';
 import { MatchmakingService } from './matchmaking.service';
+import { MoveService } from './move.service';
 
 @Module({
     providers: [
@@ -15,6 +16,7 @@ import { MatchmakingService } from './matchmaking.service';
         PlayersService,
         LiveGamesService,
         MatchmakingService,
+        MoveService
     ],
     controllers: [MultiplayerController],
 })

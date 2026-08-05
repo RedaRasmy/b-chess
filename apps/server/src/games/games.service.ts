@@ -1,27 +1,17 @@
-import { HttpException, Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { DATABASE_CONNECTION } from '../database/database.module';
 import type { Transaction, Database } from '@bchess/db';
 import {
-    calcElo,
     Elo,
-    FinishedGame,
     FullGame,
     GameSummary,
-    getOppositeColor,
     MatchedGame,
     MoveType,
-    parseTimerOption,
     PlayingGame,
 } from '@bchess/shared';
-import {
-    games,
-    moves,
-    PromotionPiece,
-    Reason,
-    Result,
-} from '@bchess/db/tables';
+import { games, moves, Reason, Result } from '@bchess/db/tables';
 import { and, asc, desc, eq, gt, inArray, isNotNull, or } from 'drizzle-orm';
-import { Color, Move } from 'chess.js';
+import { Color } from 'chess.js';
 
 @Injectable()
 export class GamesService {
@@ -38,13 +28,6 @@ export class GamesService {
             },
         });
         return data as MoveType[];
-    }
-
-    async getMatch(userId: string) {
-        return await this.db.query.games.findFirst({
-            where: (games) =>
-                and(eq(games.status, 'matching'), eq(games.whiteId, userId)),
-        });
     }
 
     async getFullCurrentGame(userId: string): Promise<FullGame | null> {
@@ -101,103 +84,6 @@ export class GamesService {
         if (!playingGame) throw new Error('Game not found!');
 
         return playingGame as PlayingGame;
-    }
-
-    async addMove(
-        tx: Transaction,
-        {
-            game,
-            move,
-            end,
-            isCheck,
-        }: {
-            game: PlayingGame;
-            move: Move;
-            isCheck: boolean;
-            end?: {
-                result: Result;
-                reason: Reason;
-            };
-        },
-    ) {
-        const lastTimestamp = game.lastMoveAt ?? game.gameStartedAt;
-
-        const currentMoveAt = Date.now();
-        const moveTime = currentMoveAt - lastTimestamp;
-
-        const data = await tx
-            .insert(moves)
-            .values({
-                from: move.from,
-                to: move.to,
-                promotion: move.promotion as PromotionPiece,
-                fenAfter: move.after,
-                gameId: game.id,
-                moveTime,
-                playerColor: move.color,
-                piece: move.piece,
-                san: move.san,
-                capturedPiece: move.captured,
-                isCheck,
-            })
-            .returning();
-
-        const savedMove = data[0]!;
-
-        const reason = end?.reason ?? null;
-        const result = end?.result ?? null;
-
-        const timeLeft =
-            game.currentTurn === 'w' ? game.whiteTimeLeft : game.blackTimeLeft;
-
-        const { plus } = parseTimerOption(game.timer);
-
-        const newTimeLeft = timeLeft - moveTime + plus * 1000;
-
-        const newTimestamps = {
-            whiteTimeLeft:
-                game.currentTurn === 'w' ? newTimeLeft : game.whiteTimeLeft,
-            blackTimeLeft:
-                game.currentTurn === 'b' ? newTimeLeft : game.blackTimeLeft,
-            lastMoveAt: currentMoveAt,
-        };
-
-        const whiteRating = game.whiteRating;
-        const blackRating = game.blackRating;
-
-        const elo =
-            result &&
-            calcElo({
-                whiteRating,
-                blackRating,
-                result,
-            });
-
-        const [newGame] = await tx
-            .update(games)
-            .set({
-                ...newTimestamps,
-                status: end ? 'finished' : 'playing',
-                reason,
-                result: result,
-                currentFen: move.after,
-                currentTurn: getOppositeColor(move.color),
-                requestDraw: null,
-                requestedDrawAt: null,
-                whiteEloDiff: elo?.whiteDiff,
-                blackEloDiff: elo?.blackDiff,
-            })
-            .where(eq(games.id, game.id))
-            .returning();
-
-        if (!newGame) throw new HttpException('Game not found!', 404);
-
-        return {
-            savedMove,
-            newGame: newGame as PlayingGame | FinishedGame,
-            end,
-            elo,
-        };
     }
 
     async endGame(

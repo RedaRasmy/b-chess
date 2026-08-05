@@ -27,6 +27,7 @@ import { Logger } from '@nestjs/common';
 import { LiveGamesService } from './live-games.service';
 import { Rooms } from './rooms';
 import { MatchmakingService } from './matchmaking.service';
+import { MoveService } from './move.service';
 
 type Data = {
     user: UserSession['user'];
@@ -64,6 +65,7 @@ export class MultiplayerGateway
         private readonly gamesService: GamesService,
         private readonly liveGamesService: LiveGamesService,
         private readonly matchmakingService: MatchmakingService,
+        private readonly moveService: MoveService,
     ) {}
 
     private readonly logger = new Logger(MultiplayerGateway.name);
@@ -288,23 +290,18 @@ export class MultiplayerGateway
 
             const { move, end, isCheck } = liveGame.move(moveDto);
 
-            const playerColor = game.playerColor;
-
-            const { savedMove, newGame, elo } =
-                await this.multiplayerService.saveMove({
+            const { savedMove, newGame, elo } = await this.moveService.saveMove(
+                {
                     game: playingGame,
                     move,
                     end: end ?? undefined,
                     isCheck,
-                });
+                },
+            );
 
             const gameRoom = this.server.to(Rooms.game(gameId));
 
             gameRoom.emit('new_move', savedMove);
-            gameRoom.emit('player_status_changed', {
-                status: 'connected',
-                color: playerColor,
-            });
 
             ack({
                 status: 'success',
