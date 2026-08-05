@@ -10,8 +10,7 @@ import {
     PlayingGame,
 } from '@bchess/shared';
 import { games, moves, Reason, Result } from '@bchess/db/tables';
-import { and, asc, desc, eq, gt, inArray, isNotNull, or } from 'drizzle-orm';
-import { Color } from 'chess.js';
+import { and, asc, desc, eq, gt, inArray, or } from 'drizzle-orm';
 
 @Injectable()
 export class GamesService {
@@ -151,43 +150,6 @@ export class GamesService {
         });
 
         return game as MatchedGame;
-    }
-
-    async requestDraw({
-        requester,
-        gameId,
-    }: {
-        requester: Color;
-        gameId: string;
-    }) {
-        const [newGame] = await this.db
-            .update(games)
-            .set({
-                requestDraw: requester,
-                requestedDrawAt: new Date(),
-            })
-            .where(eq(games.id, gameId))
-            .returning();
-
-        return newGame ?? null;
-    }
-
-    async rejectDraw(userId: string): Promise<PlayingGame | null> {
-        const [newGame] = await this.db
-            .update(games)
-            .set({
-                requestDraw: null,
-            })
-            .where(
-                and(
-                    or(eq(games.whiteId, userId), eq(games.blackId, userId)),
-                    eq(games.status, 'playing'),
-                    isNotNull(games.requestDraw),
-                ),
-            )
-            .returning();
-
-        return (newGame as PlayingGame) ?? null;
     }
 
     async getUserGames(

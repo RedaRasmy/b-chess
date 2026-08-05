@@ -2,12 +2,14 @@ import { Controller, Get } from '@nestjs/common';
 import { MultiplayerService } from './multiplayer.service';
 import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
 import { GamesService } from '../games/games.service';
+import { MatchmakingService } from './matchmaking.service';
 
 @Controller('multiplayer')
 export class MultiplayerController {
     constructor(
         private readonly multiplayerService: MultiplayerService,
         private readonly gamesService: GamesService,
+        private readonly matchmakingService: MatchmakingService,
     ) {}
 
     @Get('isPlaying')
@@ -25,7 +27,7 @@ export class MultiplayerController {
 
     @Get('isMatching')
     async isMatching(@Session() session: UserSession) {
-        const match = await this.gamesService.getMatch(session.user.id);
+        const match = await this.matchmakingService.getMatch(session.user.id);
 
         return {
             isMatching: !!match,

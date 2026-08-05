@@ -4,7 +4,6 @@ import { type Database } from '@bchess/db';
 
 import {
     calcElo,
-    DrawingGame,
     FinishedGame,
     PlayingGame,
 } from '@bchess/shared';
@@ -37,77 +36,6 @@ export class MultiplayerService {
             const finishedGame = await this.gamesService.endGame(tx, {
                 gameId: playingGame.id,
                 reason: 'Resignation',
-                result,
-                elo,
-            });
-
-            await this.playersService.updateStats(tx, {
-                whiteId: playingGame.whiteId,
-                blackId: playingGame.blackId,
-                elo,
-                result,
-            });
-
-            return {
-                game: finishedGame as FinishedGame,
-                elo,
-            };
-        });
-    }
-
-    async requestDraw(
-        gameId: string,
-        userId: string,
-    ): Promise<DrawingGame | null> {
-        const playingGame = await this.gamesService.getPlayingGame(gameId);
-
-        if (!playingGame) return null;
-
-        // validation
-
-        const requestDrawAt = playingGame.requestedDrawAt?.getTime() ?? null;
-        const now = Date.now();
-        const COOLDOWN_MS = 30_000;
-
-        const isCooldown = requestDrawAt
-            ? requestDrawAt + COOLDOWN_MS < now
-            : false;
-
-        if (playingGame.requestDraw || isCooldown) return null;
-
-        const requester = playingGame.whiteId === userId ? 'w' : 'b';
-
-        const newGame = await this.gamesService.requestDraw({
-            gameId: playingGame.id,
-            requester,
-        });
-
-        return newGame as DrawingGame;
-    }
-
-    async draw(gameId: string, userId: string) {
-        const playingGame = await this.gamesService.getPlayingGame(gameId);
-
-        if (!playingGame || !playingGame.requestDraw) return null;
-
-        const userColor = playingGame.whiteId === userId ? 'w' : 'b';
-
-        if (playingGame.requestDraw === userColor) {
-            throw new Error("You can't accept your own draw request!");
-        }
-
-        const result = 'draw';
-
-        const elo = calcElo({
-            whiteRating: playingGame.whiteRating,
-            blackRating: playingGame.blackRating,
-            result: result,
-        });
-
-        return await this.db.transaction(async (tx) => {
-            const finishedGame = await this.gamesService.endGame(tx, {
-                gameId: playingGame.id,
-                reason: 'Agreement',
                 result,
                 elo,
             });

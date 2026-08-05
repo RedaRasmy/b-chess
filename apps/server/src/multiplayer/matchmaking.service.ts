@@ -1,5 +1,5 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { CreateGameDto } from '../games/dto/create-game.dto';
+import { CreateGameDto } from './dto/create-game.dto';
 import { DATABASE_CONNECTION } from '../database/database.module';
 import type { Database } from '@bchess/db';
 import { PlayersService } from '../players/players.service';
@@ -14,11 +14,15 @@ export class MatchmakingService {
         private readonly playersService: PlayersService,
     ) {}
 
-    async findOrCreateMatch({ timer }: CreateGameDto, userId: string) {
-        const alreadyCreatedMatch = await this.db.query.games.findFirst({
+    async getMatch(userId: string) {
+        return await this.db.query.games.findFirst({
             where: (games) =>
                 and(eq(games.status, 'matching'), eq(games.whiteId, userId)),
         });
+    }
+
+    async findOrCreateMatch({ timer }: CreateGameDto, userId: string) {
+        const alreadyCreatedMatch = await this.getMatch(userId);
 
         if (alreadyCreatedMatch) {
             return {

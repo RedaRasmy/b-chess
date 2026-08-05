@@ -13,8 +13,8 @@ import { MultiplayerService } from './multiplayer.service';
 import { DefaultEventsMap, Server, Socket } from 'socket.io';
 import { fromNodeHeaders } from 'better-auth/node';
 import { auth } from '../auth/auth';
-import { MoveDto } from '../games/dto/move.dto';
-import { CreateGameDto } from '../games/dto/create-game.dto';
+import { MoveDto } from './dto/move.dto';
+import { CreateGameDto } from './dto/create-game.dto';
 import {
     CLIENT_EVENTS,
     type ClientToServerEvents,
@@ -28,6 +28,7 @@ import { LiveGamesService } from './live-games.service';
 import { Rooms } from './rooms';
 import { MatchmakingService } from './matchmaking.service';
 import { MoveService } from './move.service';
+import { DrawService } from './draw.service';
 
 type Data = {
     user: UserSession['user'];
@@ -66,6 +67,7 @@ export class MultiplayerGateway
         private readonly liveGamesService: LiveGamesService,
         private readonly matchmakingService: MatchmakingService,
         private readonly moveService: MoveService,
+        private readonly drawService: DrawService,
     ) {}
 
     private readonly logger = new Logger(MultiplayerGateway.name);
@@ -385,10 +387,7 @@ export class MultiplayerGateway
 
         if (!game) throw new WsException('Game not found!');
 
-        const newGame = await this.multiplayerService.requestDraw(
-            game.id,
-            userId,
-        );
+        const newGame = await this.drawService.requestDraw(game.id, userId);
 
         if (newGame) {
             this.server.to(Rooms.game(newGame.id)).emit('draw_request', {
@@ -405,7 +404,7 @@ export class MultiplayerGateway
 
         if (!game) throw new WsException('Game not found!');
 
-        const end = await this.multiplayerService.draw(game.id, userId);
+        const end = await this.drawService.draw(game.id, userId);
 
         if (end) {
             const { game, elo } = end;
@@ -423,6 +422,6 @@ export class MultiplayerGateway
     async handleDrawRejection(@ConnectedSocket() socket: TypedSocket) {
         const userId = socket.data.user.id;
 
-        await this.gamesService.rejectDraw(userId);
+        await this.drawService.rejectDraw(userId);
     }
 }
