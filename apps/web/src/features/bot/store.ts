@@ -1,8 +1,8 @@
 import { useGameStore } from "@/features/game/game-store"
 import { PlayerInfo } from "@/features/game/types"
 import { ColorName } from "@bchess/shared"
-import { Square } from "chess.js"
 import { create } from "zustand"
+import { persist, createJSONStorage } from "zustand/middleware"
 
 export interface BotState {
     difficulty: number
@@ -60,113 +60,133 @@ export const ELO_MAP: Record<number, number> = {
     20: 2600,
 }
 
-export const useBotStore = create<BotState>((set, get) => ({
-    difficulty: 0,
-    botColor: "black",
-    isThinking: false,
-    engine: null,
-    engineReady: false,
-    lastConfig: null,
+export const useBotStore = create<BotState>()(
+    persist(
+        (set, get) => ({
+            difficulty: 0,
+            botColor: "black",
+            isThinking: false,
+            engine: null,
+            engineReady: false,
+            lastConfig: null,
 
-    replayBotGame: () => {
-        const { lastConfig, startBotGame } = get()
-        if (!lastConfig) return
-        startBotGame(lastConfig)
-    },
+            replayBotGame: () => {
+                const { lastConfig, startBotGame } = get()
+                if (!lastConfig) return
+                startBotGame(lastConfig)
+            },
 
-    initEngine: () => {
-        const engine = new Worker("/stockfish.js")
+            initEngine: () => {
+                const engine = new Worker("/stockfish.js")
 
-        engine.onmessage = (e: MessageEvent<string>) => {
-            const line = e.data
+                engine.onmessage = (e: MessageEvent<string>) => {
+                    const line = e.data
 
-            if (line === "readyok") {
-                const { difficulty } = get()
-                engine.postMessage(
-                    "setoption name UCI_LimitStrength value true",
-                )
-                engine.postMessage(
-                    `setoption name UCI_Elo value ${ELO_MAP[difficulty]}`,
-                )
-                set({ engineReady: true })
-                console.log("engine is ready")
-            }
+                    if (line === "readyok") {
+                        const { difficulty } = get()
+                        engine.postMessage(
+                            "setoption name UCI_LimitStrength value true",
+                        )
+                        engine.postMessage(
+                            `setoption name UCI_Elo value ${ELO_MAP[difficulty]}`,
+                        )
+                        set({ engineReady: true })
+                        console.log("engine is ready")
+                    }
 
-            if (line.startsWith("bestmove")) {
-                const parts = line.split(" ")
-                const move = parts[1]
+                    if (line.startsWith("bestmove")) {
+                        const parts = line.split(" ")
+                        const move = parts[1]
 
-                if (!move || move === "(none)") {
-                    set({ isThinking: false })
-                    return
+                        if (!move || move === "(none)") {
+                            set({ isThinking: false })
+                            return
+                        }
+
+                        const from = move.slice(0, 2)
+                        const to = move.slice(2, 4)
+                        const promotion = move.length > 4 ? move[4] : undefined
+
+                        const game = useGameStore.getState()
+
+                        game.makeMove({ from, to, promotion })
+                        set({ isThinking: false })
+                    }
                 }
 
-                const from = move.slice(0, 2)
-                const to = move.slice(2, 4)
-                const promotion = move.length > 4 ? move[4] : undefined
+                engine.postMessage("uci")
+                engine.postMessage("isready")
 
+                set({ engine })
+            },
+
+            destroyEngine: () => {
+                const { engine } = get()
+                if (engine) {
+                    engine.postMessage("quit")
+                    engine.terminate()
+                }
+                set({ engine: null, engineReady: false, isThinking: false })
+            },
+
+            startBotGame: ({
+                difficulty,
+                playerColor,
+                timeControl,
+                player,
+            }) => {
+                set({ lastConfig: { difficulty, playerColor, timeControl } })
                 const game = useGameStore.getState()
+                const botColor = playerColor === "white" ? "black" : "white"
 
-                game.makeMove({ from, to, promotion })
-                set({ isThinking: false })
-            }
-        }
+                const botPlayer = {
+                    id: "stockfish",
+                    username: `Stockfish lvl ${difficulty}`,
+                    avatar: "/images/stockfish.webp",
+                }
 
-        engine.postMessage("uci")
-        engine.postMessage("isready")
+                const humanPlayer = player ?? {
+                    id: "player",
+                    username: "You",
+                    avatar: null,
+                }
 
-        set({ engine })
-    },
+                game.resetGame()
+                game.setMode("bot")
+                game.setPlayerColor(playerColor)
+                game.setPlayers(
+                    playerColor === "white" ? humanPlayer : botPlayer,
+                    playerColor === "black" ? humanPlayer : botPlayer,
+                )
+                game.startClock(timeControl)
+                game.setStatus("playing")
 
-    destroyEngine: () => {
-        const { engine } = get()
-        if (engine) {
-            engine.postMessage("quit")
-            engine.terminate()
-        }
-        set({ engine: null, engineReady: false, isThinking: false })
-    },
+                set({ difficulty, botColor })
+            },
 
-    startBotGame: ({ difficulty, playerColor, timeControl, player }) => {
-        set({ lastConfig: { difficulty, playerColor, timeControl } })
-        const game = useGameStore.getState()
-        const botColor = playerColor === "white" ? "black" : "white"
+            requestBotMove: () => {
+                const { engine, engineReady, isThinking, difficulty } = get()
+                const { chess, status } = useGameStore.getState()
 
-        const botPlayer = {
-            id: "stockfish",
-            username: `Stockfish lvl ${difficulty}`,
-            avatar: "/images/stockfish.webp",
-        }
+                if (
+                    !engine ||
+                    !engineReady ||
+                    isThinking ||
+                    status !== "playing"
+                )
+                    return
 
-        const humanPlayer = player ?? {
-            id: "player",
-            username: "You",
-            avatar: null,
-        }
+                set({ isThinking: true })
 
-        game.resetGame()
-        game.setMode("bot")
-        game.setPlayerColor(playerColor)
-        game.setPlayers(
-            playerColor === "white" ? humanPlayer : botPlayer,
-            playerColor === "black" ? humanPlayer : botPlayer,
-        )
-        game.startClock(timeControl)
-        game.setStatus("playing")
-
-        set({ difficulty, botColor })
-    },
-
-    requestBotMove: () => {
-        const { engine, engineReady, isThinking, difficulty } = get()
-        const { chess, status } = useGameStore.getState()
-
-        if (!engine || !engineReady || isThinking || status !== "playing")
-            return
-
-        set({ isThinking: true })
-
-        engine.postMessage(`position fen ${chess.fen()}`)
-        engine.postMessage(`go movetime ${getThinkingTime(difficulty)}`)
-    },
-}))
+                engine.postMessage(`position fen ${chess.fen()}`)
+                engine.postMessage(`go movetime ${getThinkingTime(difficulty)}`)
+            },
+        }),
+        {
+            name: "bot",
+            // partialize: (state) => ({
+            //     difficulty: state.difficulty,
+            // }),
+        },
+    ),
+)

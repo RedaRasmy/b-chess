@@ -7,9 +7,7 @@ import { Slider } from "@/components/ui/slider"
 import { useBotStore } from "@/features/bot/store"
 import SelectColor from "@/features/bot/components/select-color"
 import { useState } from "react"
-// import { TimerOption } from "@/features/game/types"
 import { ColorOption } from "@/features/bot/types"
-// import parseTimerOption from "@/features/game/utils/parse-timer-option"
 import SelectTimer from "@/features/game/components/select-timer"
 import { useRouter } from "next/navigation"
 import { authClient } from "@/lib/auth-client"
@@ -93,7 +91,7 @@ export default function BotOptions() {
                                     <Slider
                                         max={20}
                                         step={1}
-                                        onValueChange={(e) => setLevel(e[0])}
+                                        onValueChange={(e) => setLevel(e[0]!)}
                                         value={[level]}
                                     />
                                 </div>

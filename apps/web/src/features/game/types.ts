@@ -4,7 +4,6 @@ import {
     Reason,
     MoveType,
     GameTimestamps,
-    FullGame,
     PlayerStatus,
     ColorName,
     SyncGame,
@@ -86,6 +85,7 @@ export interface GameState {
         promotion?: string
         ack?: boolean
         withSound?: boolean
+        updateClock?: boolean
     }) => Move | null
     setPosition: (fen: string) => void
     resetGame: () => void
