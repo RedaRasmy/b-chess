@@ -30,7 +30,6 @@ export const moves = pgTable(
         piece: piecesEnum().notNull(),
         capturedPiece: piecesEnum("captured_piece"),
         isCheck: boolean("is_check").default(false).notNull(),
-        isCheckmate: boolean("is_checkmate").default(false).notNull(),
         moveTime: integer("move_time").notNull(),
         san: varchar({ length: 10 }).notNull(),
         createdAt,

@@ -238,14 +238,20 @@ export class MultiplayerService {
         });
     }
 
-    async saveMove(
-        game: PlayingGame,
-        move: Move,
+    async saveMove({
+        game,
+        move,
+        isCheck,
+        end,
+    }: {
+        game: PlayingGame;
+        isCheck: boolean;
+        move: Move;
         end?: {
             result: Result;
             reason: Reason;
-        },
-    ) {
+        };
+    }) {
         return await this.db.transaction(async (tx) => {
             const { newGame, savedMove, elo } = await this.gamesService.addMove(
                 tx,
@@ -253,6 +259,7 @@ export class MultiplayerService {
                     end,
                     game,
                     move,
+                    isCheck,
                 },
             );
 

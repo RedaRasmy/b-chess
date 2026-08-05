@@ -284,16 +284,17 @@ export class MultiplayerGateway
                 liveGame = this.liveGamesService.createGame(gameId, moves);
             }
 
-            const { move, end } = liveGame.move(moveDto);
+            const { move, end, isCheck } = liveGame.move(moveDto);
 
             const playerColor = game.playerColor;
 
             const { savedMove, newGame, elo } =
-                await this.multiplayerService.saveMove(
-                    playingGame,
+                await this.multiplayerService.saveMove({
+                    game: playingGame,
                     move,
-                    end ?? undefined,
-                );
+                    end: end ?? undefined,
+                    isCheck,
+                });
 
             const gameRoom = this.server.to(Rooms.game(gameId));
 

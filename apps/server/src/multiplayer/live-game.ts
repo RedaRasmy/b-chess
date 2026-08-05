@@ -89,10 +89,12 @@ export class LiveGame {
 
         const moveResult = this.chess.move(move);
         const end = checkGameEnd(this.chess);
+        const isCheck = this.chess.isCheck();
 
         return {
             move: moveResult,
             end,
+            isCheck,
         };
     }
 

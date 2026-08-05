@@ -3,7 +3,6 @@ import { DATABASE_CONNECTION } from '../database/database.module';
 import type { Transaction, Database } from '@bchess/db';
 import {
     calcElo,
-    checkGameEnd,
     Elo,
     FinishedGame,
     FullGame,
@@ -34,7 +33,6 @@ import {
     isNotNull,
     ne,
     or,
-    sql,
 } from 'drizzle-orm';
 import { Chess, Color, Move } from 'chess.js';
 
@@ -209,9 +207,11 @@ export class GamesService {
             game,
             move,
             end,
+            isCheck,
         }: {
             game: PlayingGame;
             move: Move;
+            isCheck: boolean;
             end?: {
                 result: Result;
                 reason: Reason;
@@ -236,6 +236,7 @@ export class GamesService {
                 piece: move.piece,
                 san: move.san,
                 capturedPiece: move.captured,
+                isCheck,
             })
             .returning();
 
