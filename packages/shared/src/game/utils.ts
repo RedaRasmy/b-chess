@@ -124,10 +124,27 @@ export function getOppositeColor(color: Color | ColorName): Color {
     return "w"
 }
 
+/**
+ *
+ *
+ * @export
+ * @param {number} min
+ * @param {number} max
+
+ * @return {*}  {boolean}
+ *
+ * @example [0,k] is allowed where ( 200 <= k <= 400)
+ * @example [-k,0] is not allowed
+ * @example [-100,400] is allowed
+ * @example [-k,k] is allowed if  100 <= k <= 400 
+ */
 export function validateRatingRange(min: number, max: number): boolean {
-    if (min > max) return false
-    if (min > max - 200) return false
-    if (max < 100) return false
+    const maxGap = 400
+    const minGap = 100
+
+    if (min < -maxGap || max > maxGap) return false
+    if (max - min < 2 * minGap) return false
+    if (max < minGap) return false
     if (max + min < 0) return false
 
     return true

@@ -1,7 +1,6 @@
 "use client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
 import SelectTimer from "@/features/game/components/select-timer"
 import { useSocket } from "@/features/multiplayer/hooks/use-socket"
@@ -17,6 +16,11 @@ export default function Page() {
     const socket = useSocket()
     const [timer, setTimer] = useState<TimerOption>("rapid 10+0")
     const [range, setRange] = useState<[number, number]>([-100, 100])
+    const [localRange, setLocalRange] = useState(range)
+
+    useEffect(() => {
+        setLocalRange(range)
+    }, [range])
 
     function handleStart() {
         socket.emit("join_queue", {
@@ -91,7 +95,7 @@ export default function Page() {
                                         <Button
                                             size={"icon-sm"}
                                             onClick={() =>
-                                                setRange([-200, 400])
+                                                setRange([-400, 400])
                                             }
                                             className="cursor-pointer"
                                             disabled={isMatching}
@@ -108,24 +112,30 @@ export default function Page() {
                                         </Button>
                                     </div>
                                     <span className="text-sm text-muted-foreground">
-                                        {range.join(", ")}
+                                        {localRange.join(", ")}
                                     </span>
                                 </div>
                                 <Slider
                                     disabled={isMatching}
-                                    value={range}
+                                    value={localRange}
                                     max={400}
-                                    min={-200}
+                                    min={-400}
                                     step={50}
                                     className="w-full"
                                     onValueChange={([x, y]) => {
-                                        if (!x || !y) return
+                                        if (x === undefined || y === undefined)
+                                            return
+                                        setLocalRange([x, y])
+                                    }}
+                                    onValueCommit={([x, y]) => {
+                                        if (x === undefined || y === undefined)
+                                            return
 
-                                        const isValid = validateRatingRange(
-                                            x,
-                                            y,
-                                        )
-                                        if (isValid) setRange([x, y])
+                                        if (validateRatingRange(x, y)) {
+                                            setRange([x, y])
+                                        } else {
+                                            setLocalRange(range)
+                                        }
                                     }}
                                 />
                             </div>
