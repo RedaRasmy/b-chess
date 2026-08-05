@@ -1,6 +1,12 @@
 import { ClockState, GameState } from "@/features/game/types"
 import { playSound } from "@/lib/sounds"
-import { checkGameEnd, getColor, getColorName, parseTimerOption, PromotionPiece } from "@bchess/shared"
+import {
+    checkGameEnd,
+    getColor,
+    getColorName,
+    parseTimerOption,
+    PromotionPiece,
+} from "@bchess/shared"
 import { Chess, Square } from "chess.js"
 import { create } from "zustand"
 import { subscribeWithSelector } from "zustand/middleware"
@@ -119,7 +125,10 @@ export const useGameStore = create<GameState>()(
             }
 
             if (selectedSquare) {
-                const move = get().makeMove(selectedSquare, square)
+                const move = get().makeMove({
+                    from: selectedSquare,
+                    to: square,
+                })
                 if (move) return
             }
 
@@ -141,7 +150,7 @@ export const useGameStore = create<GameState>()(
             set({ selectedSquare: square, legalMoves: moves })
         },
 
-        makeMove: (from, to, promotion = "q", ack = true) => {
+        makeMove: ({ from, to, promotion, ack = true, withSound = true }) => {
             const { chess, clock, playerColor } = get()
 
             if (!playerColor) return null
@@ -151,19 +160,21 @@ export const useGameStore = create<GameState>()(
 
                 const isMyMove = move.color === getColor(playerColor)
 
-                if (chess.isCheck()) {
-                    playSound("check")
-                } else if (move.captured) {
-                    playSound("capture")
-                } else if (
-                    move.isKingsideCastle() ||
-                    move.isQueensideCastle()
-                ) {
-                    playSound("castle")
-                } else if (move.isPromotion()) {
-                    playSound("promote")
-                } else {
-                    playSound("move")
+                if (withSound) {
+                    if (chess.isCheck()) {
+                        playSound("check")
+                    } else if (move.captured) {
+                        playSound("capture")
+                    } else if (
+                        move.isKingsideCastle() ||
+                        move.isQueensideCastle()
+                    ) {
+                        playSound("castle")
+                    } else if (move.isPromotion()) {
+                        playSound("promote")
+                    } else {
+                        playSound("move")
+                    }
                 }
 
                 let newClock: ClockState | null = null
@@ -206,7 +217,10 @@ export const useGameStore = create<GameState>()(
                 })
                 const end = checkGameEnd(chess)
                 if (end) {
-                    get().endGame(end.result, end.reason)
+                    get().endGame({
+                        reason: end.reason,
+                        result: end.result,
+                    })
                 }
 
                 return move
@@ -256,7 +270,7 @@ export const useGameStore = create<GameState>()(
         setStatus: (status) => set({ status }),
         setMode: (mode) => set({ mode }),
 
-        endGame: (result, reason, elo) => {
+        endGame: ({ result, reason, elo, withSound = true }) => {
             const { clock } = get()
 
             const lastActionWrapper =
@@ -287,7 +301,9 @@ export const useGameStore = create<GameState>()(
                 ...lastActionWrapper,
             })
 
-            playSound("gameEnd")
+            if (withSound) {
+                playSound("gameEnd")
+            }
         },
 
         startClock: (timeControl) => {
@@ -398,7 +414,13 @@ export const useGameStore = create<GameState>()(
             )
 
             game.moves.forEach(({ from, to, promotion }) => {
-                get().makeMove(from, to, promotion, false)
+                get().makeMove({
+                    from,
+                    to,
+                    promotion,
+                    ack: false,
+                    withSound: false,
+                })
             })
 
             const { plus } = parseTimerOption(game.timer)
@@ -416,9 +438,14 @@ export const useGameStore = create<GameState>()(
             })
 
             if (game.result) {
-                get().endGame(game.result, game.reason!, {
-                    whiteEloDiff: game.whiteEloDiff!,
-                    blackEloDiff: game.blackEloDiff!,
+                get().endGame({
+                    result: game.result,
+                    reason: game.reason!,
+                    elo: {
+                        whiteEloDiff: game.whiteEloDiff!,
+                        blackEloDiff: game.blackEloDiff!,
+                    },
+                    withSound: false,
                 })
             }
         },

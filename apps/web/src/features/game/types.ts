@@ -80,26 +80,28 @@ export interface GameState {
 
     // actions
     selectSquare: (square: Square) => void
-    makeMove: (
-        from: string,
-        to: string,
-        promotion?: string,
-        ack?: boolean,
-    ) => Move | null
+    makeMove: (payload: {
+        from: string
+        to: string
+        promotion?: string
+        ack?: boolean
+        withSound?: boolean
+    }) => Move | null
     setPosition: (fen: string) => void
     resetGame: () => void
     setPlayers: (white: PlayerInfo, black: PlayerInfo) => void
     setPlayerColor: (color: ColorName) => void
     setStatus: (status: Status) => void
     setMode: (mode: GameMode) => void
-    endGame: (
-        result: Result,
-        reason: Reason,
+    endGame: (payload: {
+        result: Result
+        reason: Reason
         elo?: {
             whiteEloDiff: number
             blackEloDiff: number
-        },
-    ) => void
+        }
+        withSound?: boolean
+    }) => void
     startClock: (timeControl?: {
         initial: number
         increment: number

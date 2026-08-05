@@ -41,9 +41,13 @@ export default function GlobalListeners() {
     useSocketListener("game_finished", (game) => {
         console.log("game finished: ", game.result, game.reason, game.diff)
 
-        gameState.endGame(game.result, game.reason, {
-            whiteEloDiff: game.whiteDiff,
-            blackEloDiff: game.blackDiff,
+        gameState.endGame({
+            result: game.result,
+            reason: game.reason,
+            elo: {
+                whiteEloDiff: game.whiteDiff,
+                blackEloDiff: game.blackDiff,
+            },
         })
     })
 
@@ -56,11 +60,11 @@ export default function GlobalListeners() {
 
         if (isOwnMove) return
 
-        gameState.makeMove(
-            move.from as Square,
-            move.to as Square,
-            move.promotion ?? undefined,
-        )
+        gameState.makeMove({
+            from: move.from,
+            to: move.to,
+            promotion: move.promotion ?? undefined,
+        })
     })
 
     return null

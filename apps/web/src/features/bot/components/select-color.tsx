@@ -1,7 +1,7 @@
 import { ColorOption } from "@/features/bot/types"
 import ChessPieceImage from "@/features/game/components/chess-piece-image"
-import { getColor } from "@/features/game/utils/get-color"
 import { cn } from "@/lib/utils"
+import { getColor } from "@bchess/shared"
 
 type Props = {
     value: ColorOption

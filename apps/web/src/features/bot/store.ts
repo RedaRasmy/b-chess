@@ -1,5 +1,6 @@
 import { useGameStore } from "@/features/game/game-store"
-import { ColorName, PlayerInfo } from "@/features/game/types"
+import { PlayerInfo } from "@/features/game/types"
+import { ColorName } from "@bchess/shared"
 import { Square } from "chess.js"
 import { create } from "zustand"
 
@@ -106,7 +107,7 @@ export const useBotStore = create<BotState>((set, get) => ({
 
                 const game = useGameStore.getState()
 
-                game.makeMove(from as Square, to as Square, promotion)
+                game.makeMove({ from, to, promotion })
                 set({ isThinking: false })
             }
         }
