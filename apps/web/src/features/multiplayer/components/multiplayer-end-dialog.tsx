@@ -19,20 +19,17 @@ import {
 import Link from "next/link"
 
 export default function MultiplayerEndDialog() {
-    const result = useGameStore((s) => s.result)
+    const results = useGameStore((s) => s.results)
     const playerColor = useGameStore((s) => s.playerColor)
-    const endReason = useGameStore((s) => s.endReason)
 
-    const whiteDiff = useGameStore((s) => s.whiteEloDiff)
-    const blackDiff = useGameStore((s) => s.blackEloDiff)
+    if (!results || !playerColor) return null
 
-    const isGameOver = result !== null
+    const { result, reason, blackEloDiff, whiteEloDiff } = results
+
     const isDraw = result === "draw"
     const isWin = result === `${playerColor}_won`
 
-    if (!isGameOver) return null
-
-    const playerDiff = playerColor === "white" ? whiteDiff : blackDiff
+    const playerEloDiff = playerColor === "white" ? whiteEloDiff : blackEloDiff
 
     const outcome = isDraw
         ? {
@@ -74,13 +71,13 @@ export default function MultiplayerEndDialog() {
                         {outcome.title}
                     </DialogTitle>
                     <DialogDescription className="capitalize">
-                        By {endReason}
+                        By {reason}
                     </DialogDescription>
                 </DialogHeader>
 
-                {playerDiff !== null && (
+                {playerEloDiff !== null && (
                     <div className="flex items-center justify-center gap-2 rounded-lg border bg-muted/40 py-3">
-                        {playerDiff >= 0 ? (
+                        {playerEloDiff >= 0 ? (
                             <TrendingUp className="h-4 w-4 text-emerald-500" />
                         ) : (
                             <TrendingDown className="h-4 w-4 text-destructive" />
@@ -88,13 +85,13 @@ export default function MultiplayerEndDialog() {
                         <span
                             className={cn(
                                 "text-lg font-semibold tabular-nums",
-                                playerDiff >= 0
+                                playerEloDiff >= 0
                                     ? "text-emerald-500"
                                     : "text-destructive",
                             )}
                         >
-                            {playerDiff >= 0 ? "+" : ""}
-                            {playerDiff}
+                            {playerEloDiff >= 0 ? "+" : ""}
+                            {playerEloDiff}
                         </span>
                         <span className="text-sm text-muted-foreground">
                             rating

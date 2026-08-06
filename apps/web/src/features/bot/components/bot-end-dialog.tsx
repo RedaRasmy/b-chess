@@ -12,12 +12,13 @@ import { useGameStore } from "@/features/game/game-store"
 import Link from "next/link"
 
 export default function BotEndDialog() {
-    const result = useGameStore((s) => s.result)
+    const results = useGameStore((s) => s.results)
     const playerColor = useGameStore((s) => s.playerColor)
-    const endReason = useGameStore((s) => s.endReason)
     const replay = useBotStore((s) => s.replayBotGame)
 
-    if (!result || !playerColor) return null
+    if (!results || !playerColor) return null
+
+    const { result, reason } = results
 
     const isDraw = result === "draw"
     const isWhite = playerColor === "white"
@@ -30,7 +31,7 @@ export default function BotEndDialog() {
                     <DialogTitle>
                         {isDraw ? "You Draw" : isWin ? "You Won" : "You Lost"}
                     </DialogTitle>
-                    <DialogDescription>By {endReason}</DialogDescription>
+                    <DialogDescription>By {reason}</DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
                     <Button asChild variant="outline">

@@ -25,13 +25,10 @@ function initGame(): GameState {
         moveHistory: [],
         selectedSquare: null,
         legalMoves: [],
-        result: null,
-        endReason: null,
         clock: null,
         viewIndex: null,
         displayFen: chess.fen(),
-        whiteEloDiff: null,
-        blackEloDiff: null,
+        results: null,
     }
 }
 
@@ -252,11 +249,13 @@ export const useGameStore = create<GameStore>()(
                         : {}
 
                 set({
-                    result,
-                    endReason: reason,
                     status: "finished",
-                    whiteEloDiff: elo?.whiteEloDiff ?? null,
-                    blackEloDiff: elo?.blackEloDiff ?? null,
+                    results: {
+                        result,
+                        reason,
+                        whiteEloDiff: elo?.whiteEloDiff ?? null,
+                        blackEloDiff: elo?.blackEloDiff ?? null,
+                    },
                     clock: clock
                         ? {
                               ...clock,
@@ -456,9 +455,7 @@ export const useGameStore = create<GameStore>()(
                           clock: state.clock,
                           white: state.white,
                           black: state.black,
-                          status: state.status,
-                          result: state.result,
-                          endReason: state.endReason,
+                          results: state.results,
                       }
                     : {},
 

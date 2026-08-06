@@ -44,6 +44,13 @@ type Action =
           type: "timeout"
       }
 
+type Results = {
+    result: Result
+    reason: Reason
+    whiteEloDiff: number | null
+    blackEloDiff: number | null
+}
+
 export interface GameState {
     // metadata
     mode: GameMode
@@ -67,10 +74,7 @@ export interface GameState {
     black: PlayerInfo | null
 
     // results
-    whiteEloDiff: number | null
-    blackEloDiff: number | null
-    result: Result | null
-    endReason: Reason | null
+    results: Results | null
 
     // clock
     clock: ClockState | null

@@ -3,7 +3,6 @@ import { useGameStore } from "@/features/game/game-store"
 import { useSocketListener } from "@/features/multiplayer/hooks/use-socket-listener"
 import { authClient } from "@/lib/auth-client"
 import { getColor } from "@bchess/shared"
-import { Square } from "chess.js"
 import { useRouter } from "next/navigation"
 
 export default function GlobalListeners() {
