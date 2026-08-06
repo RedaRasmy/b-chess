@@ -123,7 +123,29 @@ export type ResultsActions = {
 
 export type ResultsSlice = ResultsState & ResultsActions
 
-//
+// Display Slice
+
+// export type ViewIndex = number | "start" | "end"
+export type ViewIndex = number | null
+
+export type DisplayState = {
+    viewIndex: ViewIndex
+    displayFen: string
+    moveHistory: Move[]
+}
+
+export type DispalyActions = {
+    goToMove: (index: ViewIndex) => void
+    goToStart: () => void
+    goToEnd: () => void
+    stepBack: () => void
+    stepForward: () => void
+    resetDisplay: () => void
+    rollbackDisplay: () => void
+    setDisplay: (history: Move[], index?: ViewIndex) => void
+}
+
+export type DisplaySlice = DisplayState & DispalyActions
 
 export type OldState = {
     // metadata
@@ -131,22 +153,20 @@ export type OldState = {
     lastAction: null | Action
 
     // core
-    chess: Chess
-    fen: string
     status: Status
-    moveHistory: Move[]
 
-    // display
-    viewIndex: number | null
-    displayFen: string
-    selectedSquare: Square | null
+    // validation
+    fen: string
+    chess: Chess
     legalMoves: Square[]
-
-    // results
-    // results: Results | null
+    selectedSquare: Square | null
 }
 
-export type GameState = PlayersState & ClockState & ResultsState & OldState
+export type GameState = PlayersState &
+    ClockState &
+    ResultsState &
+    DisplayState &
+    OldState
 
 export type OldActions = {
     selectSquare: (square: Square) => void
@@ -158,16 +178,10 @@ export type OldActions = {
         withSound?: boolean
         updateClock?: boolean
     }) => Move | null
-    setPosition: (fen: string) => void
     resetGame: () => void
     setStatus: (status: Status) => void
     setMode: (mode: GameMode) => void
 
-    goToMove: (index: number) => void
-    goToStart: () => void
-    goToEnd: () => void
-    stepBack: () => void
-    stepForward: () => void
     undo: () => void
     rollback: (timestamps: GameTimestamps) => void
     syncGame: (game: SyncGame, playerColor: ColorName) => void
@@ -175,6 +189,7 @@ export type OldActions = {
 export type GameActions = PlayersActions &
     ClockActions &
     ResultsActions &
+    DispalyActions &
     OldActions
 
 export type GameStore = GameState & GameActions

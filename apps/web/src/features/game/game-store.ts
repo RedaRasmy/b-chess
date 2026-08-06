@@ -1,4 +1,5 @@
 import { clockSlice } from "@/features/game/slices/clock.slice"
+import { displaySlice } from "@/features/game/slices/display.slice"
 import { playersSlice } from "@/features/game/slices/players.slice"
 import { resultsSlice } from "@/features/game/slices/results.slice"
 import { GameStore, OldState } from "@/features/game/types"
@@ -24,11 +25,8 @@ function initGame(): OldState {
         //
         chess: chess,
         fen: chess.fen(),
-        moveHistory: [],
         selectedSquare: null,
         legalMoves: [],
-        viewIndex: null,
-        displayFen: chess.fen(),
     }
 }
 
@@ -38,6 +36,7 @@ export const useGameStore = create<GameStore>()(
             ...playersSlice(set, get, write),
             ...clockSlice(set, get, write),
             ...resultsSlice(set, get, write),
+            ...displaySlice(set, get, write),
             ...initGame(),
 
             undo: () => {
@@ -54,35 +53,29 @@ export const useGameStore = create<GameStore>()(
                     chess.undo()
                 }
 
-                const newHistory = chess.history({ verbose: true })
-
                 set({
                     fen: chess.fen(),
                     displayFen: chess.fen(),
-                    moveHistory: newHistory,
-                    viewIndex: null,
                     selectedSquare: null,
                     legalMoves: [],
                 })
+
+                get().rollbackDisplay()
             },
             rollback: (timestamps) => {
                 const { chess, mode, status, players } = get()
                 if (!players || mode !== "multiplayer" || status !== "playing")
                     return
 
-                chess.undo()
-
-                const newHistory = chess.history({ verbose: true })
+                chess.undo() // remove (fen)
 
                 set({
-                    fen: chess.fen(),
-                    displayFen: chess.fen(),
-                    moveHistory: newHistory,
-                    viewIndex: null,
+                    fen: chess.fen(), // remove
                     selectedSquare: null,
                     legalMoves: [],
                 })
 
+                get().rollbackDisplay()
                 get().rollbackClock(timestamps)
             },
 
@@ -168,9 +161,6 @@ export const useGameStore = create<GameStore>()(
 
                     set({
                         fen: chess.fen(),
-                        displayFen: chess.fen(),
-                        viewIndex: null,
-                        moveHistory: chess.history({ verbose: true }),
                         selectedSquare: null,
                         legalMoves: [], // TODO: null would be better ?? or set directly the new legal moves ?
                         lastAction:
@@ -181,6 +171,9 @@ export const useGameStore = create<GameStore>()(
                                   }
                                 : null,
                     })
+
+                    get().setDisplay(chess.history({ verbose: true }))
+
                     const end = checkGameEnd(chess)
 
                     if (end) {
@@ -196,68 +189,17 @@ export const useGameStore = create<GameStore>()(
                 }
             },
 
-            setPosition: (fen) => {
-                const chess = new Chess(fen)
-                set({
-                    chess,
-                    fen,
-                    moveHistory: [],
-                    selectedSquare: null,
-                    legalMoves: [],
-                })
-            },
-
             resetGame: () => {
                 set(initGame())
 
                 get().resetPlayers()
                 get().resetClock()
                 get().resetResults()
+                get().resetDisplay()
             },
 
             setStatus: (status) => set({ status }),
             setMode: (mode) => set({ mode }),
-
-            goToMove: (index) => {
-                const { moveHistory } = get()
-                if (index < 0 || index >= moveHistory.length) return
-
-                const chess = new Chess()
-                for (let i = 0; i <= index; i++) {
-                    chess.move(moveHistory[i]!)
-                }
-                set({ viewIndex: index, displayFen: chess.fen() })
-            },
-
-            goToStart: () => {
-                set({ viewIndex: -1, displayFen: new Chess().fen() })
-            },
-
-            goToEnd: () => {
-                const { fen } = get()
-                set({ viewIndex: null, displayFen: fen })
-            },
-
-            stepBack: () => {
-                const { viewIndex, moveHistory } = get()
-                const current = viewIndex ?? moveHistory.length - 1
-                if (current <= 0) {
-                    get().goToStart()
-                } else {
-                    get().goToMove(current - 1)
-                }
-            },
-
-            stepForward: () => {
-                const { viewIndex, moveHistory } = get()
-                if (viewIndex === null) return
-                const next = viewIndex + 1
-                if (next >= moveHistory.length) {
-                    get().goToEnd()
-                } else {
-                    get().goToMove(next)
-                }
-            },
 
             syncGame: (game, playerColor) => {
                 get().resetGame()

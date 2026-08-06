@@ -39,7 +39,7 @@ export default function GameBoard() {
           }
         : {}
 
-    const lastMove = moveHistory.at(viewIndex ?? -1)
+    const lastMove = viewIndex !== null ? moveHistory.at(viewIndex) : undefined
 
     const lastMoveSquareStyle = {
         boxShadow:
