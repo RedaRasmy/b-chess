@@ -40,9 +40,7 @@ export default function Page() {
                             console.warn("rollback..")
 
                             gameState.rollback(res.timestamps)
-                        } else {
-                            gameState.syncTimer(res.timestamps)
-                        }
+                        } 
                     })
                 }
             },
@@ -61,11 +59,12 @@ export default function Page() {
         }
     })
 
-    const playerColor = gameState.playerColor
+    const playerColor = gameState.players?.playerColor
 
     const opponentColor =
-        playerColor === null ? null : playerColor === "white" ? "b" : "w"
-    const color = playerColor === null ? null : getColor(playerColor)
+        playerColor === undefined ? null : playerColor === "white" ? "b" : "w"
+
+    const color = playerColor === undefined ? null : getColor(playerColor)
 
     return (
         <div className="flex flex-wrap w-full h-full gap-3 lg:gap-5 xl:gap-8">

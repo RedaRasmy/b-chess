@@ -21,7 +21,7 @@ export interface PlayerInfo {
     status: PlayerStatus | null
 }
 
-export interface ClockState {
+export interface Clock {
     white: number
     black: number
     increment: number
@@ -52,7 +52,7 @@ type Results = {
     blackEloDiff: number | null
 }
 
-// Slices
+// Players Slice
 
 export type PlayersState = {
     players: {
@@ -74,6 +74,29 @@ export type PlayersActions = {
 
 export type PlayersSlice = PlayersState & PlayersActions
 
+// Clock Slice
+
+export type ClockState = {
+    clock: Clock | null
+}
+
+export type ClockActions = {
+    setClock: (clock: Clock) => void
+    startClock: (timeControl?: {
+        initial: number
+        increment: number
+        lastTickAt?: number
+    }) => void
+
+    stopClock(p: { reason: Reason; result: Result }): void
+
+    switchClock(): void
+
+    rollbackClock(timetamps: GameTimestamps): void
+}
+
+export type ClockSlice = ClockState & ClockActions
+
 export type OldState = {
     // metadata
     mode: GameMode
@@ -84,7 +107,6 @@ export type OldState = {
     fen: string
     status: Status
     moveHistory: Move[]
-    // playerColor: ColorName | null
 
     // display
     viewIndex: number | null
@@ -92,18 +114,11 @@ export type OldState = {
     selectedSquare: Square | null
     legalMoves: Square[]
 
-    // players
-    // white: PlayerInfo | null
-    // black: PlayerInfo | null
-
     // results
     results: Results | null
-
-    // clock
-    clock: ClockState | null
 }
 
-export type GameState = PlayersState & OldState
+export type GameState = PlayersState & ClockState & OldState
 
 export type OldActions = {
     selectSquare: (square: Square) => void
@@ -117,8 +132,6 @@ export type OldActions = {
     }) => Move | null
     setPosition: (fen: string) => void
     resetGame: () => void
-    // setPlayers: (white: PlayerInfo, black: PlayerInfo) => void
-    // setPlayerColor: (color: ColorName) => void
     setStatus: (status: Status) => void
     setMode: (mode: GameMode) => void
     endGame: (payload: {
@@ -130,12 +143,6 @@ export type OldActions = {
         }
         withSound?: boolean
     }) => void
-    startClock: (timeControl?: {
-        initial: number
-        increment: number
-        lastTickAt?: number
-    }) => void
-    pauseClock: () => void
     goToMove: (index: number) => void
     goToStart: () => void
     goToEnd: () => void
@@ -143,12 +150,9 @@ export type OldActions = {
     stepForward: () => void
     undo: () => void
     rollback: (timestamps: GameTimestamps) => void
-    syncTimer: (game: GameTimestamps) => void
     syncGame: (game: SyncGame, playerColor: ColorName) => void
-    // setPlayerStatus: (color: Color, status: PlayerStatus | null) => void
-    
 }
-export type GameActions = PlayersActions & OldActions
+export type GameActions = PlayersActions & ClockActions & OldActions
 
 export type GameStore = GameState & GameActions
 

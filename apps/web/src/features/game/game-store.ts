@@ -1,10 +1,6 @@
+import { clockSlice } from "@/features/game/slices/clock.slice"
 import { playersSlice } from "@/features/game/slices/players.slice"
-import {
-    ClockState,
-    GameState,
-    GameStore,
-    OldState,
-} from "@/features/game/types"
+import { GameStore, OldState } from "@/features/game/types"
 import { playSound } from "@/lib/sounds"
 import {
     checkGameEnd,
@@ -20,18 +16,19 @@ import { persist, createJSONStorage } from "zustand/middleware"
 function initGame(): OldState {
     const chess = new Chess()
     return {
+        //
         lastAction: null,
-        chess: chess,
-        fen: chess.fen(),
         mode: "idle",
         status: "matching",
-
+        //
+        chess: chess,
+        fen: chess.fen(),
         moveHistory: [],
         selectedSquare: null,
         legalMoves: [],
-        clock: null,
         viewIndex: null,
         displayFen: chess.fen(),
+        //
         results: null,
     }
 }
@@ -40,6 +37,7 @@ export const useGameStore = create<GameStore>()(
     persist(
         subscribeWithSelector((set, get, write) => ({
             ...playersSlice(set, get, write),
+            ...clockSlice(set, get, write),
             ...initGame(),
 
             undo: () => {
@@ -67,13 +65,8 @@ export const useGameStore = create<GameStore>()(
                     legalMoves: [],
                 })
             },
-            rollback: ({
-                blackTimeLeft,
-                gameStartedAt,
-                lastMoveAt,
-                whiteTimeLeft,
-            }) => {
-                const { chess, mode, status, clock, players } = get()
+            rollback: (timestamps) => {
+                const { chess, mode, status, players } = get()
                 if (!players || mode !== "multiplayer" || status !== "playing")
                     return
 
@@ -88,14 +81,9 @@ export const useGameStore = create<GameStore>()(
                     viewIndex: null,
                     selectedSquare: null,
                     legalMoves: [],
-                    clock: {
-                        activeColor: chess.turn() === "w" ? "white" : "black",
-                        white: whiteTimeLeft,
-                        black: blackTimeLeft,
-                        lastTickAt: lastMoveAt ?? gameStartedAt,
-                        increment: clock?.increment ?? 0,
-                    },
                 })
+
+                get().rollbackClock(timestamps)
             },
 
             selectSquare: (square) => {
@@ -168,19 +156,8 @@ export const useGameStore = create<GameStore>()(
                         }
                     }
 
-                    let newClock: ClockState | null = updateClock ? null : clock
-
-                    if (clock && updateClock) {
-                        const color = move.color === "w" ? "white" : "black"
-                        const elapsed = clock.lastTickAt
-                            ? Date.now() - clock.lastTickAt
-                            : 0
-                        newClock = {
-                            ...clock,
-                            [color]: clock[color] - elapsed + clock.increment,
-                            activeColor: color === "white" ? "black" : "white",
-                            lastTickAt: Date.now(),
-                        }
+                    if (updateClock) {
+                        get().switchClock()
                     }
 
                     const theMove = {
@@ -196,7 +173,6 @@ export const useGameStore = create<GameStore>()(
                         moveHistory: chess.history({ verbose: true }),
                         selectedSquare: null,
                         legalMoves: [], // TODO: null would be better ?? or set directly the new legal moves ?
-                        clock: newClock,
                         lastAction:
                             isMyMove && ack
                                 ? {
@@ -238,8 +214,6 @@ export const useGameStore = create<GameStore>()(
             setMode: (mode) => set({ mode }),
 
             endGame: ({ result, reason, elo, withSound = true }) => {
-                const { clock } = get()
-
                 const lastActionWrapper =
                     reason === "Timeout"
                         ? {
@@ -249,6 +223,8 @@ export const useGameStore = create<GameStore>()(
                           }
                         : {}
 
+                get().stopClock({ reason, result })
+
                 set({
                     status: "finished",
                     results: {
@@ -257,50 +233,12 @@ export const useGameStore = create<GameStore>()(
                         whiteEloDiff: elo?.whiteEloDiff ?? null,
                         blackEloDiff: elo?.blackEloDiff ?? null,
                     },
-                    clock: clock
-                        ? {
-                              ...clock,
-                              activeColor: null,
-                              lastTickAt: null,
-                              ...(reason === "Timeout" && {
-                                  [result === "white_won" ? "black" : "white"]:
-                                      0,
-                              }),
-                          }
-                        : null,
                     ...lastActionWrapper,
                 })
 
                 if (withSound) {
                     playSound("gameEnd")
                 }
-            },
-
-            startClock: (timeControl) => {
-                if (!timeControl) {
-                    set({ clock: null })
-                    return
-                }
-                const { increment, initial, lastTickAt } = timeControl
-                set({
-                    clock: {
-                        white: initial,
-                        black: initial,
-                        increment,
-                        activeColor: "white",
-                        lastTickAt: lastTickAt ?? Date.now(),
-                    },
-                })
-
-                playSound("gameStart")
-            },
-
-            pauseClock: () => {
-                const { clock } = get()
-                if (!clock) return
-                set({
-                    clock: { ...clock, activeColor: null, lastTickAt: null },
-                })
             },
 
             goToMove: (index) => {
@@ -344,26 +282,6 @@ export const useGameStore = create<GameStore>()(
                 }
             },
 
-            syncTimer: ({
-                blackTimeLeft,
-                gameStartedAt,
-                lastMoveAt,
-                whiteTimeLeft,
-            }) => {
-                const { clock } = get()
-
-                if (!clock) return
-
-                set({
-                    clock: {
-                        activeColor: clock.activeColor,
-                        white: whiteTimeLeft,
-                        black: blackTimeLeft,
-                        lastTickAt: lastMoveAt ?? gameStartedAt,
-                        increment: clock.increment,
-                    },
-                })
-            },
             syncGame: (game, playerColor) => {
                 get().resetGame()
                 get().setMode("multiplayer")
@@ -386,6 +304,16 @@ export const useGameStore = create<GameStore>()(
                     playerColor,
                 })
 
+                const { plus } = parseTimerOption(game.timer)
+
+                get().setClock({
+                    activeColor: getColorName(game.currentTurn),
+                    white: game.whiteTimeLeft,
+                    black: game.blackTimeLeft,
+                    lastTickAt: game.lastMoveAt ?? game.gameStartedAt,
+                    increment: plus * 1000,
+                })
+
                 game.moves.forEach(({ from, to, promotion }) => {
                     get().makeMove({
                         from,
@@ -397,18 +325,6 @@ export const useGameStore = create<GameStore>()(
                 })
 
                 get().setStatus(game.status)
-
-                const { plus } = parseTimerOption(game.timer)
-
-                set({
-                    clock: {
-                        activeColor: getColorName(game.currentTurn),
-                        white: game.whiteTimeLeft,
-                        black: game.blackTimeLeft,
-                        lastTickAt: game.lastMoveAt ?? game.gameStartedAt,
-                        increment: plus * 1000,
-                    },
-                })
 
                 if (game.result) {
                     get().endGame({

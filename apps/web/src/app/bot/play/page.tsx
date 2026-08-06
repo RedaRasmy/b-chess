@@ -9,7 +9,7 @@ import { getColor } from "@bchess/shared"
 
 export default function Page() {
     useBot()
-    const playerColor = useGameStore((s) => s.playerColor)
+    const playerColor = useGameStore((s) => s.players?.playerColor) ?? null
 
     const opponentColor =
         playerColor === null ? null : playerColor === "white" ? "b" : "w"
