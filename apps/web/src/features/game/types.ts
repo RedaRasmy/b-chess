@@ -70,6 +70,8 @@ export type PlayersActions = {
     }) => void
 
     setPlayerStatus: (color: Color, status: PlayerStatus | null) => void
+
+    resetPlayers: () => void
 }
 
 export type PlayersSlice = PlayersState & PlayersActions
@@ -93,9 +95,35 @@ export type ClockActions = {
     switchClock(): void
 
     rollbackClock(timetamps: GameTimestamps): void
+
+    resetClock(): void
 }
 
 export type ClockSlice = ClockState & ClockActions
+
+// Results Slice
+
+export type ResultsState = {
+    results: Results | null
+}
+
+export type ResultsActions = {
+    endGame: (payload: {
+        result: Result
+        reason: Reason
+        elo?: {
+            whiteEloDiff: number
+            blackEloDiff: number
+        }
+        withSound?: boolean
+    }) => void
+
+    resetResults(): void
+}
+
+export type ResultsSlice = ResultsState & ResultsActions
+
+//
 
 export type OldState = {
     // metadata
@@ -115,10 +143,10 @@ export type OldState = {
     legalMoves: Square[]
 
     // results
-    results: Results | null
+    // results: Results | null
 }
 
-export type GameState = PlayersState & ClockState & OldState
+export type GameState = PlayersState & ClockState & ResultsState & OldState
 
 export type OldActions = {
     selectSquare: (square: Square) => void
@@ -134,15 +162,7 @@ export type OldActions = {
     resetGame: () => void
     setStatus: (status: Status) => void
     setMode: (mode: GameMode) => void
-    endGame: (payload: {
-        result: Result
-        reason: Reason
-        elo?: {
-            whiteEloDiff: number
-            blackEloDiff: number
-        }
-        withSound?: boolean
-    }) => void
+
     goToMove: (index: number) => void
     goToStart: () => void
     goToEnd: () => void
@@ -152,7 +172,10 @@ export type OldActions = {
     rollback: (timestamps: GameTimestamps) => void
     syncGame: (game: SyncGame, playerColor: ColorName) => void
 }
-export type GameActions = PlayersActions & ClockActions & OldActions
+export type GameActions = PlayersActions &
+    ClockActions &
+    ResultsActions &
+    OldActions
 
 export type GameStore = GameState & GameActions
 

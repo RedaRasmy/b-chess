@@ -79,4 +79,10 @@ export const clockSlice: GameSlice<ClockSlice> = (set, get) => ({
             },
         })
     },
+
+    resetClock() {
+        set({
+            clock: null,
+        })
+    },
 })

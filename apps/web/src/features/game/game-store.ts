@@ -1,5 +1,6 @@
 import { clockSlice } from "@/features/game/slices/clock.slice"
 import { playersSlice } from "@/features/game/slices/players.slice"
+import { resultsSlice } from "@/features/game/slices/results.slice"
 import { GameStore, OldState } from "@/features/game/types"
 import { playSound } from "@/lib/sounds"
 import {
@@ -28,8 +29,6 @@ function initGame(): OldState {
         legalMoves: [],
         viewIndex: null,
         displayFen: chess.fen(),
-        //
-        results: null,
     }
 }
 
@@ -38,6 +37,7 @@ export const useGameStore = create<GameStore>()(
         subscribeWithSelector((set, get, write) => ({
             ...playersSlice(set, get, write),
             ...clockSlice(set, get, write),
+            ...resultsSlice(set, get, write),
             ...initGame(),
 
             undo: () => {
@@ -129,7 +129,7 @@ export const useGameStore = create<GameStore>()(
                 withSound = true,
                 updateClock = true,
             }) => {
-                const { chess, clock, players } = get()
+                const { chess, players } = get()
 
                 if (!players) return null
 
@@ -182,6 +182,7 @@ export const useGameStore = create<GameStore>()(
                                 : null,
                     })
                     const end = checkGameEnd(chess)
+
                     if (end) {
                         get().endGame({
                             reason: end.reason,
@@ -208,38 +209,14 @@ export const useGameStore = create<GameStore>()(
 
             resetGame: () => {
                 set(initGame())
+
+                get().resetPlayers()
+                get().resetClock()
+                get().resetResults()
             },
 
             setStatus: (status) => set({ status }),
             setMode: (mode) => set({ mode }),
-
-            endGame: ({ result, reason, elo, withSound = true }) => {
-                const lastActionWrapper =
-                    reason === "Timeout"
-                        ? {
-                              lastAction: {
-                                  type: "timeout" as const,
-                              },
-                          }
-                        : {}
-
-                get().stopClock({ reason, result })
-
-                set({
-                    status: "finished",
-                    results: {
-                        result,
-                        reason,
-                        whiteEloDiff: elo?.whiteEloDiff ?? null,
-                        blackEloDiff: elo?.blackEloDiff ?? null,
-                    },
-                    ...lastActionWrapper,
-                })
-
-                if (withSound) {
-                    playSound("gameEnd")
-                }
-            },
 
             goToMove: (index) => {
                 const { moveHistory } = get()

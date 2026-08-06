@@ -35,4 +35,10 @@ export const playersSlice: GameSlice<PlayersSlice> = (set, get) => ({
             },
         })
     },
+
+    resetPlayers: () => {
+        set({
+            players: null,
+        })
+    },
 })
