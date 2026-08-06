@@ -9,6 +9,8 @@ export default function GameBoard() {
         selectSquare,
         selectedSquare,
         legalMoves,
+        moveHistory,
+        viewIndex,
     } = useGameStore()
 
     function onPieceDrop(from: Square, to: Square) {
@@ -27,6 +29,30 @@ export default function GameBoard() {
             },
         ]),
     )
+
+    const selectedSquareStyle = selectedSquare
+        ? {
+              [selectedSquare]: {
+                  backgroundColor:
+                      "color-mix(in oklch, var(--primary) 20%, transparent)",
+              },
+          }
+        : {}
+
+    const lastMove = moveHistory.at(viewIndex ?? -1)
+
+    const lastMoveSquareStyle = {
+        boxShadow:
+            "inset 0 0 0 3px color-mix(in oklch, yellow 40%, transparent)",
+    }
+
+    const lastMoveStyle = lastMove
+        ? {
+              [lastMove.from]: lastMoveSquareStyle,
+              [lastMove.to]: lastMoveSquareStyle,
+          }
+        : {}
+
     return (
         <Chessboard
             options={{
@@ -47,17 +73,13 @@ export default function GameBoard() {
                 },
                 boardOrientation: playerColor ?? "white",
                 position: displayFen,
-                onSquareClick: ({ square }) => selectSquare(square as Square),
+                onSquareClick: ({ square ,}) => selectSquare(square as Square),
                 onPieceDrop: ({ sourceSquare, targetSquare }) =>
                     onPieceDrop(sourceSquare as Square, targetSquare as Square),
                 squareStyles: {
                     ...legalMoveStyles,
-                    ...(selectedSquare && {
-                        [selectedSquare]: {
-                            backgroundColor:
-                                "color-mix(in oklch, var(--primary) 20%, transparent)",
-                        },
-                    }),
+                    ...selectedSquareStyle,
+                    ...lastMoveStyle,
                 },
             }}
         />

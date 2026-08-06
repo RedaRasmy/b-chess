@@ -44,40 +44,40 @@ type Action =
       }
 
 export interface GameState {
+    // metadata
+    mode: GameMode
+    lastAction: null | Action
+
     // core
     chess: Chess
     fen: string
-    mode: GameMode
     status: Status
-    lastAction: null | Action
-
-    // players
-    playerColor: ColorName | null
-    white: PlayerInfo | null
-    black: PlayerInfo | null
-    whiteEloDiff: number | null
-    blackEloDiff: number | null
-    whiteStatus: PlayerStatus | null
-    blackStatus: PlayerStatus | null
-
-    // moves
     moveHistory: Move[]
-    lastMove: MoveType | null
+    playerColor: ColorName | null
+
+    // display
     viewIndex: number | null
     displayFen: string
-
-    // selection
     selectedSquare: Square | null
     legalMoves: Square[]
 
-    // result
+    // players
+    white: PlayerInfo | null
+    black: PlayerInfo | null
+    whiteStatus: PlayerStatus | null
+    blackStatus: PlayerStatus | null
+
+    // results
+    whiteEloDiff: number | null
+    blackEloDiff: number | null
     result: Result | null
     endReason: Reason | null
 
     // clock
     clock: ClockState | null
+}
 
-    // actions
+export interface GameActions {
     selectSquare: (square: Square) => void
     makeMove: (payload: {
         from: string
@@ -119,3 +119,5 @@ export interface GameState {
     syncGame: (game: SyncGame, playerColor: ColorName) => void
     setPlayerStatus: (color: Color, status: PlayerStatus | null) => void
 }
+
+export type GameStore = GameState & GameActions

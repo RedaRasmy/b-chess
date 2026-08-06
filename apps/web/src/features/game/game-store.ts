@@ -1,4 +1,4 @@
-import { ClockState, GameState } from "@/features/game/types"
+import { ClockState, GameState, GameStore } from "@/features/game/types"
 import { playSound } from "@/lib/sounds"
 import {
     checkGameEnd,
@@ -11,40 +11,44 @@ import { create } from "zustand"
 import { subscribeWithSelector } from "zustand/middleware"
 import { persist, createJSONStorage } from "zustand/middleware"
 
-const DEFAULT_CLOCK: ClockState = {
-    white: 10 * 60 * 1000,
-    black: 10 * 60 * 1000,
-    increment: 0,
-    activeColor: null,
-    lastTickAt: null,
+// const DEFAULT_CLOCK: ClockState = {
+//     white: 10 * 60 * 1000,
+//     black: 10 * 60 * 1000,
+//     increment: 0,
+//     activeColor: null,
+//     lastTickAt: null,
+// }
+
+function initGame(): GameState {
+    const chess = new Chess()
+    return {
+        lastAction: null,
+        chess: chess,
+        fen: chess.fen(),
+        mode: "idle",
+        status: "matching",
+        playerColor: null,
+        white: null,
+        black: null,
+        moveHistory: [],
+        selectedSquare: null,
+        legalMoves: [],
+        result: null,
+        endReason: null,
+        clock: null,
+        viewIndex: null,
+        displayFen: chess.fen(),
+        whiteEloDiff: null,
+        blackEloDiff: null,
+        whiteStatus: null,
+        blackStatus: null,
+    }
 }
 
-// TODO: add initialState object
-
-export const useGameStore = create<GameState>()(
+export const useGameStore = create<GameStore>()(
     persist(
         subscribeWithSelector((set, get) => ({
-            lastAction: null,
-            chess: new Chess(),
-            fen: new Chess().fen(),
-            mode: "idle",
-            status: "preparing",
-            playerColor: null,
-            white: null,
-            black: null,
-            moveHistory: [],
-            lastMove: null,
-            selectedSquare: null,
-            legalMoves: [],
-            result: null,
-            endReason: null,
-            clock: DEFAULT_CLOCK,
-            viewIndex: null,
-            displayFen: new Chess().fen(),
-            whiteEloDiff: null,
-            blackEloDiff: null,
-            whiteStatus: null,
-            blackStatus: null,
+            ...initGame(),
 
             undo: () => {
                 const { chess, playerColor, mode, status } = get()
@@ -65,15 +69,6 @@ export const useGameStore = create<GameState>()(
                     fen: chess.fen(),
                     displayFen: chess.fen(),
                     moveHistory: newHistory,
-                    lastMove:
-                        newHistory.length > 0
-                            ? {
-                                  from: newHistory[newHistory.length - 1]!
-                                      .from as Square,
-                                  to: newHistory[newHistory.length - 1]!
-                                      .to as Square,
-                              }
-                            : null,
                     viewIndex: null,
                     selectedSquare: null,
                     legalMoves: [],
@@ -101,15 +96,6 @@ export const useGameStore = create<GameState>()(
                     fen: chess.fen(),
                     displayFen: chess.fen(),
                     moveHistory: newHistory,
-                    lastMove:
-                        newHistory.length > 0
-                            ? {
-                                  from: newHistory[newHistory.length - 1]!
-                                      .from as Square,
-                                  to: newHistory[newHistory.length - 1]!
-                                      .to as Square,
-                              }
-                            : null,
                     viewIndex: null,
                     selectedSquare: null,
                     legalMoves: [],
@@ -218,7 +204,6 @@ export const useGameStore = create<GameState>()(
                         displayFen: chess.fen(),
                         viewIndex: null,
                         moveHistory: chess.history({ verbose: true }),
-                        lastMove: theMove,
                         selectedSquare: null,
                         legalMoves: [], // TODO: null would be better ?? or set directly the new legal moves ?
                         clock: newClock,
@@ -250,34 +235,13 @@ export const useGameStore = create<GameState>()(
                     chess,
                     fen,
                     moveHistory: [],
-                    lastMove: null,
                     selectedSquare: null,
                     legalMoves: [],
                 })
             },
 
             resetGame: () => {
-                const chess = new Chess()
-                set({
-                    chess,
-                    fen: chess.fen(),
-                    displayFen: chess.fen(),
-                    viewIndex: null,
-                    mode: "idle",
-                    status: "preparing",
-                    playerColor: null,
-                    white: null,
-                    black: null,
-                    moveHistory: [],
-                    lastMove: null,
-                    selectedSquare: null,
-                    legalMoves: [],
-                    result: null,
-                    endReason: null,
-                    clock: DEFAULT_CLOCK,
-                    whiteEloDiff: null,
-                    blackEloDiff: null,
-                })
+                set(initGame())
             },
 
             setPlayers: (white, black) => set({ white, black }),
