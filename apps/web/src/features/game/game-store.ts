@@ -1,4 +1,10 @@
-import { ClockState, GameState, GameStore } from "@/features/game/types"
+import { playersSlice } from "@/features/game/slices/players.slice"
+import {
+    ClockState,
+    GameState,
+    GameStore,
+    OldState,
+} from "@/features/game/types"
 import { playSound } from "@/lib/sounds"
 import {
     checkGameEnd,
@@ -11,7 +17,7 @@ import { create } from "zustand"
 import { subscribeWithSelector } from "zustand/middleware"
 import { persist, createJSONStorage } from "zustand/middleware"
 
-function initGame(): GameState {
+function initGame(): OldState {
     const chess = new Chess()
     return {
         lastAction: null,
@@ -19,9 +25,7 @@ function initGame(): GameState {
         fen: chess.fen(),
         mode: "idle",
         status: "matching",
-        playerColor: null,
-        white: null,
-        black: null,
+
         moveHistory: [],
         selectedSquare: null,
         legalMoves: [],
@@ -34,13 +38,15 @@ function initGame(): GameState {
 
 export const useGameStore = create<GameStore>()(
     persist(
-        subscribeWithSelector((set, get) => ({
+        subscribeWithSelector((set, get, write) => ({
+            ...playersSlice(set, get, write),
             ...initGame(),
 
             undo: () => {
-                const { chess, playerColor, mode, status } = get()
-                if (!playerColor || mode !== "bot" || status !== "playing")
-                    return
+                const { chess, mode, status, players } = get()
+                if (!players || mode !== "bot" || status !== "playing") return // TODO: allow undo if game has finished ?
+
+                const playerColor = players.playerColor
 
                 const turn = chess.turn()
                 if (getColor(playerColor) === turn) {
@@ -67,12 +73,8 @@ export const useGameStore = create<GameStore>()(
                 lastMoveAt,
                 whiteTimeLeft,
             }) => {
-                const { chess, playerColor, mode, status, clock } = get()
-                if (
-                    !playerColor ||
-                    mode !== "multiplayer" ||
-                    status !== "playing"
-                )
+                const { chess, mode, status, clock, players } = get()
+                if (!players || mode !== "multiplayer" || status !== "playing")
                     return
 
                 chess.undo()
@@ -97,9 +99,9 @@ export const useGameStore = create<GameStore>()(
             },
 
             selectSquare: (square) => {
-                const { chess, selectedSquare, playerColor, status } = get()
+                const { chess, selectedSquare, players, status } = get()
 
-                if (status !== "playing") return
+                if (status !== "playing" || !players) return
 
                 if (selectedSquare === square) {
                     return set({ selectedSquare: null, legalMoves: [] })
@@ -120,7 +122,7 @@ export const useGameStore = create<GameStore>()(
                     return set({ selectedSquare: null, legalMoves: [] })
                 }
 
-                if (playerColor && turn !== playerColor) {
+                if (turn !== players.playerColor) {
                     return set({ selectedSquare: null, legalMoves: [] })
                 }
 
@@ -139,14 +141,15 @@ export const useGameStore = create<GameStore>()(
                 withSound = true,
                 updateClock = true,
             }) => {
-                const { chess, clock, playerColor } = get()
+                const { chess, clock, players } = get()
 
-                if (!playerColor) return null
+                if (!players) return null
 
                 try {
                     const move = chess.move({ from, to, promotion })
 
-                    const isMyMove = move.color === getColor(playerColor)
+                    const isMyMove =
+                        move.color === getColor(players.playerColor)
 
                     if (withSound) {
                         if (chess.isCheck()) {
@@ -231,8 +234,6 @@ export const useGameStore = create<GameStore>()(
                 set(initGame())
             },
 
-            setPlayers: (white, black) => set({ white, black }),
-            setPlayerColor: (color) => set({ playerColor: color }),
             setStatus: (status) => set({ status }),
             setMode: (mode) => set({ mode }),
 
@@ -366,25 +367,24 @@ export const useGameStore = create<GameStore>()(
             syncGame: (game, playerColor) => {
                 get().resetGame()
                 get().setMode("multiplayer")
-                get().setPlayerColor(playerColor)
-                get().setStatus(game.status)
 
-                get().setPlayers(
-                    {
+                get().setPlayers({
+                    white: {
                         id: game.whiteId,
                         username: game.white.username,
                         avatar: game.white.image,
                         rating: game.whiteRating,
                         status: game.whiteStatus,
                     },
-                    {
+                    black: {
                         id: game.blackId,
                         username: game.black.username,
                         avatar: game.black.image,
                         rating: game.blackRating,
                         status: game.blackStatus,
                     },
-                )
+                    playerColor,
+                })
 
                 game.moves.forEach(({ from, to, promotion }) => {
                     get().makeMove({
@@ -395,6 +395,8 @@ export const useGameStore = create<GameStore>()(
                         withSound: false,
                     })
                 })
+
+                get().setStatus(game.status)
 
                 const { plus } = parseTimerOption(game.timer)
 
@@ -420,24 +422,6 @@ export const useGameStore = create<GameStore>()(
                     })
                 }
             },
-            setPlayerStatus: (color, status) => {
-                const { white, black } = get()
-                if (color === "w" && white) {
-                    set({
-                        white: {
-                            ...white,
-                            status,
-                        },
-                    })
-                } else if (black) {
-                    set({
-                        black: {
-                            ...black,
-                            status,
-                        },
-                    })
-                }
-            },
         })),
         {
             name: "game-state",
@@ -446,15 +430,13 @@ export const useGameStore = create<GameStore>()(
                 state.mode === "bot"
                     ? {
                           mode: state.mode,
+                          players: state.players,
+                          clock: state.clock,
                           moveHistory: state.moveHistory.map((m) => ({
                               from: m.from,
                               to: m.to,
                               promotion: m.promotion,
                           })),
-                          playerColor: state.playerColor,
-                          clock: state.clock,
-                          white: state.white,
-                          black: state.black,
                           results: state.results,
                       }
                     : {},

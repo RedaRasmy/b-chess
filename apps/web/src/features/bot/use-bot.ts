@@ -9,7 +9,7 @@ export default function useBot() {
     const requestBotMove = useBotStore((s) => s.requestBotMove)
     const initEngine = useBotStore((s) => s.initEngine)
     const destroyEngine = useBotStore((s) => s.destroyEngine)
-    const playerColor = useGameStore((s) => s.playerColor)
+    const playerColor = useGameStore((s) => s.players?.playerColor)
     const chess = useGameStore((s) => s.chess)
     const displayFen = useGameStore((s) => s.displayFen)
     const status = useGameStore((s) => s.status)

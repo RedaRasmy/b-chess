@@ -20,7 +20,7 @@ import Link from "next/link"
 
 export default function MultiplayerEndDialog() {
     const results = useGameStore((s) => s.results)
-    const playerColor = useGameStore((s) => s.playerColor)
+    const playerColor = useGameStore((s) => s.players?.playerColor)
 
     if (!results || !playerColor) return null
 

@@ -4,7 +4,7 @@ import { Chessboard } from "react-chessboard"
 
 export default function GameBoard() {
     const {
-        playerColor,
+        players,
         displayFen,
         selectSquare,
         selectedSquare,
@@ -71,9 +71,9 @@ export default function GameBoard() {
                 lightSquareNotationStyle: {
                     color: "black",
                 },
-                boardOrientation: playerColor ?? "white",
+                boardOrientation: players?.playerColor ?? "white",
                 position: displayFen,
-                onSquareClick: ({ square ,}) => selectSquare(square as Square),
+                onSquareClick: ({ square }) => selectSquare(square as Square),
                 onPieceDrop: ({ sourceSquare, targetSquare }) =>
                     onPieceDrop(sourceSquare as Square, targetSquare as Square),
                 squareStyles: {

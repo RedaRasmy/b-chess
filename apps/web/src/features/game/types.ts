@@ -9,6 +9,7 @@ import {
     SyncGame,
 } from "@bchess/shared"
 import { Chess, Color, Move, Square } from "chess.js"
+import { StateCreator } from "zustand"
 
 export type GameMode = "bot" | "multiplayer" | "idle"
 
@@ -51,7 +52,29 @@ type Results = {
     blackEloDiff: number | null
 }
 
-export interface GameState {
+// Slices
+
+export type PlayersState = {
+    players: {
+        white: PlayerInfo
+        black: PlayerInfo
+        playerColor: ColorName
+    } | null
+}
+
+export type PlayersActions = {
+    setPlayers: (payload: {
+        white: PlayerInfo
+        black: PlayerInfo
+        playerColor: ColorName
+    }) => void
+
+    setPlayerStatus: (color: Color, status: PlayerStatus | null) => void
+}
+
+export type PlayersSlice = PlayersState & PlayersActions
+
+export type OldState = {
     // metadata
     mode: GameMode
     lastAction: null | Action
@@ -61,7 +84,7 @@ export interface GameState {
     fen: string
     status: Status
     moveHistory: Move[]
-    playerColor: ColorName | null
+    // playerColor: ColorName | null
 
     // display
     viewIndex: number | null
@@ -70,8 +93,8 @@ export interface GameState {
     legalMoves: Square[]
 
     // players
-    white: PlayerInfo | null
-    black: PlayerInfo | null
+    // white: PlayerInfo | null
+    // black: PlayerInfo | null
 
     // results
     results: Results | null
@@ -80,7 +103,9 @@ export interface GameState {
     clock: ClockState | null
 }
 
-export interface GameActions {
+export type GameState = PlayersState & OldState
+
+export type OldActions = {
     selectSquare: (square: Square) => void
     makeMove: (payload: {
         from: string
@@ -92,8 +117,8 @@ export interface GameActions {
     }) => Move | null
     setPosition: (fen: string) => void
     resetGame: () => void
-    setPlayers: (white: PlayerInfo, black: PlayerInfo) => void
-    setPlayerColor: (color: ColorName) => void
+    // setPlayers: (white: PlayerInfo, black: PlayerInfo) => void
+    // setPlayerColor: (color: ColorName) => void
     setStatus: (status: Status) => void
     setMode: (mode: GameMode) => void
     endGame: (payload: {
@@ -120,7 +145,11 @@ export interface GameActions {
     rollback: (timestamps: GameTimestamps) => void
     syncTimer: (game: GameTimestamps) => void
     syncGame: (game: SyncGame, playerColor: ColorName) => void
-    setPlayerStatus: (color: Color, status: PlayerStatus | null) => void
+    // setPlayerStatus: (color: Color, status: PlayerStatus | null) => void
+    
 }
+export type GameActions = PlayersActions & OldActions
 
 export type GameStore = GameState & GameActions
+
+export type GameSlice<T> = StateCreator<GameStore, [], [], T>

@@ -13,7 +13,7 @@ import Link from "next/link"
 
 export default function BotEndDialog() {
     const results = useGameStore((s) => s.results)
-    const playerColor = useGameStore((s) => s.playerColor)
+    const playerColor = useGameStore((s) => s.players?.playerColor)
     const replay = useBotStore((s) => s.replayBotGame)
 
     if (!results || !playerColor) return null

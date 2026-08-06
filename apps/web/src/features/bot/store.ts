@@ -156,11 +156,11 @@ export const useBotStore = create<BotState>()(
 
                 game.resetGame()
                 game.setMode("bot")
-                game.setPlayerColor(playerColor)
-                game.setPlayers(
-                    playerColor === "white" ? humanPlayer : botPlayer,
-                    playerColor === "black" ? humanPlayer : botPlayer,
-                )
+                game.setPlayers({
+                    white: playerColor === "white" ? humanPlayer : botPlayer,
+                    black: playerColor === "black" ? humanPlayer : botPlayer,
+                    playerColor,
+                })
                 game.startClock(timeControl)
                 game.setStatus("playing")
 

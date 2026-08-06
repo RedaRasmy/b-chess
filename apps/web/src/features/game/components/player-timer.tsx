@@ -6,10 +6,11 @@ import { useEffect, useRef, useState } from "react"
 
 export function PlayerTimer({ color }: { color: "white" | "black" }) {
     const clock = useGameStore((s) => s.clock)
-    const playerColor = useGameStore((s) => s.playerColor)
+    const playerColor = useGameStore((s) => s.players?.playerColor)
+
     if (!clock || !playerColor)
         throw new Error(
-            "PlayerTimer can't be used while clock or playerColor is null",
+            "PlayerTimer can't be used while clock or players is null",
         )
 
     const status = useGameStore((s) => s.status)

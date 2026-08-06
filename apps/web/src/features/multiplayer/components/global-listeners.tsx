@@ -52,10 +52,11 @@ export default function GlobalListeners() {
 
     useSocketListener("new_move", (move) => {
         console.log("new move: ", move)
-        if (!gameState.playerColor) {
+        if (!gameState.players) {
             throw new Error("Game is not initialized")
         }
-        const isOwnMove = getColor(gameState.playerColor) === move.playerColor
+        const isOwnMove =
+            getColor(gameState.players.playerColor) === move.playerColor
 
         if (isOwnMove) return
 

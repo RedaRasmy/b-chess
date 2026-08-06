@@ -6,7 +6,7 @@ import { Plus, RotateCcw, Undo } from "lucide-react"
 import Link from "next/link"
 
 export default function BotControls() {
-    const playerColor = useGameStore((s) => s.playerColor)
+    const playerColor = useGameStore((s) => s.players?.playerColor)
     const moveHistory = useGameStore((s) => s.moveHistory)
     const undo = useGameStore((s) => s.undo)
     const resetGame = useGameStore((s) => s.resetGame)

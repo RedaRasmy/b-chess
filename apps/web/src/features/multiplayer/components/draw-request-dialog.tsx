@@ -16,7 +16,7 @@ import { getColor } from "@bchess/shared"
 
 export default function DrawRequestDialog() {
     const [isOpen, setIsOpen] = useState(false)
-    const playerColor = useGameStore((s) => s.playerColor)
+    const playerColor = useGameStore((s) => s.players?.playerColor)
     const socket = useSocket()
 
     useSocketListener("draw_request", ({ requestDraw }) => {

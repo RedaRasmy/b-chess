@@ -9,11 +9,9 @@ import { cn } from "@/lib/utils"
 import { getColor, getOppositeColor } from "@bchess/shared"
 
 export default function PlayerInfo({ color }: { color: Color | null }) {
-    const { white, black, fen, clock, playerColor, results } = useGameStore()
+    const { fen, clock, results, players } = useGameStore()
 
-    const player = color === "w" ? white : black
-
-    if (!color || !player)
+    if (!color || !players)
         return (
             <div className="">
                 <div className="bg-accent/70 rounded-md flex items-center justify-between gap-2 px-2 py-2 h-fit w-full">
@@ -25,6 +23,9 @@ export default function PlayerInfo({ color }: { color: Color | null }) {
                 </div>
             </div>
         )
+
+    const player = color === "w" ? players.white : players.black
+    const playerColor = players.playerColor
 
     const { captured, advantage } = getMaterialState(fen)
 
