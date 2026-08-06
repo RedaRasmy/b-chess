@@ -2,7 +2,7 @@ import { useGameStore } from "@/features/game/game-store"
 import { PlayerInfo } from "@/features/game/types"
 import { ColorName } from "@bchess/shared"
 import { create } from "zustand"
-import { persist, createJSONStorage } from "zustand/middleware"
+import { persist } from "zustand/middleware"
 
 export interface BotState {
     difficulty: number
@@ -139,16 +139,19 @@ export const useBotStore = create<BotState>()(
                 const game = useGameStore.getState()
                 const botColor = playerColor === "white" ? "black" : "white"
 
-                const botPlayer = {
+                const botPlayer: PlayerInfo = {
                     id: "stockfish",
                     username: `Stockfish lvl ${difficulty}`,
                     avatar: "/images/stockfish.webp",
+                    status: null,
+                    rating: ELO_MAP[difficulty],
                 }
 
-                const humanPlayer = player ?? {
+                const humanPlayer: PlayerInfo = player ?? {
                     id: "player",
                     username: "You",
                     avatar: null,
+                    status: null,
                 }
 
                 game.resetGame()

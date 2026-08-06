@@ -15,8 +15,9 @@ export type GameMode = "bot" | "multiplayer" | "idle"
 export interface PlayerInfo {
     id: string
     username: string
-    rating?: number
     avatar: string | null
+    rating?: number
+    status: PlayerStatus | null
 }
 
 export interface ClockState {
@@ -64,8 +65,6 @@ export interface GameState {
     // players
     white: PlayerInfo | null
     black: PlayerInfo | null
-    whiteStatus: PlayerStatus | null
-    blackStatus: PlayerStatus | null
 
     // results
     whiteEloDiff: number | null

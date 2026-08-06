@@ -11,14 +11,6 @@ import { create } from "zustand"
 import { subscribeWithSelector } from "zustand/middleware"
 import { persist, createJSONStorage } from "zustand/middleware"
 
-// const DEFAULT_CLOCK: ClockState = {
-//     white: 10 * 60 * 1000,
-//     black: 10 * 60 * 1000,
-//     increment: 0,
-//     activeColor: null,
-//     lastTickAt: null,
-// }
-
 function initGame(): GameState {
     const chess = new Chess()
     return {
@@ -40,8 +32,6 @@ function initGame(): GameState {
         displayFen: chess.fen(),
         whiteEloDiff: null,
         blackEloDiff: null,
-        whiteStatus: null,
-        blackStatus: null,
     }
 }
 
@@ -386,12 +376,14 @@ export const useGameStore = create<GameStore>()(
                         username: game.white.username,
                         avatar: game.white.image,
                         rating: game.whiteRating,
+                        status: game.whiteStatus,
                     },
                     {
                         id: game.blackId,
                         username: game.black.username,
                         avatar: game.black.image,
                         rating: game.blackRating,
+                        status: game.blackStatus,
                     },
                 )
 
@@ -415,8 +407,6 @@ export const useGameStore = create<GameStore>()(
                         lastTickAt: game.lastMoveAt ?? game.gameStartedAt,
                         increment: plus * 1000,
                     },
-                    whiteStatus: game.whiteStatus,
-                    blackStatus: game.blackStatus,
                 })
 
                 if (game.result) {
@@ -432,13 +422,20 @@ export const useGameStore = create<GameStore>()(
                 }
             },
             setPlayerStatus: (color, status) => {
-                if (color === "w") {
+                const { white, black } = get()
+                if (color === "w" && white) {
                     set({
-                        whiteStatus: status,
+                        white: {
+                            ...white,
+                            status,
+                        },
                     })
-                } else {
+                } else if (black) {
                     set({
-                        blackStatus: status,
+                        black: {
+                            ...black,
+                            status,
+                        },
                     })
                 }
             },

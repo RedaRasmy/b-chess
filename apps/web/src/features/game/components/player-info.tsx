@@ -16,8 +16,6 @@ export default function PlayerInfo({ color }: { color: Color | null }) {
         clock,
         whiteEloDiff,
         blackEloDiff,
-        whiteStatus,
-        blackStatus,
         playerColor,
     } = useGameStore()
 
@@ -45,11 +43,7 @@ export default function PlayerInfo({ color }: { color: Color | null }) {
 
     const showStatus = playerColor && color !== getColor(playerColor)
 
-    const status = showStatus
-        ? color === "w"
-            ? whiteStatus
-            : blackStatus
-        : null
+    const status = showStatus ? player.status : null
 
     const pieces: PieceSymbol[] = ["p", "b", "n", "r", "q"]
 

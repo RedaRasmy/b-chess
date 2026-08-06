@@ -26,6 +26,7 @@ export default function BotOptions() {
               id: user.id,
               avatar: user.image ?? null,
               username: user.username ?? "You",
+              status: null,
           }
         : undefined
 
