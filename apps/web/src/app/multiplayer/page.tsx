@@ -8,7 +8,7 @@ import { useSocketListener } from "@/features/multiplayer/hooks/use-socket-liste
 import { fetchIsMatching } from "@/features/multiplayer/requests"
 import { TimerOption } from "@bchess/shared"
 import { useQuery } from "@tanstack/react-query"
-import { Timer, Users } from "lucide-react"
+import { Swords, Timer } from "lucide-react"
 import { useEffect, useState } from "react"
 
 export default function Page() {
@@ -47,16 +47,16 @@ export default function Page() {
     })
 
     return (
-        <div className="grid py-2 items-center overflow-auto w-full px-2 xl:px-20 h-full">
-            <Card className="px-4 py-6 md:space-y-5 w-full xl:px-10 ">
-                <CardHeader>
+        <div className="grid py-2 items-center overflow-auto w-full px-2 lg:px-10 xl:px-15 h-full">
+            <Card className="px-4 py-6 md:space-y-5 w-full xl:px-10 max-w-5xl mx-auto">
+                <CardHeader className="bg-card">
                     <h1 className="text-2xl font-semibold flex gap-3 items-center">
-                        <Users size={40} />
-                        Multiplayer Configuration
+                        <Swords size={30} />
+                        Multiplayer
                     </h1>
                 </CardHeader>
                 <CardContent className="w-full flex justify-center">
-                    <div className="flex flex-col w-full h-full gap-6 lg:gap-10 lg:flex-row not-lg:max-w-md">
+                    <div className="flex flex-col w-full h-full gap-6 lg:gap-10 xl:flex-row not-xl:max-w-md">
                         <div className="flex flex-col lg:items-center justify-center w-full h-full">
                             <h1 className="text-xl items-center font-semibold mb-4 lg:mb-6 flex gap-2 ">
                                 <Timer />
@@ -64,7 +64,7 @@ export default function Page() {
                             </h1>
                             <div className="flex items-center justify-center w-full flex-col">
                                 <SelectTimer
-                                    className=""
+                                    className="w-full"
                                     value={timer}
                                     onChange={setTimer}
                                     required

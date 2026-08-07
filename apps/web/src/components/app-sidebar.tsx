@@ -1,5 +1,5 @@
 "use client"
-import { Users, Bot, User, Settings, Trophy } from "lucide-react"
+import { Bot, User, Trophy, Swords } from "lucide-react"
 import {
     Sidebar,
     SidebarContent,
@@ -17,7 +17,7 @@ import { usePathname } from "next/navigation"
 const items = [
     { title: "Profile", path: "/profile", icon: User },
     { title: "Bot", path: "/bot", icon: Bot },
-    { title: "Multiplayer", path: "/multiplayer", icon: Users },
+    { title: "Multiplayer", path: "/multiplayer", icon: Swords },
     { title: "Leaderboard", path: "/leaderboard", icon: Trophy },
     // { title: "Settings", path: "/settings", icon: Settings },
 ]

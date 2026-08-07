@@ -13,12 +13,7 @@ export default function SelectColor({ value, onChange, className }: Props) {
     const options: ColorOption[] = ["white", "black", "random"]
 
     return (
-        <div
-            className={cn(
-                "flex gap-2 lg:gap-4 flex-wrap justify-center",
-                className,
-            )}
-        >
+        <div className={cn("flex gap-2 lg:gap-4 justify-center", className)}>
             {options.map((op, i) => (
                 <div
                     key={i}
@@ -27,7 +22,7 @@ export default function SelectColor({ value, onChange, className }: Props) {
                         {
                             "border-primary ": value === op,
                         },
-                        "aspect-square  lg:max-w-30 max-w-20",
+                        "aspect-square  lg:max-w-25 max-w-20",
                     )}
                     onClick={() => onChange(op)}
                 >
