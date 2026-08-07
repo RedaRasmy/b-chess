@@ -107,7 +107,9 @@ export type FullMatchedGame = Prettify<
     MatchedGame & Players & { moves: MoveType[] }
 >
 
-// export type FullPlayingGame = PlayingGame & Players
+export type FullPlayingGame = Prettify<
+    PlayingGame & Players & { moves: MoveType[] }
+>
 
 // export type DrawingGameWithPlayers = DrawingGame & Players
 

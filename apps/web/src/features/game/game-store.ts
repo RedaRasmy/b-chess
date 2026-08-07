@@ -40,9 +40,9 @@ export const useGameStore = create<GameStore>()(
             setStatus: (status) => set({ status }),
             setMode: (mode) => set({ mode }),
 
-            syncGame: (game, playerColor) => {
+            setGame: (mode,game, playerColor) => {
                 get().resetGame()
-                get().setMode("multiplayer")
+                get().setMode(mode)
 
                 get().setPlayers({
                     white: {
@@ -112,12 +112,11 @@ export const useGameStore = create<GameStore>()(
                 if (state && state.mode === "bot") {
                     // Note: we must restore the history also not just chess instance
                     // the persisted history is simplified ( MoveType vs Move )
-                    
+
                     const chess = new Chess()
 
                     const moves = [...state.moveHistory]
-                    state.moveHistory = [] 
-
+                    state.moveHistory = []
 
                     moves.forEach((move) => {
                         state.makeMove({

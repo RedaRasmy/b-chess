@@ -29,7 +29,7 @@ export default function GlobalListeners() {
 
         const playerColor = game.whiteId === userId ? "white" : "black"
 
-        gameState.syncGame(game, playerColor)
+        gameState.setGame("multiplayer", game, playerColor)
     })
 
     useSocketListener("game_finished", (game) => {

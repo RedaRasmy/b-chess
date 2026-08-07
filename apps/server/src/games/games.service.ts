@@ -3,14 +3,16 @@ import { DATABASE_CONNECTION } from '../database/database.module';
 import type { Transaction, Database } from '@bchess/db';
 import {
     Elo,
+    FullFinishedGame,
     FullGame,
+    FullPlayingGame,
     GameSummary,
     MatchedGame,
     MoveType,
     PlayingGame,
 } from '@bchess/shared';
 import { games, moves, Reason, Result } from '@bchess/db/tables';
-import { and, asc, desc, eq, gt, inArray, or } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, inArray, ne, or } from 'drizzle-orm';
 
 @Injectable()
 export class GamesService {
@@ -27,6 +29,53 @@ export class GamesService {
             },
         });
         return data as MoveType[];
+    }
+
+    /**
+     *
+     *
+     * @param {string} gameId
+     * @return {*}  {(Promise<FullGame | null>)}
+     * @memberof GamesService
+     *
+     * Return a Playing or Finished Game
+     * If the game is not found it will return null
+     */
+    async getFullGameById(
+        gameId: string,
+    ): Promise<FullPlayingGame | FullFinishedGame | null> {
+        const game = await this.db.query.games.findFirst({
+            where: (games) =>
+                and(
+                    inArray(games.status, ['playing', 'finished']),
+                    eq(games.id, gameId),
+                ),
+            with: {
+                white: {
+                    columns: {
+                        username: true,
+                        image: true,
+                    },
+                },
+                black: {
+                    columns: {
+                        username: true,
+                        image: true,
+                    },
+                },
+                moves: {
+                    columns: {
+                        from: true,
+                        to: true,
+                        promotion: true,
+                    },
+                },
+            },
+        });
+
+        if (!game) return null;
+
+        return game as FullPlayingGame | FullFinishedGame;
     }
 
     async getFullCurrentGame(userId: string): Promise<FullGame | null> {

@@ -6,15 +6,22 @@ import {
     Patch,
     Param,
     Delete,
+    NotFoundException,
 } from '@nestjs/common';
 import { GamesService } from './games.service';
-
+import { OptionalAuth } from '@thallesp/nestjs-better-auth';
 
 @Controller('games')
 export class GamesController {
     constructor(private readonly gamesService: GamesService) {}
 
-    // TODO:
-    // get full game by id 
-    // get current/recent games of top rated players
+    @Get('/:id')
+    @OptionalAuth()
+    async getFullGame(@Param('id') id: string) {
+        const game = await this.gamesService.getFullGameById(id);
+
+        if (!game) throw new NotFoundException('Game not found!');
+
+        return game;
+    }
 }

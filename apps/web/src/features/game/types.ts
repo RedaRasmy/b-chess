@@ -11,7 +11,7 @@ import {
 import { Chess, Color, Move, Square } from "chess.js"
 import { StateCreator } from "zustand"
 
-export type GameMode = "bot" | "multiplayer" | "idle"
+export type GameMode = "bot" | "multiplayer" | "idle" | "review"
 
 export interface PlayerInfo {
     id: string
@@ -185,7 +185,7 @@ export type CoreActions = {
     setMode: (mode: GameMode) => void
     setStatus: (status: Status) => void
     resetGame: () => void
-    syncGame: (game: SyncGame, playerColor: ColorName) => void // TODO: change it to setGame
+    setGame: (mode: GameMode, game: SyncGame, playerColor: ColorName) => void
 }
 
 // The Full Store

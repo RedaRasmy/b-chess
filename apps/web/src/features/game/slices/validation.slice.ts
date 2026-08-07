@@ -41,7 +41,7 @@ export const validationSlice: GameSlice<ValidationSlice> = (set, get) => ({
     },
     rollback: (timestamps) => {
         const { chess, mode, status, players } = get()
-        if (!players || mode !== "multiplayer" || status !== "playing") return // TODO: rollback iven if the game has finished
+        if (!players || mode !== "multiplayer" || status !== "playing") return // TODO!: rollback iven if the game has finished
 
         chess.undo()
 
@@ -160,11 +160,12 @@ export const validationSlice: GameSlice<ValidationSlice> = (set, get) => ({
     setValidation(moves) {
         get().resetValidation()
 
-        const { chess } = get()
+        const { chess, moveHistory } = get()
 
         try {
             moves.forEach((move) => {
-                chess.move(move)
+                const fullMove = chess.move(move)
+                moveHistory.push(fullMove)
             })
         } catch (error) {
             console.error("Validation Slice/ setValidation: ", error)
