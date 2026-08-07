@@ -13,27 +13,27 @@ export default async function LeaderboardPage() {
     const players = await fetchTopPlayers({})
 
     return (
-        <div className="w-full flex justify-center bg-stone-950 px-3 py-10 sm:py-16">
+        <div className="w-full flex justify-center px-3 py-10 sm:py-16">
             <div className="w-full max-w-xl">
                 {/* Header */}
                 <div className="mb-7 px-1">
-                    <h1 className="mt-1.5 text-stone-100 text-3xl font-serif font-semibold tracking-tight">
+                    <h1 className="mt-1.5 text-3xl font-semibold">
                         Leaderboard
                     </h1>
                 </div>
 
                 {/* Table */}
-                <div className="rounded-lg overflow-hidden bg-stone-900 border border-stone-800 ">
+                <div className="rounded-lg overflow-hidden bg-card">
                     <Table>
                         <TableHeader>
-                            <TableRow className="bg-stone-800 border-stone-800 hover:bg-stone-800">
-                                <TableHead className="w-11 font-mono text-[10px] tracking-widest uppercase text-stone-500">
+                            <TableRow className="">
+                                <TableHead className="w-11 font-mono text-[10px] tracking-widest uppercase ">
                                     #
                                 </TableHead>
-                                <TableHead className="font-mono text-[10px] tracking-widest uppercase text-stone-500">
+                                <TableHead className="font-mono text-[10px] tracking-widest uppercase ">
                                     Player
                                 </TableHead>
-                                <TableHead className="text-right font-mono text-[10px] tracking-widest uppercase text-stone-500">
+                                <TableHead className="text-right font-mono text-[10px] tracking-widest uppercase ">
                                     Rating
                                 </TableHead>
                             </TableRow>
@@ -51,7 +51,7 @@ export default async function LeaderboardPage() {
                                 <TableRow>
                                     <TableCell
                                         colSpan={3}
-                                        className="text-center text-stone-400 text-sm py-10"
+                                        className="text-center text-sm py-10"
                                     >
                                         No ranked players yet.
                                     </TableCell>

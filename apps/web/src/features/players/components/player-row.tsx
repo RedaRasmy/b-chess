@@ -9,9 +9,10 @@ type Accent = {
 }
 
 const RANK_ACCENT: Record<number, Accent> = {
-    1: { border: "border-l-amber-400", text: "text-amber-400" },
-    2: { border: "border-l-zinc-400", text: "text-zinc-300" },
-    3: { border: "border-l-orange-400", text: "text-orange-400" },
+    1: { border: "border-l-primary", text: "text-primary" },
+    2: { border: "border-l-amber-400", text: "text-amber-400" },
+    3: { border: "border-l-zinc-400", text: "text-zinc-300" },
+    // 3: { border: "border-l-orange-400", text: "text-orange-400" },
 }
 const DEFAULT_ACCENT = {
     border: "border-l-transparent",
@@ -30,7 +31,7 @@ export function PlayerRow({
     const winPct = total ? Math.round((player.wins / total) * 100) : 0
 
     return (
-        <TableRow className="border-stone-800/70 hover:bg-stone-800/40">
+        <TableRow className="">
             <TableCell
                 className={`text-right font-serif text-lg font-medium tabular-nums border-l-2 ${accent.border} ${accent.text}`}
             >
