@@ -8,6 +8,7 @@ import Header from "@/components/header"
 import { Toaster } from "@/components/ui/sonner"
 import GlobalListeners from "@/features/multiplayer/components/global-listeners"
 import { AppBootstrap } from "@/components/app-bootstrap"
+import UserProvider from "@/features/profile/components/user-provider"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
 
@@ -39,7 +40,10 @@ export default function RootLayout({
             >
                 <Providers>
                     <SidebarProvider>
-                        <GlobalListeners />
+                        <UserProvider redirect={false}>
+                            <GlobalListeners />
+                        </UserProvider>
+
                         <AppBootstrap />
                         <AppSidebar />
                         <div className="w-full grid grid-rows-[auto_1fr] h-screen">

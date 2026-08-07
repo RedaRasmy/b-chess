@@ -14,10 +14,9 @@ export default function GameBoard() {
     } = useGameStore()
 
     function onPieceDrop(from: Square, to: Square) {
-        const prevFen = useGameStore.getState().fen
         selectSquare(from)
-        selectSquare(to)
-        return useGameStore.getState().fen !== prevFen
+        const move = selectSquare(to)
+        return !!move
     }
 
     const legalMoveStyles = Object.fromEntries(

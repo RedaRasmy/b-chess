@@ -12,6 +12,10 @@ const sounds = {
     gameEnd: new Howl({ src: ["/sounds/game-end.mp3"] }),
 }
 
-export function playSound(name: keyof typeof sounds) {
-    sounds[name].play()
+export type Sound = keyof typeof sounds
+
+export type MoveSound = Exclude<Sound, "gameStart" | "gameEnd" | "timeoutAlert">
+
+export function playSound(sound: Sound) {
+    sounds[sound].play()
 }

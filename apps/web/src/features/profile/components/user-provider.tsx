@@ -1,4 +1,4 @@
-'use client'
+"use client"
 import useStats from "@/features/profile/hooks/use-stats"
 import { UserContext, UserWithUsername } from "@/features/profile/user-context"
 import { authClient } from "@/lib/auth-client"
@@ -8,22 +8,26 @@ import { ReactNode, useEffect } from "react"
 export default function UserProvider({
     children,
     fallback = null,
+    redirect = true,
 }: {
     children: ReactNode
     fallback?: ReactNode
+    redirect?: boolean
 }) {
     const { data: session, isPending } = authClient.useSession()
 
     const router = useRouter()
 
     useEffect(() => {
-        if (!isPending && !session) {
-            router.replace("/auth/login")
+        if (redirect) {
+            if (!isPending && !session) {
+                router.replace("/auth/login")
+            }
+            if (session && !session.user.username) {
+                router.replace("/onboarding")
+            }
         }
-        if (session && !session.user.username) {
-            router.replace("/onboarding")
-        }
-    }, [isPending, session, router])
+    }, [isPending, session, router, redirect])
 
     const { data: stats, isPending: isStatsPending } = useStats()
 

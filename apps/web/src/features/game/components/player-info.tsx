@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils"
 import { getColor, getOppositeColor } from "@bchess/shared"
 
 export default function PlayerInfo({ color }: { color: Color | null }) {
-    const { fen, clock, results, players } = useGameStore()
+    const { chess, clock, results, players } = useGameStore()
 
     if (!color || !players)
         return (
@@ -27,7 +27,7 @@ export default function PlayerInfo({ color }: { color: Color | null }) {
     const player = color === "w" ? players.white : players.black
     const playerColor = players.playerColor
 
-    const { captured, advantage } = getMaterialState(fen)
+    const { captured, advantage } = getMaterialState(chess)
 
     const playerPoints = color === "w" ? advantage.white : advantage.black
     const capturedPieces = color === "w" ? captured.white : captured.black

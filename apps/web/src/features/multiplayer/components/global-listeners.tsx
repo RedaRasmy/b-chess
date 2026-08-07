@@ -1,14 +1,14 @@
 "use client"
 import { useGameStore } from "@/features/game/game-store"
 import { useSocketListener } from "@/features/multiplayer/hooks/use-socket-listener"
-import { authClient } from "@/lib/auth-client"
+import { useUser } from "@/features/profile/hooks/use-user"
 import { getColor } from "@bchess/shared"
 import { useRouter } from "next/navigation"
 
 export default function GlobalListeners() {
     const gameState = useGameStore()
     const router = useRouter()
-    const { data: session } = authClient.useSession()
+    const { user } = useUser()
 
     useSocketListener("game_found", (game) => {
         console.log("game found: ", game)
@@ -25,16 +25,11 @@ export default function GlobalListeners() {
 
     useSocketListener("sync", (game) => {
         console.log("sync/ full game: ", game)
-        const userId = session?.user.id
+        const userId = user.id
 
-        if (userId) {
-            const playerColor = game.whiteId === userId ? "white" : "black"
+        const playerColor = game.whiteId === userId ? "white" : "black"
 
-            gameState.syncGame(game, playerColor)
-        } else {
-            // TODO: create UserProvider
-            console.warn("Sync Failed: User session is required to sync game")
-        }
+        gameState.syncGame(game, playerColor)
     })
 
     useSocketListener("game_finished", (game) => {

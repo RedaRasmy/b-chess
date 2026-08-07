@@ -1,4 +1,5 @@
 import { getCapturedPieces } from "@/features/game/utils/get-captured-pieces"
+import { Chess } from "chess.js"
 
 const PIECE_VALUES: Record<string, number> = {
     p: 1,
@@ -22,8 +23,8 @@ export type MaterialState = {
     }
 }
 
-export function getMaterialState(fen: string): MaterialState {
-    const captured = getCapturedPieces(fen)
+export function getMaterialState(chess: Chess): MaterialState {
+    const captured = getCapturedPieces(chess)
 
     const sum = (pieces: PieceCounts) =>
         Object.entries(pieces).reduce(

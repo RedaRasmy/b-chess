@@ -1,24 +1,33 @@
 import { Chess } from "chess.js"
 
 const STARTING_COUNTS: Record<string, number> = {
-    p: 8, n: 2, b: 2, r: 2, q: 1, // black pieces
-    P: 8, N: 2, B: 2, R: 2, Q: 1, // white pieces
+    p: 8,
+    n: 2,
+    b: 2,
+    r: 2,
+    q: 1, // black pieces
+    P: 8,
+    N: 2,
+    B: 2,
+    R: 2,
+    Q: 1, // white pieces
 }
 
-export function getCapturedPieces(fen: string) {
-    const chess = new Chess(fen)
+export function getCapturedPieces(chess: Chess) {
     const board = chess.board().flat()
 
     const remaining: Record<string, number> = {}
     for (const square of board) {
         if (!square) continue
-        const key = square.color === "w" 
-            ? square.type.toUpperCase() 
-            : square.type
+        const key =
+            square.color === "w" ? square.type.toUpperCase() : square.type
         remaining[key] = (remaining[key] ?? 0) + 1
     }
 
-    const captured = { white: {} as Record<string, number>, black: {} as Record<string, number> }
+    const captured = {
+        white: {} as Record<string, number>,
+        black: {} as Record<string, number>,
+    }
 
     for (const [piece, start] of Object.entries(STARTING_COUNTS)) {
         const diff = start - (remaining[piece] ?? 0)

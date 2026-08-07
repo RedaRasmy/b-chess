@@ -2,32 +2,18 @@ import { clockSlice } from "@/features/game/slices/clock.slice"
 import { displaySlice } from "@/features/game/slices/display.slice"
 import { playersSlice } from "@/features/game/slices/players.slice"
 import { resultsSlice } from "@/features/game/slices/results.slice"
-import { GameStore, OldState } from "@/features/game/types"
-import { playSound } from "@/lib/sounds"
-import {
-    checkGameEnd,
-    getColor,
-    getColorName,
-    parseTimerOption,
-} from "@bchess/shared"
-import { Chess, Square } from "chess.js"
+import { validationSlice } from "@/features/game/slices/validation.slice"
+import { GameStore, CoreState } from "@/features/game/types"
+import { getColorName, parseTimerOption } from "@bchess/shared"
+import { Chess } from "chess.js"
 import { create } from "zustand"
 import { subscribeWithSelector } from "zustand/middleware"
 import { persist, createJSONStorage } from "zustand/middleware"
 
-function initGame(): OldState {
-    const chess = new Chess()
-    return {
-        //
-        lastAction: null,
-        mode: "idle",
-        status: "matching",
-        //
-        chess: chess,
-        fen: chess.fen(),
-        selectedSquare: null,
-        legalMoves: [],
-    }
+const init: CoreState = {
+    mode: "idle",
+    status: "matching",
+    lastAction: null,
 }
 
 export const useGameStore = create<GameStore>()(
@@ -37,165 +23,18 @@ export const useGameStore = create<GameStore>()(
             ...clockSlice(set, get, write),
             ...resultsSlice(set, get, write),
             ...displaySlice(set, get, write),
-            ...initGame(),
+            ...validationSlice(set, get, write),
 
-            undo: () => {
-                const { chess, mode, status, players } = get()
-                if (!players || mode !== "bot" || status !== "playing") return // TODO: allow undo if game has finished ?
-
-                const playerColor = players.playerColor
-
-                const turn = chess.turn()
-                if (getColor(playerColor) === turn) {
-                    chess.undo() // bot's move
-                    chess.undo()
-                } else {
-                    chess.undo()
-                }
-
-                set({
-                    fen: chess.fen(),
-                    displayFen: chess.fen(),
-                    selectedSquare: null,
-                    legalMoves: [],
-                })
-
-                get().rollbackDisplay()
-            },
-            rollback: (timestamps) => {
-                const { chess, mode, status, players } = get()
-                if (!players || mode !== "multiplayer" || status !== "playing")
-                    return
-
-                chess.undo() // remove (fen)
-
-                set({
-                    fen: chess.fen(), // remove
-                    selectedSquare: null,
-                    legalMoves: [],
-                })
-
-                get().rollbackDisplay()
-                get().rollbackClock(timestamps)
-            },
-
-            selectSquare: (square) => {
-                const { chess, selectedSquare, players, status } = get()
-
-                if (status !== "playing" || !players) return
-
-                if (selectedSquare === square) {
-                    return set({ selectedSquare: null, legalMoves: [] })
-                }
-
-                if (selectedSquare) {
-                    const move = get().makeMove({
-                        from: selectedSquare,
-                        to: square,
-                    })
-                    if (move) return
-                }
-
-                const piece = chess.get(square)
-                const turn = chess.turn() === "w" ? "white" : "black"
-
-                if (!piece || piece.color !== (turn === "white" ? "w" : "b")) {
-                    return set({ selectedSquare: null, legalMoves: [] })
-                }
-
-                if (turn !== players.playerColor) {
-                    return set({ selectedSquare: null, legalMoves: [] })
-                }
-
-                const moves = chess
-                    .moves({ square, verbose: true })
-                    .map((m) => m.to as Square)
-
-                set({ selectedSquare: square, legalMoves: moves })
-            },
-
-            makeMove: ({
-                from,
-                to,
-                promotion,
-                ack = true,
-                withSound = true,
-                updateClock = true,
-            }) => {
-                const { chess, players } = get()
-
-                if (!players) return null
-
-                try {
-                    const move = chess.move({ from, to, promotion })
-
-                    const isMyMove =
-                        move.color === getColor(players.playerColor)
-
-                    if (withSound) {
-                        if (chess.isCheck()) {
-                            playSound("check")
-                        } else if (move.captured) {
-                            playSound("capture")
-                        } else if (
-                            move.isKingsideCastle() ||
-                            move.isQueensideCastle()
-                        ) {
-                            playSound("castle")
-                        } else if (move.isPromotion()) {
-                            playSound("promote")
-                        } else {
-                            playSound("move")
-                        }
-                    }
-
-                    if (updateClock) {
-                        get().switchClock()
-                    }
-
-                    const theMove = {
-                        from,
-                        to,
-                        promotion: move.promotion,
-                    }
-
-                    set({
-                        fen: chess.fen(),
-                        selectedSquare: null,
-                        legalMoves: [], // TODO: null would be better ?? or set directly the new legal moves ?
-                        lastAction:
-                            isMyMove && ack
-                                ? {
-                                      type: "move",
-                                      move: theMove,
-                                  }
-                                : null,
-                    })
-
-                    get().setDisplay(chess.history({ verbose: true }))
-
-                    const end = checkGameEnd(chess)
-
-                    if (end) {
-                        get().endGame({
-                            reason: end.reason,
-                            result: end.result,
-                        })
-                    }
-
-                    return move
-                } catch {
-                    return null
-                }
-            },
+            ...init,
 
             resetGame: () => {
-                set(initGame())
+                set(init)
 
                 get().resetPlayers()
                 get().resetClock()
                 get().resetResults()
                 get().resetDisplay()
+                get().resetValidation()
             },
 
             setStatus: (status) => set({ status }),
@@ -233,15 +72,7 @@ export const useGameStore = create<GameStore>()(
                     increment: plus * 1000,
                 })
 
-                game.moves.forEach(({ from, to, promotion }) => {
-                    get().makeMove({
-                        from,
-                        to,
-                        promotion,
-                        ack: false,
-                        withSound: false,
-                    })
-                })
+                get().setValidation(game.moves)
 
                 get().setStatus(game.status)
 
@@ -273,15 +104,21 @@ export const useGameStore = create<GameStore>()(
                               promotion: m.promotion,
                           })),
                           results: state.results,
+                          status: state.status,
                       }
                     : {},
 
             onRehydrateStorage: () => (state) => {
                 if (state && state.mode === "bot") {
+                    // Note: we must restore the history also not just chess instance
+                    // the persisted history is simplified ( MoveType vs Move )
+                    
                     const chess = new Chess()
 
                     const moves = [...state.moveHistory]
-                    state.moveHistory = []
+                    state.moveHistory = [] 
+
+
                     moves.forEach((move) => {
                         state.makeMove({
                             ...move,

@@ -5,11 +5,10 @@ export const displaySlice: GameSlice<DisplaySlice> = (set, get) => ({
     viewIndex: null,
     displayFen: DEFAULT_POSITION,
     moveHistory: [],
+    legalMoves: [],
 
     goToMove: (index) => {
         const { moveHistory } = get()
-
-        console.log("go to move: ", index)
 
         if (index === null) {
             set({
@@ -69,12 +68,14 @@ export const displaySlice: GameSlice<DisplaySlice> = (set, get) => ({
             displayFen: DEFAULT_POSITION,
             viewIndex: null,
             moveHistory: [],
+            legalMoves: [],
         })
     },
 
     rollbackDisplay() {
         const { moveHistory } = get()
 
+        get().maskLegalMoves()
         get().stepBack()
 
         set({
@@ -91,5 +92,17 @@ export const displaySlice: GameSlice<DisplaySlice> = (set, get) => ({
         })
 
         get().goToMove(index)
+    },
+
+    showLegalMoves(squares) {
+        set({
+            legalMoves: squares,
+        })
+    },
+
+    maskLegalMoves() {
+        set({
+            legalMoves: [],
+        })
     },
 })

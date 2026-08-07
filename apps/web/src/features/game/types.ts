@@ -36,7 +36,7 @@ export interface CapturedPieces {
     black: CapturedPiece[]
 }
 
-type Action =
+type Event =
     | {
           type: "move"
           move: MoveType
@@ -125,13 +125,13 @@ export type ResultsSlice = ResultsState & ResultsActions
 
 // Display Slice
 
-// export type ViewIndex = number | "start" | "end"
 export type ViewIndex = number | null
 
 export type DisplayState = {
     viewIndex: ViewIndex
     displayFen: string
     moveHistory: Move[]
+    legalMoves: Square[]
 }
 
 export type DispalyActions = {
@@ -143,33 +143,20 @@ export type DispalyActions = {
     resetDisplay: () => void
     rollbackDisplay: () => void
     setDisplay: (history: Move[], index?: ViewIndex) => void
+    showLegalMoves(squares: Square[]): void
+    maskLegalMoves(): void
 }
 
 export type DisplaySlice = DisplayState & DispalyActions
 
-export type OldState = {
-    // metadata
-    mode: GameMode
-    lastAction: null | Action
+// Validation Slice
 
-    // core
-    status: Status
-
-    // validation
-    fen: string
+export type ValidationState = {
     chess: Chess
-    legalMoves: Square[]
     selectedSquare: Square | null
 }
-
-export type GameState = PlayersState &
-    ClockState &
-    ResultsState &
-    DisplayState &
-    OldState
-
-export type OldActions = {
-    selectSquare: (square: Square) => void
+export type ValidationActions = {
+    selectSquare: (square: Square) => void | Move
     makeMove: (payload: {
         from: string
         to: string
@@ -178,19 +165,44 @@ export type OldActions = {
         withSound?: boolean
         updateClock?: boolean
     }) => Move | null
-    resetGame: () => void
-    setStatus: (status: Status) => void
-    setMode: (mode: GameMode) => void
-
     undo: () => void
     rollback: (timestamps: GameTimestamps) => void
-    syncGame: (game: SyncGame, playerColor: ColorName) => void
+    resetValidation(): void
+    setValidation(moves: MoveType[]): void
 }
+
+export type ValidationSlice = ValidationState & ValidationActions
+
+// Core
+
+export type CoreState = {
+    mode: GameMode
+    lastAction: null | Event
+    status: Status
+}
+
+export type CoreActions = {
+    setMode: (mode: GameMode) => void
+    setStatus: (status: Status) => void
+    resetGame: () => void
+    syncGame: (game: SyncGame, playerColor: ColorName) => void // TODO: change it to setGame
+}
+
+// The Full Store
+
+export type GameState = PlayersState &
+    ClockState &
+    ResultsState &
+    DisplayState &
+    ValidationState &
+    CoreState
+
 export type GameActions = PlayersActions &
     ClockActions &
     ResultsActions &
     DispalyActions &
-    OldActions
+    ValidationActions &
+    CoreActions
 
 export type GameStore = GameState & GameActions
 
