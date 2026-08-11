@@ -8,6 +8,7 @@ import {
     WebSocketServer,
     WsException,
     Ack,
+    OnGatewayInit,
 } from '@nestjs/websockets';
 import { MultiplayerService } from './multiplayer.service';
 import { fromNodeHeaders } from 'better-auth/node';
@@ -27,7 +28,7 @@ import { isConnected, Rooms } from './utils';
 
 @WebSocketGateway({ cors: { origin: true, credentials: true } })
 export class MultiplayerGateway
-    implements OnGatewayConnection, OnGatewayDisconnect
+    implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit
 {
     constructor(
         private readonly multiplayerService: MultiplayerService,
@@ -36,12 +37,44 @@ export class MultiplayerGateway
         private readonly matchmakingService: MatchmakingService,
         private readonly moveService: MoveService,
         private readonly drawService: DrawService,
-    ) {}
-
-    private readonly logger = new Logger(MultiplayerGateway.name);
+    ) {
+        this.deadlines = new Map<string, number>();
+    }
 
     @WebSocketServer()
     server!: TypedServer;
+
+    private deadlines: Map<string, number>;
+
+    afterInit() {
+        setInterval(() => this.sweep(), 250);
+    }
+
+    private sweep() {
+        const expired: string[] = [];
+        for (const [id, deadline] of this.deadlines) {
+            if (deadline <= Date.now()) expired.push(id);
+        }
+        for (const id of expired) {
+            this.deadlines.delete(id);
+            this.resolveTimeout(id);
+        }
+    }
+
+    private async resolveTimeout(gameId: string) {
+        const result = await this.multiplayerService.timeout(gameId);
+        if (result) {
+            const { game, elo } = result;
+            this.server.to(Rooms.game(game.id)).emit('game_finished', {
+                reason: game.reason,
+                result: game.result,
+                ...elo,
+            });
+            this.liveGamesService.deleteGame(game.id);
+        }
+    }
+
+    private readonly logger = new Logger(MultiplayerGateway.name);
 
     async handleConnection(socket: TypedSocket) {
         const session = await auth.api.getSession({
@@ -97,6 +130,19 @@ export class MultiplayerGateway
                         : newLiveGame.setWhiteDisconnected();
                 }
                 liveGame = newLiveGame;
+            }
+
+            if (!this.deadlines.get(gameId)) {
+                const currentTimeLeft =
+                    ongoingGame.currentTurn === 'w'
+                        ? ongoingGame.whiteTimeLeft
+                        : ongoingGame.blackTimeLeft;
+                const ref =
+                    ongoingGame.lastMoveAt ??
+                    ongoingGame.gameStartedAt ??
+                    Date.now();
+                const deadline = ref + currentTimeLeft;
+                this.deadlines.set(gameId, deadline);
             }
 
             liveGame.setPlayerConnected(playerColor);
@@ -161,6 +207,11 @@ export class MultiplayerGateway
             });
 
             const game = this.liveGamesService.createGame(result.game.id);
+
+            const ref = result.game.gameStartedAt ?? Date.now();
+            const deadline = ref + result.game.whiteTimeLeft;
+
+            this.deadlines.set(result.game.id, deadline);
 
             const isWhiteConnected = await isConnected(
                 this.server,
@@ -270,6 +321,16 @@ export class MultiplayerGateway
                 },
             );
 
+            // Update deadline
+
+            const currentTimeLeft =
+                newGame.currentTurn === 'w'
+                    ? newGame.whiteTimeLeft
+                    : newGame.blackTimeLeft;
+            const ref = newGame.lastMoveAt ?? newGame.gameStartedAt;
+            const deadline = ref + currentTimeLeft;
+            this.deadlines.set(playingGame.id, deadline);
+
             const gameRoom = this.server.to(Rooms.game(gameId));
 
             gameRoom.emit('new_move', savedMove);
@@ -292,6 +353,7 @@ export class MultiplayerGateway
                 });
 
                 this.liveGamesService.deleteGame(newGame.id);
+                this.deadlines.delete(newGame.id);
             }
         } catch (error) {
             this.logger.error(error);
@@ -326,6 +388,7 @@ export class MultiplayerGateway
             });
 
             this.liveGamesService.deleteGame(game.id);
+            this.deadlines.delete(game.id);
         }
     }
 
@@ -346,6 +409,7 @@ export class MultiplayerGateway
             });
 
             this.liveGamesService.deleteGame(game.id);
+            this.deadlines.delete(game.id);
         }
     }
 
@@ -384,6 +448,7 @@ export class MultiplayerGateway
             });
 
             this.liveGamesService.deleteGame(game.id);
+            this.deadlines.delete(game.id);
         }
     }
 
