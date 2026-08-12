@@ -1,57 +1,62 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { DATABASE_CONNECTION } from '../database/database.module';
-import { type Database } from '@bchess/db';
-
-import {
-    calcElo,
-    FinishedGame,
-    PlayingGame,
-} from '@bchess/shared';
+import { calcElo, FinishedGame, PlayingGame } from '@bchess/shared';
+import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { LiveGamesService } from './live-games.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { GamesService } from '../games/games.service';
+import { DATABASE_CONNECTION } from '../database/database.module';
+import type { Database } from '@bchess/db';
 import { PlayersService } from '../players/players.service';
 
 @Injectable()
-export class MultiplayerService {
+export class TimerService implements OnModuleInit {
+    private deadlines = new Map<string, number>();
+
     constructor(
         @Inject(DATABASE_CONNECTION) private readonly db: Database,
         private readonly gamesService: GamesService,
+        private readonly liveGamesService: LiveGamesService,
+        private readonly eventEmitter: EventEmitter2,
         private readonly playersService: PlayersService,
     ) {}
 
-    async resign(gameId: string, userId: string) {
-        const playingGame = await this.gamesService.getPlayingGame(gameId);
+    onModuleInit() {
+        setInterval(() => this.check(), 250);
+    }
 
-        if (!playingGame) return null;
+    setDeadline(gameId: string, remainingMs: number, ref?: number) {
+        this.deadlines.set(gameId, (ref ?? Date.now()) + remainingMs);
+    }
 
-        const result =
-            playingGame.whiteId === userId ? 'black_won' : 'white_won';
+    clearDeadline(gameId: string) {
+        this.deadlines.delete(gameId);
+    }
 
-        const elo = calcElo({
-            whiteRating: playingGame.whiteRating,
-            blackRating: playingGame.blackRating,
-            result: result,
-        });
+    getDeadline(gameId: string) {
+        return this.deadlines.get(gameId);
+    }
 
-        return await this.db.transaction(async (tx) => {
-            const finishedGame = await this.gamesService.endGame(tx, {
-                gameId: playingGame.id,
-                reason: 'Resignation',
-                result,
-                elo,
-            });
+    exist(gameId: string): boolean {
+        return this.deadlines.get(gameId) !== undefined;
+    }
 
-            await this.playersService.updateStats(tx, {
-                whiteId: playingGame.whiteId,
-                blackId: playingGame.blackId,
-                elo,
-                result,
-            });
+    private check() {
+        const expired: string[] = [];
+        for (const [id, deadline] of this.deadlines) {
+            if (deadline <= Date.now()) expired.push(id);
+        }
+        for (const id of expired) {
+            this.deadlines.delete(id);
+            this.resolveAndEmit(id);
+        }
+    }
 
-            return {
-                game: finishedGame as FinishedGame,
-                elo,
-            };
-        });
+    private async resolveAndEmit(gameId: string) {
+        const result = await this.timeout(gameId);
+        console.log('timeout resolved (DB get called to validate)');
+        if (result) {
+            this.liveGamesService.deleteGame(result.game.id);
+            this.eventEmitter.emit('game.finished', result);
+        }
     }
 
     async timeout(gameId: string) {

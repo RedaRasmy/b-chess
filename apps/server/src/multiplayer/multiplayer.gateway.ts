@@ -8,9 +8,8 @@ import {
     WebSocketServer,
     WsException,
     Ack,
-    OnGatewayInit,
 } from '@nestjs/websockets';
-import { MultiplayerService } from './multiplayer.service';
+import { ResignService } from './resign.service';
 import { fromNodeHeaders } from 'better-auth/node';
 import { auth } from '../auth/auth';
 import { MoveDto } from './dto/move.dto';
@@ -25,54 +24,25 @@ import { DrawService } from './draw.service';
 import { ZodValidationPipe } from 'nestjs-zod';
 import type { TypedServer, TypedSocket } from './socket.type';
 import { isConnected, Rooms } from './utils';
+import { OnEvent } from '@nestjs/event-emitter';
+import { TimerService } from './timer.service';
 
 @WebSocketGateway({ cors: { origin: true, credentials: true } })
 export class MultiplayerGateway
-    implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit
+    implements OnGatewayConnection, OnGatewayDisconnect
 {
     constructor(
-        private readonly multiplayerService: MultiplayerService,
+        private readonly resignService: ResignService,
         private readonly gamesService: GamesService,
         private readonly liveGamesService: LiveGamesService,
         private readonly matchmakingService: MatchmakingService,
         private readonly moveService: MoveService,
         private readonly drawService: DrawService,
-    ) {
-        this.deadlines = new Map<string, number>();
-    }
+        private readonly timerService: TimerService,
+    ) {}
 
     @WebSocketServer()
     server!: TypedServer;
-
-    private deadlines: Map<string, number>;
-
-    afterInit() {
-        setInterval(() => this.sweep(), 250);
-    }
-
-    private sweep() {
-        const expired: string[] = [];
-        for (const [id, deadline] of this.deadlines) {
-            if (deadline <= Date.now()) expired.push(id);
-        }
-        for (const id of expired) {
-            this.deadlines.delete(id);
-            this.resolveTimeout(id);
-        }
-    }
-
-    private async resolveTimeout(gameId: string) {
-        const result = await this.multiplayerService.timeout(gameId);
-        if (result) {
-            const { game, elo } = result;
-            this.server.to(Rooms.game(game.id)).emit('game_finished', {
-                reason: game.reason,
-                result: game.result,
-                ...elo,
-            });
-            this.liveGamesService.deleteGame(game.id);
-        }
-    }
 
     private readonly logger = new Logger(MultiplayerGateway.name);
 
@@ -132,7 +102,7 @@ export class MultiplayerGateway
                 liveGame = newLiveGame;
             }
 
-            if (!this.deadlines.get(gameId)) {
+            if (!this.timerService.exist(gameId)) {
                 const currentTimeLeft =
                     ongoingGame.currentTurn === 'w'
                         ? ongoingGame.whiteTimeLeft
@@ -141,8 +111,7 @@ export class MultiplayerGateway
                     ongoingGame.lastMoveAt ??
                     ongoingGame.gameStartedAt ??
                     Date.now();
-                const deadline = ref + currentTimeLeft;
-                this.deadlines.set(gameId, deadline);
+                this.timerService.setDeadline(gameId, currentTimeLeft, ref);
             }
 
             liveGame.setPlayerConnected(playerColor);
@@ -208,10 +177,11 @@ export class MultiplayerGateway
 
             const game = this.liveGamesService.createGame(result.game.id);
 
-            const ref = result.game.gameStartedAt ?? Date.now();
-            const deadline = ref + result.game.whiteTimeLeft;
-
-            this.deadlines.set(result.game.id, deadline);
+            this.timerService.setDeadline(
+                result.game.id,
+                result.game.whiteTimeLeft,
+                result.game.gameStartedAt ?? Date.now(),
+            );
 
             const isWhiteConnected = await isConnected(
                 this.server,
@@ -328,8 +298,7 @@ export class MultiplayerGateway
                     ? newGame.whiteTimeLeft
                     : newGame.blackTimeLeft;
             const ref = newGame.lastMoveAt ?? newGame.gameStartedAt;
-            const deadline = ref + currentTimeLeft;
-            this.deadlines.set(playingGame.id, deadline);
+            this.timerService.setDeadline(playingGame.id, currentTimeLeft, ref);
 
             const gameRoom = this.server.to(Rooms.game(gameId));
 
@@ -353,7 +322,7 @@ export class MultiplayerGateway
                 });
 
                 this.liveGamesService.deleteGame(newGame.id);
-                this.deadlines.delete(newGame.id);
+                this.timerService.clearDeadline(newGame.id);
             }
         } catch (error) {
             this.logger.error(error);
@@ -377,7 +346,7 @@ export class MultiplayerGateway
 
         if (!game) throw new WsException('Game not found!');
 
-        const end = await this.multiplayerService.resign(game.id, userId);
+        const end = await this.resignService.resign(game.id, userId);
 
         if (end) {
             const { game, elo } = end;
@@ -388,30 +357,11 @@ export class MultiplayerGateway
             });
 
             this.liveGamesService.deleteGame(game.id);
-            this.deadlines.delete(game.id);
+            this.timerService.clearDeadline(game.id);
         }
     }
 
-    @SubscribeMessage(CLIENT_EVENTS.TIMEOUT)
-    async handleTimeout(@ConnectedSocket() socket: TypedSocket) {
-        const game = socket.data.currentGame;
-
-        if (!game) throw new WsException('Game not found!');
-
-        const result = await this.multiplayerService.timeout(game.id);
-
-        if (result) {
-            const { game, elo } = result;
-            this.server.to(Rooms.game(game.id)).emit('game_finished', {
-                reason: game.reason,
-                result: game.result,
-                ...elo,
-            });
-
-            this.liveGamesService.deleteGame(game.id);
-            this.deadlines.delete(game.id);
-        }
-    }
+    // Draw Handlers
 
     @SubscribeMessage(CLIENT_EVENTS.RQUEST_DRAW)
     async handleDrawRequest(@ConnectedSocket() socket: TypedSocket) {
@@ -448,7 +398,7 @@ export class MultiplayerGateway
             });
 
             this.liveGamesService.deleteGame(game.id);
-            this.deadlines.delete(game.id);
+            this.timerService.clearDeadline(game.id);
         }
     }
 
@@ -457,5 +407,37 @@ export class MultiplayerGateway
         const userId = socket.data.user.id;
 
         await this.drawService.rejectDraw(userId);
+    }
+
+    // Timeout Handlers
+
+    @SubscribeMessage(CLIENT_EVENTS.TIMEOUT)
+    async handleTimeout(@ConnectedSocket() socket: TypedSocket) {
+        const game = socket.data.currentGame;
+
+        if (!game) throw new WsException('Game not found!');
+
+        const result = await this.timerService.timeout(game.id);
+
+        if (result) {
+            const { game, elo } = result;
+            this.server.to(Rooms.game(game.id)).emit('game_finished', {
+                reason: game.reason,
+                result: game.result,
+                ...elo,
+            });
+
+            this.liveGamesService.deleteGame(game.id);
+            this.timerService.clearDeadline(game.id);
+        }
+    }
+
+    @OnEvent('game.finished')
+    handleGameFinished({ game, elo }) {
+        this.server.to(Rooms.game(game.id)).emit('game_finished', {
+            reason: game.reason,
+            result: game.result,
+            ...elo,
+        });
     }
 }

@@ -9,6 +9,7 @@ import { ProfileModule } from './profile/profile.module';
 import { DatabaseModule } from './database/database.module';
 import { GamesModule } from './games/games.module';
 import { PlayersModule } from './players/players.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
     imports: [
@@ -19,6 +20,7 @@ import { PlayersModule } from './players/players.module';
         AuthModule.forRoot({
             auth,
         }),
+        EventEmitterModule.forRoot(),
         ProfileModule,
         MultiplayerModule,
         GamesModule,

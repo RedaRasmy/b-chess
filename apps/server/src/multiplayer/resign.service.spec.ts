@@ -1,15 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { MultiplayerService } from './multiplayer.service';
+import { ResignService } from './resign.service';
 
-describe('MultiplayerService', () => {
-    let service: MultiplayerService;
+describe('ResignService', () => {
+    let service: ResignService;
 
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
-            providers: [MultiplayerService],
+            providers: [ResignService],
         }).compile();
 
-        service = module.get<MultiplayerService>(MultiplayerService);
+        service = module.get<ResignService>(ResignService);
     });
 
     it('should be defined', () => {

@@ -1,13 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { MultiplayerGateway } from './multiplayer.gateway';
-import { MultiplayerService } from './multiplayer.service';
+import { ResignService } from './resign.service';
 
 describe('MultiplayerGateway', () => {
     let gateway: MultiplayerGateway;
 
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
-            providers: [MultiplayerGateway, MultiplayerService],
+            providers: [MultiplayerGateway, ResignService],
         }).compile();
 
         gateway = module.get<MultiplayerGateway>(MultiplayerGateway);
