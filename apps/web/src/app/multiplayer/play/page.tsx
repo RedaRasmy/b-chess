@@ -40,7 +40,7 @@ export default function Page() {
                             console.warn("rollback..")
 
                             gameState.rollback(res.timestamps)
-                        } 
+                        }
                     })
                 }
             },
@@ -49,12 +49,8 @@ export default function Page() {
         return () => unsubscribe()
     }, [socket])
 
-    useSocketListener("exception", ({ message, code }) => {
-        console.log("exception: ", message)
-        toast.error(message, {
-            richColors: true,
-        })
-        if (code === "GAME_NOT_FOUND") {
+    useSocketListener("exception", (exception) => {
+        if (exception.code === "GAME_NOT_FOUND") {
             router.replace("/multiplayer")
         }
     })

@@ -52,7 +52,6 @@ export class TimerService implements OnModuleInit {
 
     private async resolveAndEmit(gameId: string) {
         const result = await this.timeout(gameId);
-        console.log('timeout resolved (DB get called to validate)');
         if (result) {
             this.liveGamesService.deleteGame(result.game.id);
             this.eventEmitter.emit('game.finished', result);

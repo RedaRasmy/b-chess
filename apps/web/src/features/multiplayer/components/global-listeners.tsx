@@ -4,6 +4,7 @@ import { useSocketListener } from "@/features/multiplayer/hooks/use-socket-liste
 import { useUser } from "@/features/profile/hooks/use-user"
 import { getColor } from "@bchess/shared"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 
 export default function GlobalListeners() {
     const gameState = useGameStore()
@@ -60,6 +61,16 @@ export default function GlobalListeners() {
             to: move.to,
             promotion: move.promotion ?? undefined,
         })
+    })
+
+    useSocketListener("exception", (exception) => {
+        console.error("exception: ", exception)
+
+        if (exception.code === "TOO_MANY_REQUESTS") {
+            toast.error(exception.message, {
+                richColors: true,
+            })
+        }
     })
 
     return null

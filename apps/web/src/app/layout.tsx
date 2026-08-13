@@ -32,7 +32,6 @@ export default function RootLayout({
 }: Readonly<{
     children: React.ReactNode
 }>) {
-    console.log("layout runs")
     return (
         <html lang="en" className={inter.variable}>
             <body

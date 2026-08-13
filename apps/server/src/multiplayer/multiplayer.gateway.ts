@@ -16,7 +16,7 @@ import { MoveDto } from './dto/move.dto';
 import { CreateGameDto } from './dto/create-game.dto';
 import { CLIENT_EVENTS, type MoveAck } from '@bchess/shared';
 import { GamesService } from '../games/games.service';
-import { Logger, UsePipes } from '@nestjs/common';
+import { Logger, UseFilters, UseGuards, UsePipes } from '@nestjs/common';
 import { LiveGamesService } from './live-games.service';
 import { MatchmakingService } from './matchmaking.service';
 import { MoveService } from './move.service';
@@ -26,7 +26,12 @@ import type { TypedServer, TypedSocket } from './socket.type';
 import { isConnected, Rooms } from './utils';
 import { OnEvent } from '@nestjs/event-emitter';
 import { TimerService } from './timer.service';
+import { WsThrottlerGuard } from './ws-throttler.guard';
+import { SkipThrottle, Throttle } from '@nestjs/throttler';
+import { ThrottlerWsExceptionFilter } from './throttler-ws-exception.filter';
 
+@UseGuards(WsThrottlerGuard)
+@UseFilters(ThrottlerWsExceptionFilter)
 @WebSocketGateway({ cors: { origin: true, credentials: true } })
 export class MultiplayerGateway
     implements OnGatewayConnection, OnGatewayDisconnect
@@ -250,6 +255,10 @@ export class MultiplayerGateway
         }
     }
 
+    @SkipThrottle({ long: true })
+    @Throttle({
+        short: { ttl: 1000, limit: 15 },
+    })
     @SubscribeMessage(CLIENT_EVENTS.MOVE)
     async handleMove(
         @MessageBody() moveDto: MoveDto,
