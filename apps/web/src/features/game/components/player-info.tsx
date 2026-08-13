@@ -5,7 +5,6 @@ import { getMaterialState } from "@/features/game/utils/get-material-state"
 import ChessPieceImage from "@/features/game/components/chess-piece-image"
 import { Skeleton } from "@/components/ui/skeleton"
 import PlayerAvatar from "@/features/profile/components/player-avatar"
-import { cn } from "@/lib/utils"
 import { getColor, getOppositeColor } from "@bchess/shared"
 
 export default function PlayerInfo({ color }: { color: Color | null }) {
@@ -47,30 +46,30 @@ export default function PlayerInfo({ color }: { color: Color | null }) {
     const opponentColor = getOppositeColor(color)
 
     return (
-        <div className="bg-accent/70 rounded-sm flex items-center justify-between gap-3 px-2 py-2 w-full">
-            <div className="flex items-center gap-2">
+        <div className="bg-accent/70 rounded-sm flex items-center justify-between gap-3 px-1 md:px-3 py-1.5 w-full">
+            <div className="flex items-center">
                 <PlayerAvatar
-                    className="size-8"
+                    className="size-9 mr-2 md:mr-3"
                     username={player.username}
                     avatar={player.avatar}
                     status={status}
                 />
-                <p className="text-muted-foreground">{player.username}</p>
-                {player.rating !== undefined && (
-                    <span className="text-primary/70 text-sm">
-                        {player.rating}
-                        {diff !== null && (
-                            <span
-                                className={cn("text-green-500 ml-1 text-xs", {
-                                    "text-destructive": diff < 0,
-                                })}
-                            >
-                                {diff >= 0 && "+"}
-                                {diff}
-                            </span>
-                        )}
-                    </span>
-                )}
+                <div className="flex flex-col -mt-1">
+                    <p className="text-muted-foreground">{player.username}</p>
+                    {player.rating !== undefined && (
+                        <div className="text-primary/70 text-xs md:text-sm ">
+                            <div className="py-0 text-xs bg-primary px-2 text-white rounded-xl flex gap-0.5">
+                                {player.rating}
+                                {diff !== null && (
+                                    <span>
+                                        {diff >= 0 && "+"}
+                                        {diff}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </div>
                 <div className="flex items-center h-full ml-2">
                     {pieces.map((type, index) => (
                         <div
@@ -93,7 +92,9 @@ export default function PlayerInfo({ color }: { color: Color | null }) {
                         </div>
                     ))}
                 </div>
-                {playerPoints > 0 && <p>+{playerPoints}</p>}
+                {playerPoints > 0 && (
+                    <p className="text-sm ml-1">+{playerPoints}</p>
+                )}
             </div>
             <div>
                 {clock && (
