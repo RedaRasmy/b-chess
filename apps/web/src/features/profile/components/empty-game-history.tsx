@@ -1,5 +1,5 @@
-import { Button } from "@/components/ui/button"
-import Link from "next/link"
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 export function EmptyGameHistory() {
     return (
@@ -11,26 +11,25 @@ export function EmptyGameHistory() {
             <div className="flex flex-col gap-1.5">
                 <h3 className="text-sm font-semibold">No games yet</h3>
                 <p className="max-w-[26ch] text-sm text-muted-foreground">
-                    Your match history will show up here once you&apos;ve played
-                    your first game.
+                    Your match history will show up here once you&apos;ve played your first game.
                 </p>
             </div>
 
             <Button size="sm" asChild className="mt-1">
-                <Link href={"/multiplayer"}>Play your first game</Link>
+                <Link href={'/multiplayer'}>Play your first game</Link>
             </Button>
         </div>
-    )
+    );
 }
 
 function ChessboardGlyph({ className }: { className?: string }) {
-    const cells = Array.from({ length: 16 }, (_, i) => i)
+    const cells = Array.from({ length: 16 }, (_, i) => i);
     return (
         <svg viewBox="0 0 32 32" className={className} aria-hidden="true">
             {cells.map((i) => {
-                const row = Math.floor(i / 4)
-                const col = i % 4
-                const isDark = (row + col) % 2 === 1
+                const row = Math.floor(i / 4);
+                const col = i % 4;
+                const isDark = (row + col) % 2 === 1;
                 return (
                     <rect
                         key={i}
@@ -41,8 +40,8 @@ function ChessboardGlyph({ className }: { className?: string }) {
                         fill="currentColor"
                         opacity={isDark ? 0.9 : 0.25}
                     />
-                )
+                );
             })}
         </svg>
-    )
+    );
 }

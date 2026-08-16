@@ -1,12 +1,4 @@
-export function Record({
-    wins,
-    losses,
-    draws,
-}: {
-    wins: number
-    losses: number
-    draws: number
-}) {
+export function Record({ wins, losses, draws }: { wins: number; losses: number; draws: number }) {
     return (
         <div
             className="flex items-center gap-2.5 text-xs"
@@ -20,5 +12,5 @@ export function Record({
             <span className="text-muted-foreground">·</span>
             <span className="text-yellow-400">{draws}D</span>
         </div>
-    )
+    );
 }

@@ -1,20 +1,20 @@
-import { clockSlice } from "@/features/game/slices/clock.slice"
-import { displaySlice } from "@/features/game/slices/display.slice"
-import { playersSlice } from "@/features/game/slices/players.slice"
-import { resultsSlice } from "@/features/game/slices/results.slice"
-import { validationSlice } from "@/features/game/slices/validation.slice"
-import { GameStore, CoreState } from "@/features/game/types"
-import { getColorName, parseTimerOption } from "@bchess/shared"
-import { Chess } from "chess.js"
-import { create } from "zustand"
-import { subscribeWithSelector } from "zustand/middleware"
-import { persist, createJSONStorage } from "zustand/middleware"
+import { clockSlice } from '@/features/game/slices/clock.slice';
+import { displaySlice } from '@/features/game/slices/display.slice';
+import { playersSlice } from '@/features/game/slices/players.slice';
+import { resultsSlice } from '@/features/game/slices/results.slice';
+import { validationSlice } from '@/features/game/slices/validation.slice';
+import { GameStore, CoreState } from '@/features/game/types';
+import { getColorName, parseTimerOption } from '@bchess/shared';
+import { Chess } from 'chess.js';
+import { create } from 'zustand';
+import { subscribeWithSelector } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
 const init: CoreState = {
-    mode: "idle",
-    status: "matching",
+    mode: 'idle',
+    status: 'matching',
     lastAction: null,
-}
+};
 
 export const useGameStore = create<GameStore>()(
     persist(
@@ -28,21 +28,21 @@ export const useGameStore = create<GameStore>()(
             ...init,
 
             resetGame: () => {
-                set(init)
+                set(init);
 
-                get().resetPlayers()
-                get().resetClock()
-                get().resetResults()
-                get().resetDisplay()
-                get().resetValidation()
+                get().resetPlayers();
+                get().resetClock();
+                get().resetResults();
+                get().resetDisplay();
+                get().resetValidation();
             },
 
             setStatus: (status) => set({ status }),
             setMode: (mode) => set({ mode }),
 
-            setGame: (mode,game, playerColor) => {
-                get().resetGame()
-                get().setMode(mode)
+            setGame: (mode, game, playerColor) => {
+                get().resetGame();
+                get().setMode(mode);
 
                 get().setPlayers({
                     white: {
@@ -60,9 +60,9 @@ export const useGameStore = create<GameStore>()(
                         status: game.blackStatus,
                     },
                     playerColor,
-                })
+                });
 
-                const { plus } = parseTimerOption(game.timer)
+                const { plus } = parseTimerOption(game.timer);
 
                 get().setClock({
                     activeColor: getColorName(game.currentTurn),
@@ -70,11 +70,11 @@ export const useGameStore = create<GameStore>()(
                     black: game.blackTimeLeft,
                     lastTickAt: game.lastMoveAt ?? game.gameStartedAt,
                     increment: plus * 1000,
-                })
+                });
 
-                get().setValidation(game.moves)
+                get().setValidation(game.moves);
 
-                get().setStatus(game.status)
+                get().setStatus(game.status);
 
                 if (game.result) {
                     get().endGame({
@@ -85,15 +85,15 @@ export const useGameStore = create<GameStore>()(
                             blackEloDiff: game.blackEloDiff!,
                         },
                         withSound: false,
-                    })
+                    });
                 }
             },
         })),
         {
-            name: "game-state",
+            name: 'game-state',
             storage: createJSONStorage(() => localStorage),
             partialize: (state) =>
-                state.mode === "bot"
+                state.mode === 'bot'
                     ? {
                           mode: state.mode,
                           players: state.players,
@@ -109,14 +109,14 @@ export const useGameStore = create<GameStore>()(
                     : {},
 
             onRehydrateStorage: () => (state) => {
-                if (state && state.mode === "bot") {
+                if (state && state.mode === 'bot') {
                     // Note: we must restore the history also not just chess instance
                     // the persisted history is simplified ( MoveType vs Move )
 
-                    const chess = new Chess()
+                    const chess = new Chess();
 
-                    const moves = [...state.moveHistory]
-                    state.moveHistory = []
+                    const moves = [...state.moveHistory];
+                    state.moveHistory = [];
 
                     moves.forEach((move) => {
                         state.makeMove({
@@ -124,12 +124,12 @@ export const useGameStore = create<GameStore>()(
                             ack: false,
                             withSound: false,
                             updateClock: false,
-                        })
-                    })
+                        });
+                    });
 
-                    state.chess = chess
+                    state.chess = chess;
                 }
             },
         },
     ),
-)
+);

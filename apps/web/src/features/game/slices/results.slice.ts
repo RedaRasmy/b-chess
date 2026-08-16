@@ -1,23 +1,23 @@
-import { GameSlice, ResultsSlice } from "@/features/game/types"
-import { playSound } from "@/lib/sounds"
+import { GameSlice, ResultsSlice } from '@/features/game/types';
+import { playSound } from '@/lib/sounds';
 
 export const resultsSlice: GameSlice<ResultsSlice> = (set, get) => ({
     results: null,
 
     endGame: ({ result, reason, elo, withSound = true }) => {
         const lastActionWrapper =
-            reason === "Timeout"
+            reason === 'Timeout'
                 ? {
                       lastAction: {
-                          type: "timeout" as const,
+                          type: 'timeout' as const,
                       },
                   }
-                : {}
+                : {};
 
-        get().stopClock({ reason, result })
+        get().stopClock({ reason, result });
 
         set({
-            status: "finished",
+            status: 'finished',
             results: {
                 result,
                 reason,
@@ -25,16 +25,16 @@ export const resultsSlice: GameSlice<ResultsSlice> = (set, get) => ({
                 blackEloDiff: elo?.blackEloDiff ?? null,
             },
             ...lastActionWrapper,
-        })
+        });
 
         if (withSound) {
-            playSound("gameEnd")
+            playSound('gameEnd');
         }
     },
 
     resetResults() {
         set({
             results: null,
-        })
+        });
     },
-})
+});

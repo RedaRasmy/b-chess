@@ -1,5 +1,5 @@
-"use client"
-import { Bot, User, Trophy, Swords } from "lucide-react"
+'use client';
+import { Bot, User, Trophy, Swords } from 'lucide-react';
 import {
     Sidebar,
     SidebarContent,
@@ -8,30 +8,27 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
     useSidebar,
-} from "@/components/ui/sidebar"
-import Link from "next/link"
-import Image from "next/image"
-import { cn } from "@/lib/utils"
-import { usePathname } from "next/navigation"
+} from '@/components/ui/sidebar';
+import Link from 'next/link';
+import Image from 'next/image';
+import { cn } from '@/lib/utils';
+import { usePathname } from 'next/navigation';
 
 const items = [
-    { title: "Profile", path: "/profile", icon: User },
-    { title: "Bot", path: "/bot", icon: Bot },
-    { title: "Multiplayer", path: "/multiplayer", icon: Swords },
-    { title: "Leaderboard", path: "/leaderboard", icon: Trophy },
+    { title: 'Profile', path: '/profile', icon: User },
+    { title: 'Bot', path: '/bot', icon: Bot },
+    { title: 'Multiplayer', path: '/multiplayer', icon: Swords },
+    { title: 'Leaderboard', path: '/leaderboard', icon: Trophy },
     // { title: "Settings", path: "/settings", icon: Settings },
-]
+];
 
 export function AppSidebar() {
-    const { state, setOpenMobile } = useSidebar()
-    const pathname = usePathname()
-    const isCollapsed = state === "collapsed"
+    const { state, setOpenMobile } = useSidebar();
+    const pathname = usePathname();
+    const isCollapsed = state === 'collapsed';
 
     return (
-        <Sidebar
-            className={cn(isCollapsed ? "w-14" : "w-64")}
-            collapsible="icon"
-        >
+        <Sidebar className={cn(isCollapsed ? 'w-14' : 'w-64')} collapsible="icon">
             <SidebarContent>
                 <div className="p-4 border-b border-sidebar-border ">
                     <Link
@@ -52,9 +49,7 @@ export function AppSidebar() {
                                 <h1 className="font-bold text-lg text-sidebar-foreground">
                                     BChess
                                 </h1>
-                                <p className="text-xs text-sidebar-foreground/70">
-                                    Play & Improve
-                                </p>
+                                <p className="text-xs text-sidebar-foreground/70">Play & Improve</p>
                             </div>
                         )}
                     </Link>
@@ -63,14 +58,8 @@ export function AppSidebar() {
                 <SidebarMenu className="flex p-2 py-3 gap-1">
                     {items.map((item) => (
                         <SidebarMenuItem key={item.title}>
-                            <SidebarMenuButton
-                                asChild
-                                isActive={pathname === item.path}
-                            >
-                                <Link
-                                    onClick={() => setOpenMobile(false)}
-                                    href={item.path}
-                                >
+                            <SidebarMenuButton asChild isActive={pathname === item.path}>
+                                <Link onClick={() => setOpenMobile(false)} href={item.path}>
                                     <item.icon className="w-4 h-4" />
                                     {!isCollapsed && <span>{item.title}</span>}
                                 </Link>
@@ -81,5 +70,5 @@ export function AppSidebar() {
             </SidebarContent>
             <SidebarFooter></SidebarFooter>
         </Sidebar>
-    )
+    );
 }

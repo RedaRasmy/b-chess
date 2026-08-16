@@ -1,61 +1,59 @@
-import { useGameStore } from "@/features/game/game-store"
-import { playSound } from "@/lib/sounds"
-import { cn } from "@/lib/utils"
-import { formatMs } from "@bchess/shared"
-import { useEffect, useRef, useState } from "react"
+import { useGameStore } from '@/features/game/game-store';
+import { playSound } from '@/lib/sounds';
+import { cn } from '@/lib/utils';
+import { formatMs } from '@bchess/shared';
+import { useEffect, useRef, useState } from 'react';
 
-export function PlayerTimer({ color }: { color: "white" | "black" }) {
-    const clock = useGameStore((s) => s.clock)
-    const playerColor = useGameStore((s) => s.players?.playerColor)
+export function PlayerTimer({ color }: { color: 'white' | 'black' }) {
+    const clock = useGameStore((s) => s.clock);
+    const playerColor = useGameStore((s) => s.players?.playerColor);
 
     if (!clock || !playerColor)
-        throw new Error(
-            "PlayerTimer can't be used while clock or players is null",
-        )
+        throw new Error("PlayerTimer can't be used while clock or players is null");
 
-    const status = useGameStore((s) => s.status)
-    const endGame = useGameStore((s) => s.endGame)
-    const [ms, setMs] = useState(clock[color])
-    const isPlayer = playerColor === color
-    const alertedRef = useRef(false)
+    const status = useGameStore((s) => s.status);
+    const endGame = useGameStore((s) => s.endGame);
+    const [ms, setMs] = useState(clock[color]);
+    const isPlayer = playerColor === color;
+    const alertedRef = useRef(false);
 
     useEffect(() => {
-        if (status !== "playing" || clock.activeColor !== color) {
-            setMs(clock[color])
-            return
+        if (status !== 'playing' || clock.activeColor !== color) {
+            setMs(clock[color]);
+            return;
         }
 
         const interval = setInterval(() => {
-            const elapsed = Date.now() - (clock.lastTickAt ?? Date.now())
-            const remaining = Math.max(0, clock[color] - elapsed)
-            setMs(remaining)
+            const elapsed = Date.now() - (clock.lastTickAt ?? Date.now());
+            const remaining = Math.max(0, clock[color] - elapsed);
+            setMs(remaining);
             if (remaining === 0) {
                 endGame({
-                    result: color === "white" ? "black_won" : "white_won",
-                    reason: "Timeout",
-                })
+                    result: color === 'white' ? 'black_won' : 'white_won',
+                    reason: 'Timeout',
+                });
             }
             if (isPlayer && remaining <= 10000 && !alertedRef.current) {
-                alertedRef.current = true
-                playSound("timeoutAlert")
+                alertedRef.current = true;
+                playSound('timeoutAlert');
             }
-        }, 100)
+        }, 100);
 
         return () => {
-            clearInterval(interval)
-            alertedRef.current = false
-        }
-    }, [clock, status, color])
+            clearInterval(interval);
+            alertedRef.current = false;
+        };
+    }, [clock, status, color]);
 
-    const display = formatMs(ms, ms < 10000)
+    const display = formatMs(ms, ms < 10000);
 
     return (
         <span
-            className={cn("px-2", {
-                "text-red-500": ms <= 10000,
+            className={cn('px-2', {
+                'text-red-500': ms <= 10000,
             })}
         >
             {display}
         </span>
-    )
+    );
 }

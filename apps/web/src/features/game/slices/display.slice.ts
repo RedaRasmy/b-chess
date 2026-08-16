@@ -1,5 +1,5 @@
-import { DisplaySlice, GameSlice } from "@/features/game/types"
-import { DEFAULT_POSITION } from "chess.js"
+import { DisplaySlice, GameSlice } from '@/features/game/types';
+import { DEFAULT_POSITION } from 'chess.js';
 
 export const displaySlice: GameSlice<DisplaySlice> = (set, get) => ({
     viewIndex: null,
@@ -8,59 +8,59 @@ export const displaySlice: GameSlice<DisplaySlice> = (set, get) => ({
     legalMoves: [],
 
     goToMove: (index) => {
-        const { moveHistory } = get()
+        const { moveHistory } = get();
 
         if (index === null) {
             set({
                 viewIndex: null,
                 displayFen: DEFAULT_POSITION,
-            })
+            });
         } else {
-            const move = moveHistory.at(index)
+            const move = moveHistory.at(index);
             if (!move) {
-                console.warn("Move not found, index=", index)
-                return
+                console.warn('Move not found, index=', index);
+                return;
             }
 
-            const viewIndex = index < 0 ? moveHistory.length + index : index
+            const viewIndex = index < 0 ? moveHistory.length + index : index;
 
-            set({ viewIndex, displayFen: move.after })
+            set({ viewIndex, displayFen: move.after });
         }
     },
 
     goToStart: () => {
-        get().goToMove(null)
+        get().goToMove(null);
     },
 
     goToEnd: () => {
-        get().goToMove(-1)
+        get().goToMove(-1);
     },
 
     stepBack: () => {
-        const { viewIndex } = get()
+        const { viewIndex } = get();
 
-        if (viewIndex === null) return
+        if (viewIndex === null) return;
 
         if (viewIndex === 0) {
-            get().goToStart()
+            get().goToStart();
         } else {
-            get().goToMove(viewIndex - 1)
+            get().goToMove(viewIndex - 1);
         }
     },
 
     stepForward: () => {
-        const { viewIndex, moveHistory } = get()
+        const { viewIndex, moveHistory } = get();
 
         if (viewIndex === null) {
-            get().goToMove(0)
-            return
+            get().goToMove(0);
+            return;
         }
 
-        const isLastMove = moveHistory.length - 1 === viewIndex
+        const isLastMove = moveHistory.length - 1 === viewIndex;
 
-        if (isLastMove) return
+        if (isLastMove) return;
 
-        get().goToMove(viewIndex + 1)
+        get().goToMove(viewIndex + 1);
     },
 
     resetDisplay() {
@@ -69,40 +69,40 @@ export const displaySlice: GameSlice<DisplaySlice> = (set, get) => ({
             viewIndex: null,
             moveHistory: [],
             legalMoves: [],
-        })
+        });
     },
 
     rollbackDisplay() {
-        const { moveHistory } = get()
+        const { moveHistory } = get();
 
-        get().maskLegalMoves()
-        get().stepBack()
+        get().maskLegalMoves();
+        get().stepBack();
 
         set({
             moveHistory: moveHistory.slice(0, -1),
-        })
+        });
 
-        get().goToEnd()
+        get().goToEnd();
     },
 
     setDisplay(history, index = -1) {
-        get().resetDisplay()
+        get().resetDisplay();
         set({
             moveHistory: history,
-        })
+        });
 
-        get().goToMove(index)
+        get().goToMove(index);
     },
 
     showLegalMoves(squares) {
         set({
             legalMoves: squares,
-        })
+        });
     },
 
     maskLegalMoves() {
         set({
             legalMoves: [],
-        })
+        });
     },
-})
+});

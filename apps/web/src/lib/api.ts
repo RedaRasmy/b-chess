@@ -1,12 +1,12 @@
-import axios from "axios"
+import axios from 'axios';
 
-const apiURL = process.env.NEXT_PUBLIC_BACKEND_API_URL
+const apiURL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 if (!apiURL) {
-    throw new Error("NEXT_PUBLIC_BACKEND_API_URL env variable is missing")
+    throw new Error('NEXT_PUBLIC_BACKEND_API_URL env variable is missing');
 }
 
 export const api = axios.create({
-    baseURL: apiURL + "",
+    baseURL: apiURL + '',
     withCredentials: true,
-})
+});

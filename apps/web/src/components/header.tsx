@@ -1,14 +1,14 @@
-"use client"
-import { Button } from "./ui/button"
-import { SidebarTrigger } from "./ui/sidebar"
-import Link from "next/link"
-import { authClient } from "@/lib/auth-client"
-import ConnectionButton from "@/features/multiplayer/components/connection-button"
+'use client';
+import { Button } from './ui/button';
+import { SidebarTrigger } from './ui/sidebar';
+import Link from 'next/link';
+import { authClient } from '@/lib/auth-client';
+import ConnectionButton from '@/features/multiplayer/components/connection-button';
 
 export default function Header() {
-    const { isPending, data: session } = authClient.useSession()
+    const { isPending, data: session } = authClient.useSession();
 
-    const showLogin = !isPending && !session
+    const showLogin = !isPending && !session;
 
     return (
         <div className="min-h-10 flex items-center pl-2 pr-4 justify-between sticky py-3">
@@ -17,10 +17,10 @@ export default function Header() {
                 <ConnectionButton />
                 {showLogin && (
                     <Button asChild>
-                        <Link href={"/auth/login"}>Sign in</Link>
+                        <Link href={'/auth/login'}>Sign in</Link>
                     </Button>
                 )}
             </div>
         </div>
-    )
+    );
 }

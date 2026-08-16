@@ -1,34 +1,28 @@
-import { Record } from "@/features/players/components/record"
-import PlayerAvatar from "@/features/profile/components/player-avatar"
-import { TopPlayer } from "@bchess/shared"
-import { TableCell, TableRow } from "@/components/ui/table"
+import { Record } from '@/features/players/components/record';
+import PlayerAvatar from '@/features/profile/components/player-avatar';
+import { TopPlayer } from '@bchess/shared';
+import { TableCell, TableRow } from '@/components/ui/table';
 
 type Accent = {
-    border: string
-    text: string
-}
+    border: string;
+    text: string;
+};
 
 const RANK_ACCENT: Record<number, Accent> = {
-    1: { border: "border-l-primary", text: "text-primary" },
-    2: { border: "border-l-amber-400", text: "text-amber-400" },
-    3: { border: "border-l-zinc-400", text: "text-zinc-300" },
+    1: { border: 'border-l-primary', text: 'text-primary' },
+    2: { border: 'border-l-amber-400', text: 'text-amber-400' },
+    3: { border: 'border-l-zinc-400', text: 'text-zinc-300' },
     // 3: { border: "border-l-orange-400", text: "text-orange-400" },
-}
+};
 const DEFAULT_ACCENT = {
-    border: "border-l-transparent",
-    text: "text-stone-500",
-}
+    border: 'border-l-transparent',
+    text: 'text-stone-500',
+};
 
-export function PlayerRow({
-    player,
-    rank,
-}: {
-    player: TopPlayer
-    rank: 1 | 2 | 3 | number
-}) {
-    const accent = RANK_ACCENT[rank] || DEFAULT_ACCENT
-    const total = player.wins + player.losses + player.draws
-    const winPct = total ? Math.round((player.wins / total) * 100) : 0
+export function PlayerRow({ player, rank }: { player: TopPlayer; rank: 1 | 2 | 3 | number }) {
+    const accent = RANK_ACCENT[rank] || DEFAULT_ACCENT;
+    const total = player.wins + player.losses + player.draws;
+    const winPct = total ? Math.round((player.wins / total) * 100) : 0;
 
     return (
         <TableRow className="">
@@ -62,9 +56,7 @@ export function PlayerRow({
                                 losses={player.losses}
                                 draws={player.draws}
                             />
-                            <span className="text-stone-500 text-xs">
-                                {winPct}% win rate
-                            </span>
+                            <span className="text-stone-500 text-xs">{winPct}% win rate</span>
                         </div>
                     </div>
                 </div>
@@ -74,5 +66,5 @@ export function PlayerRow({
                 {player.rating}
             </TableCell>
         </TableRow>
-    )
+    );
 }

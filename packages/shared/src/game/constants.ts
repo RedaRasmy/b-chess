@@ -9,4 +9,4 @@ export {
     type Reason,
     PROMOTION,
     type PromotionPiece,
-} from "@bchess/db/tables"
+} from '@bchess/db/tables';

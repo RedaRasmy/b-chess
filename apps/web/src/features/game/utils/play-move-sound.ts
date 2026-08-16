@@ -1,16 +1,16 @@
-import { playSound } from "@/lib/sounds"
-import { Chess, Move } from "chess.js"
+import { playSound } from '@/lib/sounds';
+import { Chess, Move } from 'chess.js';
 
 export function playMoveSound(chess: Chess, move: Move) {
     if (chess.isCheck()) {
-        playSound("check")
+        playSound('check');
     } else if (move.captured) {
-        playSound("capture")
+        playSound('capture');
     } else if (move.isKingsideCastle() || move.isQueensideCastle()) {
-        playSound("castle")
+        playSound('castle');
     } else if (move.isPromotion()) {
-        playSound("promote")
+        playSound('promote');
     } else {
-        playSound("move")
+        playSound('move');
     }
 }

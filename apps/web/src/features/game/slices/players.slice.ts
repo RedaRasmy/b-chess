@@ -1,4 +1,4 @@
-import { GameSlice, PlayersSlice } from "@/features/game/types"
+import { GameSlice, PlayersSlice } from '@/features/game/types';
 
 export const playersSlice: GameSlice<PlayersSlice> = (set, get) => ({
     players: null,
@@ -10,16 +10,16 @@ export const playersSlice: GameSlice<PlayersSlice> = (set, get) => ({
                 black,
                 playerColor,
             },
-            status: "preparing",
-        })
+            status: 'preparing',
+        });
     },
 
     setPlayerStatus: (color, status) => {
-        const { players } = get()
-        if (!players) return
+        const { players } = get();
+        if (!players) return;
 
-        const isWhite = color === "w"
-        const isBlack = (color = "b")
+        const isWhite = color === 'w';
+        const isBlack = (color = 'b');
 
         set({
             players: {
@@ -33,12 +33,12 @@ export const playersSlice: GameSlice<PlayersSlice> = (set, get) => ({
                     status: isBlack ? status : players.black.status,
                 },
             },
-        })
+        });
     },
 
     resetPlayers: () => {
         set({
             players: null,
-        })
+        });
     },
-})
+});

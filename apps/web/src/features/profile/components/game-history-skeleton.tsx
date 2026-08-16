@@ -1,13 +1,10 @@
-import { Skeleton } from "@/components/ui/skeleton"
+import { Skeleton } from '@/components/ui/skeleton';
 
 function GameHistoryItemSkeleton() {
     return (
         <div className="relative flex items-center gap-4 overflow-hidden rounded-lg border bg-card py-3 pl-4 pr-4">
             {/* result accent bar */}
-            <span
-                className="absolute left-0 top-0 h-full w-1 bg-muted"
-                aria-hidden="true"
-            />
+            <span className="absolute left-0 top-0 h-full w-1 bg-muted" aria-hidden="true" />
 
             {/* avatar */}
             <Skeleton className="h-10 w-10 shrink-0 rounded-full" />
@@ -24,7 +21,7 @@ function GameHistoryItemSkeleton() {
             {/* result pill */}
             <Skeleton className="h-6 w-6 shrink-0 rounded-full sm:h-6 sm:w-16" />
         </div>
-    )
+    );
 }
 
 export function GameHistorySkeleton({ count = 5 }: { count?: number }) {
@@ -35,5 +32,5 @@ export function GameHistorySkeleton({ count = 5 }: { count?: number }) {
                 <GameHistoryItemSkeleton key={i} />
             ))}
         </div>
-    )
+    );
 }

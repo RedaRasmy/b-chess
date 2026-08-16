@@ -1,21 +1,18 @@
-import { Button } from "@/components/ui/button"
-import { useBotStore } from "@/features/bot/store"
-import HistoryController from "@/features/game/components/history-controller"
-import { useGameStore } from "@/features/game/game-store"
-import { Plus, RotateCcw, Undo } from "lucide-react"
-import Link from "next/link"
+import { Button } from '@/components/ui/button';
+import { useBotStore } from '@/features/bot/store';
+import HistoryController from '@/features/game/components/history-controller';
+import { useGameStore } from '@/features/game/game-store';
+import { Plus, RotateCcw, Undo } from 'lucide-react';
+import Link from 'next/link';
 
 export default function BotControls() {
-    const playerColor = useGameStore((s) => s.players?.playerColor)
-    const moveHistory = useGameStore((s) => s.moveHistory)
-    const undo = useGameStore((s) => s.undo)
-    const resetGame = useGameStore((s) => s.resetGame)
-    const replay = useBotStore((s) => s.replayBotGame)
+    const playerColor = useGameStore((s) => s.players?.playerColor);
+    const moveHistory = useGameStore((s) => s.moveHistory);
+    const undo = useGameStore((s) => s.undo);
+    const resetGame = useGameStore((s) => s.resetGame);
+    const replay = useBotStore((s) => s.replayBotGame);
 
-    const canUndo =
-        playerColor === "white"
-            ? moveHistory.length > 0
-            : moveHistory.length > 1
+    const canUndo = playerColor === 'white' ? moveHistory.length > 0 : moveHistory.length > 1;
 
     return (
         <div className="bg-secondary flex-1 w-full landscape:min-w-80 py-5 flex flex-col gap-5 lg:gap-8 justify-center items-center border-l border-black/30 ">
@@ -23,7 +20,7 @@ export default function BotControls() {
                 <Button
                     className="cursor-pointer font-semibold max-w-70 w-full "
                     onClick={undo}
-                    variant={"outline"}
+                    variant={'outline'}
                     disabled={!canUndo}
                 >
                     <Undo />
@@ -32,7 +29,7 @@ export default function BotControls() {
                 <Button
                     className="cursor-pointer font-semibold max-w-70 w-full"
                     onClick={replay}
-                    variant={"outline"}
+                    variant={'outline'}
                 >
                     <RotateCcw />
                     Replay
@@ -41,7 +38,7 @@ export default function BotControls() {
                     asChild
                     className="cursor-pointer font-semibold max-w-70 w-full"
                     onClick={resetGame}
-                    variant={"outline"}
+                    variant={'outline'}
                 >
                     <Link href="/bot">
                         <Plus />
@@ -51,5 +48,5 @@ export default function BotControls() {
             </div>
             <HistoryController />
         </div>
-    )
+    );
 }

@@ -1,20 +1,15 @@
-import { useGameStore } from "@/features/game/game-store"
-import {
-    ChevronsLeft,
-    ChevronLeft,
-    ChevronRight,
-    ChevronsRight,
-} from "lucide-react"
-import { useHotkeys } from "react-hotkeys-hook"
+import { useGameStore } from '@/features/game/game-store';
+import { ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight } from 'lucide-react';
+import { useHotkeys } from 'react-hotkeys-hook';
 
 export default function HistoryController() {
-    const stepBack = useGameStore((s) => s.stepBack)
-    const stepForward = useGameStore((s) => s.stepForward)
-    const gotoStart = useGameStore((s) => s.goToStart)
-    const gotoEnd = useGameStore((s) => s.goToEnd)
+    const stepBack = useGameStore((s) => s.stepBack);
+    const stepForward = useGameStore((s) => s.stepForward);
+    const gotoStart = useGameStore((s) => s.goToStart);
+    const gotoEnd = useGameStore((s) => s.goToEnd);
 
-    useHotkeys(["ctrl+z", "meta+z"], stepBack)
-    useHotkeys(["ctrl+shift+z", "meta+shift+z"], stepForward)
+    useHotkeys(['ctrl+z', 'meta+z'], stepBack);
+    useHotkeys(['ctrl+shift+z', 'meta+shift+z'], stepForward);
 
     return (
         <div className="grid grid-cols-4 w-full bg-accent/50 ">
@@ -43,5 +38,5 @@ export default function HistoryController() {
                 <ChevronsRight className="size-9 stroke-inherit font-bold mx-auto" />
             </button>
         </div>
-    )
+    );
 }

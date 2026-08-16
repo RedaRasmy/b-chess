@@ -1,6 +1,6 @@
-import { useGameStore } from "@/features/game/game-store"
-import { Square } from "chess.js"
-import { Chessboard } from "react-chessboard"
+import { useGameStore } from '@/features/game/game-store';
+import { Square } from 'chess.js';
+import { Chessboard } from 'react-chessboard';
 
 export default function GameBoard() {
     const {
@@ -11,12 +11,12 @@ export default function GameBoard() {
         legalMoves,
         moveHistory,
         viewIndex,
-    } = useGameStore()
+    } = useGameStore();
 
     function onPieceDrop(from: Square, to: Square) {
-        selectSquare(from)
-        const move = selectSquare(to)
-        return !!move
+        selectSquare(from);
+        const move = selectSquare(to);
+        return !!move;
     }
 
     const legalMoveStyles = Object.fromEntries(
@@ -24,33 +24,31 @@ export default function GameBoard() {
             sq,
             {
                 background:
-                    "radial-gradient(circle, color-mix(in oklch, var(--primary) 70%, transparent) 25%, transparent 25%)",
+                    'radial-gradient(circle, color-mix(in oklch, var(--primary) 70%, transparent) 25%, transparent 25%)',
             },
         ]),
-    )
+    );
 
     const selectedSquareStyle = selectedSquare
         ? {
               [selectedSquare]: {
-                  backgroundColor:
-                      "color-mix(in oklch, var(--primary) 20%, transparent)",
+                  backgroundColor: 'color-mix(in oklch, var(--primary) 20%, transparent)',
               },
           }
-        : {}
+        : {};
 
-    const lastMove = viewIndex !== null ? moveHistory.at(viewIndex) : undefined
+    const lastMove = viewIndex !== null ? moveHistory.at(viewIndex) : undefined;
 
     const lastMoveSquareStyle = {
-        boxShadow:
-            "inset 0 0 0 3px color-mix(in oklch, yellow 40%, transparent)",
-    }
+        boxShadow: 'inset 0 0 0 3px color-mix(in oklch, yellow 40%, transparent)',
+    };
 
     const lastMoveStyle = lastMove
         ? {
               [lastMove.from]: lastMoveSquareStyle,
               [lastMove.to]: lastMoveSquareStyle,
           }
-        : {}
+        : {};
 
     return (
         <Chessboard
@@ -59,18 +57,18 @@ export default function GameBoard() {
                     borderRadius: 5,
                 },
                 darkSquareStyle: {
-                    backgroundColor: "var(--secondary)",
+                    backgroundColor: 'var(--secondary)',
                 },
                 lightSquareStyle: {
-                    backgroundColor: "oklch(from var(--primary) l c h / 0.5)",
+                    backgroundColor: 'oklch(from var(--primary) l c h / 0.5)',
                 },
                 darkSquareNotationStyle: {
-                    color: "var(--primary)",
+                    color: 'var(--primary)',
                 },
                 lightSquareNotationStyle: {
-                    color: "black",
+                    color: 'black',
                 },
-                boardOrientation: players?.playerColor ?? "white",
+                boardOrientation: players?.playerColor ?? 'white',
                 position: displayFen,
                 onSquareClick: ({ square }) => selectSquare(square as Square),
                 onPieceDrop: ({ sourceSquare, targetSquare }) =>
@@ -82,5 +80,5 @@ export default function GameBoard() {
                 },
             }}
         />
-    )
+    );
 }

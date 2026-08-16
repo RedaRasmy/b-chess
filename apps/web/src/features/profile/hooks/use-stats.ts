@@ -1,9 +1,9 @@
-import { fetchStats } from "@/features/profile/requests"
-import { useQuery } from "@tanstack/react-query"
+import { fetchStats } from '@/features/profile/requests';
+import { useQuery } from '@tanstack/react-query';
 
 export default function useStats() {
     return useQuery({
-        queryKey: ["stats"],
+        queryKey: ['stats'],
         queryFn: fetchStats,
-    })
+    });
 }

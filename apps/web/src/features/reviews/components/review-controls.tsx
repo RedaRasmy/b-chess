@@ -1,4 +1,4 @@
-import HistoryController from "@/features/game/components/history-controller"
+import HistoryController from '@/features/game/components/history-controller';
 
 export default function ReviewControls() {
     return (
@@ -6,5 +6,5 @@ export default function ReviewControls() {
             {/* <div className="flex flex-col w-full items-center px-2 lg:px-4 gap-1"></div> */}
             <HistoryController />
         </div>
-    )
+    );
 }

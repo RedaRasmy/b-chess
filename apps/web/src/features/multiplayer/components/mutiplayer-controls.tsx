@@ -1,25 +1,25 @@
-import { ActionButton } from "@/components/ui/action-button"
-import HistoryController from "@/features/game/components/history-controller"
-import { useSocket } from "@/features/multiplayer/hooks/use-socket"
-import { Flag, Handshake } from "lucide-react"
+import { ActionButton } from '@/components/ui/action-button';
+import HistoryController from '@/features/game/components/history-controller';
+import { useSocket } from '@/features/multiplayer/hooks/use-socket';
+import { Flag, Handshake } from 'lucide-react';
 
 export default function MultiplayerControls() {
-    const socket = useSocket()
+    const socket = useSocket();
 
     async function handleResign() {
-        socket.emit("resign")
+        socket.emit('resign');
 
         return {
             error: false,
-        }
+        };
     }
 
     async function handleDraw() {
-        socket.emit("request_draw")
+        socket.emit('request_draw');
 
         return {
             error: false,
-        }
+        };
     }
 
     return (
@@ -39,7 +39,7 @@ export default function MultiplayerControls() {
                     requireAreYouSure
                     areYouSureTitle="Resignation"
                     areYouSureDescription="Are you sure you want to resign?"
-                    variant={"outline"}
+                    variant={'outline'}
                 >
                     <Flag />
                     Resign
@@ -50,7 +50,7 @@ export default function MultiplayerControls() {
                     requireAreYouSure
                     areYouSureTitle="Request A Draw"
                     areYouSureDescription="Are you sure?"
-                    variant={"outline"}
+                    variant={'outline'}
                 >
                     <Handshake />
                     Draw
@@ -58,5 +58,5 @@ export default function MultiplayerControls() {
             </div>
             <HistoryController />
         </div>
-    )
+    );
 }

@@ -1,11 +1,11 @@
-import { Button } from "@/components/ui/button"
-import { Slider } from "@/components/ui/slider"
-import { cn } from "@/lib/utils"
-import { validateRatingRange } from "@bchess/shared"
-import { TrendingUp, Zap } from "lucide-react"
-import { useEffect, useState } from "react"
+import { Button } from '@/components/ui/button';
+import { Slider } from '@/components/ui/slider';
+import { cn } from '@/lib/utils';
+import { validateRatingRange } from '@bchess/shared';
+import { TrendingUp, Zap } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
-export type Range = [number, number]
+export type Range = [number, number];
 
 export default function RatingRange({
     range,
@@ -13,32 +13,32 @@ export default function RatingRange({
     disabled = false,
     className,
 }: {
-    range: Range
-    onRangeChange: (range: Range) => void
-    disabled?: boolean
-    className?: string
+    range: Range;
+    onRangeChange: (range: Range) => void;
+    disabled?: boolean;
+    className?: string;
 }) {
-    const [localRange, setLocalRange] = useState<Range>(range)
+    const [localRange, setLocalRange] = useState<Range>(range);
 
     useEffect(() => {
-        setLocalRange(range)
-    }, [range])
+        setLocalRange(range);
+    }, [range]);
 
     return (
-        <div className={cn("my-5 w-full space-y-5 lg:space-y-6", className)}>
+        <div className={cn('my-5 w-full space-y-5 lg:space-y-6', className)}>
             <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                     <Button
-                        size={"sm"}
+                        size={'sm'}
                         onClick={() => onRangeChange([-100, 100])}
                         className="cursor-pointer"
-                        variant={"outline"}
+                        variant={'outline'}
                         disabled={disabled}
                     >
                         default
                     </Button>
                     <Button
-                        size={"icon-sm"}
+                        size={'icon-sm'}
                         onClick={() => onRangeChange([-400, 400])}
                         className="cursor-pointer"
                         disabled={disabled}
@@ -46,7 +46,7 @@ export default function RatingRange({
                         <Zap />
                     </Button>
                     <Button
-                        size={"icon-sm"}
+                        size={'icon-sm'}
                         onClick={() => onRangeChange([200, 400])}
                         className="cursor-pointer"
                         disabled={disabled}
@@ -54,9 +54,7 @@ export default function RatingRange({
                         <TrendingUp />
                     </Button>
                 </div>
-                <span className="text-sm text-muted-foreground">
-                    {localRange.join(", ")}
-                </span>
+                <span className="text-sm text-muted-foreground">{localRange.join(', ')}</span>
             </div>
             <Slider
                 disabled={disabled}
@@ -66,19 +64,19 @@ export default function RatingRange({
                 step={50}
                 className="w-full"
                 onValueChange={([x, y]) => {
-                    if (x === undefined || y === undefined) return
-                    setLocalRange([x, y])
+                    if (x === undefined || y === undefined) return;
+                    setLocalRange([x, y]);
                 }}
                 onValueCommit={([x, y]) => {
-                    if (x === undefined || y === undefined) return
+                    if (x === undefined || y === undefined) return;
 
                     if (validateRatingRange(x, y)) {
-                        onRangeChange([x, y])
+                        onRangeChange([x, y]);
                     } else {
-                        setLocalRange(range)
+                        setLocalRange(range);
                     }
                 }}
             />
         </div>
-    )
+    );
 }

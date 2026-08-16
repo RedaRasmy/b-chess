@@ -1,17 +1,17 @@
-import { cn } from "@/lib/utils"
-import { Piece } from "chess.js"
-import Image from "next/image"
+import { cn } from '@/lib/utils';
+import { Piece } from 'chess.js';
+import Image from 'next/image';
 
 export default function ChessPieceImage({
     piece,
     className,
     size,
 }: {
-    piece: Piece
-    className?: string
-    size?: number
+    piece: Piece;
+    className?: string;
+    size?: number;
 }) {
-    const { color, type } = piece
+    const { color, type } = piece;
 
     return (
         <Image
@@ -25,5 +25,5 @@ export default function ChessPieceImage({
             src={`/images/chess-pieces/${color}${type}.png`}
             className={cn(`select-none`, className)}
         />
-    )
+    );
 }

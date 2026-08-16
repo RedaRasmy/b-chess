@@ -1,50 +1,50 @@
-"use client"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import SelectTimer from "@/features/game/components/select-timer"
-import RatingRange from "@/features/multiplayer/components/rating-range"
-import { useSocket } from "@/features/multiplayer/hooks/use-socket"
-import { useSocketListener } from "@/features/multiplayer/hooks/use-socket-listener"
-import { fetchIsMatching } from "@/features/multiplayer/requests"
-import { TimerOption } from "@bchess/shared"
-import { useQuery } from "@tanstack/react-query"
-import { Swords, Timer } from "lucide-react"
-import { useEffect, useState } from "react"
+'use client';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import SelectTimer from '@/features/game/components/select-timer';
+import RatingRange from '@/features/multiplayer/components/rating-range';
+import { useSocket } from '@/features/multiplayer/hooks/use-socket';
+import { useSocketListener } from '@/features/multiplayer/hooks/use-socket-listener';
+import { fetchIsMatching } from '@/features/multiplayer/requests';
+import { TimerOption } from '@bchess/shared';
+import { useQuery } from '@tanstack/react-query';
+import { Swords, Timer } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 export default function Page() {
-    const [isMatching, setIsMatching] = useState(false)
-    const socket = useSocket()
-    const [timer, setTimer] = useState<TimerOption>("rapid 10+0")
-    const [range, setRange] = useState<[number, number]>([-100, 100])
+    const [isMatching, setIsMatching] = useState(false);
+    const socket = useSocket();
+    const [timer, setTimer] = useState<TimerOption>('rapid 10+0');
+    const [range, setRange] = useState<[number, number]>([-100, 100]);
 
     function handleStart() {
-        socket.emit("join_queue", {
+        socket.emit('join_queue', {
             timer,
             min: range[0],
             max: range[1],
-        })
-        setIsMatching(true)
+        });
+        setIsMatching(true);
     }
 
     function handleCancel() {
-        socket.emit("cancel_match")
-        setIsMatching(false)
+        socket.emit('cancel_match');
+        setIsMatching(false);
     }
 
     const { data, isPending } = useQuery({
-        queryKey: ["isMatching"],
+        queryKey: ['isMatching'],
         queryFn: fetchIsMatching,
-    })
+    });
 
     useEffect(() => {
         if (!isPending && data !== undefined) {
-            setIsMatching(data)
+            setIsMatching(data);
         }
-    }, [data, isPending])
+    }, [data, isPending]);
 
-    useSocketListener("queue_joined", () => {
-        console.log("queue joined")
-    })
+    useSocketListener('queue_joined', () => {
+        console.log('queue joined');
+    });
 
     return (
         <div className="grid py-2 items-center overflow-auto w-full px-2 lg:px-10 xl:px-15 h-full">
@@ -83,7 +83,7 @@ export default function Page() {
                                     <Button
                                         className="w-full lg:text-xl max-w-m py-7 lg:py-10 cursor-pointer"
                                         onClick={handleCancel}
-                                        variant={"outline"}
+                                        variant={'outline'}
                                         disabled={isPending}
                                     >
                                         Cancel
@@ -92,7 +92,7 @@ export default function Page() {
                                     <Button
                                         className="w-full lg:text-xl max-w-m py-7 lg:py-10 cursor-pointer"
                                         onClick={handleStart}
-                                        variant={"destructive"}
+                                        variant={'destructive'}
                                         disabled={isPending}
                                     >
                                         Start
@@ -104,5 +104,5 @@ export default function Page() {
                 </CardContent>
             </Card>
         </div>
-    )
+    );
 }

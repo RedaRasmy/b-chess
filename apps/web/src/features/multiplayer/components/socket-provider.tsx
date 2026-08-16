@@ -1,33 +1,31 @@
-import { SocketContext } from "@/features/multiplayer/socket-context"
-import type { ClientSocket } from "@/features/multiplayer/types"
-import { useEffect, useState, type ReactNode } from "react"
-import { io } from "socket.io-client"
+import { SocketContext } from '@/features/multiplayer/socket-context';
+import type { ClientSocket } from '@/features/multiplayer/types';
+import { useEffect, useState, type ReactNode } from 'react';
+import { io } from 'socket.io-client';
 
 export default function SocketProvider({ children }: { children: ReactNode }) {
     const [socket] = useState<ClientSocket>(() =>
         io(process.env.NEXT_PUBLIC_BACKEND_API_URL, {
             withCredentials: true,
         }),
-    )
+    );
 
     useEffect(() => {
-        const onConnect = () => console.log("Connected")
-        const onDisconnect = (reason: string) =>
-            console.warn("Disconnected:", reason)
-        const onConnectError = (error: Error) =>
-            console.error("Connection Error:", error)
+        const onConnect = () => console.log('Connected');
+        const onDisconnect = (reason: string) => console.warn('Disconnected:', reason);
+        const onConnectError = (error: Error) => console.error('Connection Error:', error);
 
-        socket.on("connect", onConnect)
-        socket.on("disconnect", onDisconnect)
-        socket.on("connect_error", onConnectError)
+        socket.on('connect', onConnect);
+        socket.on('disconnect', onDisconnect);
+        socket.on('connect_error', onConnectError);
 
         return () => {
-            socket.off("connect", onConnect)
-            socket.off("disconnect", onDisconnect)
-            socket.off("connect_error", onConnectError)
-            socket.disconnect()
-        }
-    }, [socket])
+            socket.off('connect', onConnect);
+            socket.off('disconnect', onDisconnect);
+            socket.off('connect_error', onConnectError);
+            socket.disconnect();
+        };
+    }, [socket]);
 
     return (
         <SocketContext.Provider
@@ -37,5 +35,5 @@ export default function SocketProvider({ children }: { children: ReactNode }) {
         >
             {children}
         </SocketContext.Provider>
-    )
+    );
 }

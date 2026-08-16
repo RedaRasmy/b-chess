@@ -1,56 +1,52 @@
-"use client"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Bot, Timer } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
-import { Slider } from "@/components/ui/slider"
-import { useBotStore } from "@/features/bot/store"
-import SelectColor from "@/features/bot/components/select-color"
-import { useState } from "react"
-import { ColorOption } from "@/features/bot/types"
-import SelectTimer from "@/features/game/components/select-timer"
-import { useRouter } from "next/navigation"
-import { authClient } from "@/lib/auth-client"
-import { parseTimerOption, TimerOption } from "@bchess/shared"
+'use client';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Bot, Timer } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Slider } from '@/components/ui/slider';
+import { useBotStore } from '@/features/bot/store';
+import SelectColor from '@/features/bot/components/select-color';
+import { useState } from 'react';
+import { ColorOption } from '@/features/bot/types';
+import SelectTimer from '@/features/game/components/select-timer';
+import { useRouter } from 'next/navigation';
+import { authClient } from '@/lib/auth-client';
+import { parseTimerOption, TimerOption } from '@bchess/shared';
 
 export default function BotOptions() {
-    const { startBotGame } = useBotStore()
-    const [level, setLevel] = useState(1)
-    const [playerColor, setPlayerColor] = useState<ColorOption>("white")
-    const [timer, setTimer] = useState<TimerOption | null>("rapid 10+0")
-    const router = useRouter()
-    const { data: session } = authClient.useSession()
-    const user = session?.user
+    const { startBotGame } = useBotStore();
+    const [level, setLevel] = useState(1);
+    const [playerColor, setPlayerColor] = useState<ColorOption>('white');
+    const [timer, setTimer] = useState<TimerOption | null>('rapid 10+0');
+    const router = useRouter();
+    const { data: session } = authClient.useSession();
+    const user = session?.user;
     const player = user
         ? {
               id: user.id,
               avatar: user.image ?? null,
-              username: user.username ?? "You",
+              username: user.username ?? 'You',
               status: null,
           }
-        : undefined
+        : undefined;
 
     function handleStart() {
         const color =
-            playerColor === "random"
-                ? Math.random() > 0.5
-                    ? "white"
-                    : "black"
-                : playerColor
+            playerColor === 'random' ? (Math.random() > 0.5 ? 'white' : 'black') : playerColor;
 
         const timeControl = timer
             ? {
                   initial: parseTimerOption(timer).base * 1000,
                   increment: parseTimerOption(timer).plus * 1000,
               }
-            : undefined
+            : undefined;
         startBotGame({
             timeControl,
             difficulty: level,
             playerColor: color,
             player,
-        })
-        router.push("/bot/play")
+        });
+        router.push('/bot/play');
     }
 
     return (
@@ -68,16 +64,10 @@ export default function BotOptions() {
                             <h1 className="text-xl items-center font-semibold mb-4 lg:mb-6 flex gap-2 ">
                                 <Timer />
                                 Timer
-                                <span className="text-xs text-muted-foreground">
-                                    (optional)
-                                </span>
+                                <span className="text-xs text-muted-foreground">(optional)</span>
                             </h1>
                             <div className="flex items-center justify-center w-full flex-col">
-                                <SelectTimer
-                                    className="w-full"
-                                    value={timer}
-                                    onChange={setTimer}
-                                />
+                                <SelectTimer className="w-full" value={timer} onChange={setTimer} />
                             </div>
                         </div>
                         <div className="flex flex-col justify-center items-center gap-5 w-full md:space-y-3 ">
@@ -85,9 +75,7 @@ export default function BotOptions() {
                                 <div className="flex flex-col lg:items-center justify-center w-full max-w-[min(100%,400px)">
                                     <h1 className="text-xl text-nowrap items-center justify-between font-semibold mb-4 flex gap-2 w-full ">
                                         Difficulty Level
-                                        <Badge className="h-4 w-20 rounded-lg">
-                                            Level {level}
-                                        </Badge>
+                                        <Badge className="h-4 w-20 rounded-lg">Level {level}</Badge>
                                     </h1>
                                     <Slider
                                         max={20}
@@ -101,9 +89,7 @@ export default function BotOptions() {
                                         Your Color
                                     </h1>
                                     <SelectColor
-                                        onChange={(color) =>
-                                            setPlayerColor(color)
-                                        }
+                                        onChange={(color) => setPlayerColor(color)}
                                         value={playerColor}
                                     />
                                 </div>
@@ -112,7 +98,7 @@ export default function BotOptions() {
                                 <Button
                                     className="w-full lg:text-xl max-w-m py-7 lg:py-10  cursor-pointer"
                                     onClick={handleStart}
-                                    variant={"destructive"}
+                                    variant={'destructive'}
                                 >
                                     Start
                                 </Button>
@@ -122,5 +108,5 @@ export default function BotOptions() {
                 </CardContent>
             </Card>
         </div>
-    )
+    );
 }

@@ -1,6 +1,6 @@
-import { useGameStore } from "@/features/game/game-store"
-import { useSocketListener } from "@/features/multiplayer/hooks/use-socket-listener"
-import { useState } from "react"
+import { useGameStore } from '@/features/game/game-store';
+import { useSocketListener } from '@/features/multiplayer/hooks/use-socket-listener';
+import { useState } from 'react';
 import {
     Dialog,
     DialogClose,
@@ -9,37 +9,35 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { useSocket } from "@/features/multiplayer/hooks/use-socket"
-import { getColor } from "@bchess/shared"
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { useSocket } from '@/features/multiplayer/hooks/use-socket';
+import { getColor } from '@bchess/shared';
 
 export default function DrawRequestDialog() {
-    const [isOpen, setIsOpen] = useState(false)
-    const playerColor = useGameStore((s) => s.players?.playerColor)
-    const socket = useSocket()
+    const [isOpen, setIsOpen] = useState(false);
+    const playerColor = useGameStore((s) => s.players?.playerColor);
+    const socket = useSocket();
 
-    useSocketListener("draw_request", ({ requestDraw }) => {
-        const open = !!playerColor && requestDraw !== getColor(playerColor)
+    useSocketListener('draw_request', ({ requestDraw }) => {
+        const open = !!playerColor && requestDraw !== getColor(playerColor);
 
-        setIsOpen(open)
-    })
+        setIsOpen(open);
+    });
 
     function handleAccept() {
-        socket.emit("accept_draw")
+        socket.emit('accept_draw');
     }
 
     function handleReject() {
-        socket.emit("reject_draw")
+        socket.emit('reject_draw');
     }
 
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogContent className="sm:max-w-sm">
                 <DialogHeader>
-                    <DialogTitle>
-                        Your opponent is asking for a draw
-                    </DialogTitle>
+                    <DialogTitle>Your opponent is asking for a draw</DialogTitle>
                     <DialogDescription>You want to accept?</DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
@@ -49,12 +47,12 @@ export default function DrawRequestDialog() {
                         </Button>
                     </DialogClose>
                     <DialogClose asChild>
-                        <Button onClick={handleAccept} variant={"destructive"}>
+                        <Button onClick={handleAccept} variant={'destructive'}>
                             Draw
                         </Button>
                     </DialogClose>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
-    )
+    );
 }

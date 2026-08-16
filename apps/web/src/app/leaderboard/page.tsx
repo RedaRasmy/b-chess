@@ -1,5 +1,5 @@
-import { PlayerRow } from "@/features/players/components/player-row"
-import { fetchTopPlayers } from "@/features/players/requests"
+import { PlayerRow } from '@/features/players/components/player-row';
+import { fetchTopPlayers } from '@/features/players/requests';
 import {
     Table,
     TableBody,
@@ -7,19 +7,17 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from "@/components/ui/table"
+} from '@/components/ui/table';
 
 export default async function LeaderboardPage() {
-    const players = await fetchTopPlayers({})
+    const players = await fetchTopPlayers({});
 
     return (
         <div className="w-full flex justify-center px-3 py-10 sm:py-16">
             <div className="w-full max-w-xl">
                 {/* Header */}
                 <div className="mb-7 px-1">
-                    <h1 className="mt-1.5 text-3xl font-semibold">
-                        Leaderboard
-                    </h1>
+                    <h1 className="mt-1.5 text-3xl font-semibold">Leaderboard</h1>
                 </div>
 
                 {/* Table */}
@@ -41,18 +39,11 @@ export default async function LeaderboardPage() {
                         <TableBody>
                             {players.length > 0 ? (
                                 players.map((player, i) => (
-                                    <PlayerRow
-                                        key={player.userId}
-                                        player={player}
-                                        rank={i + 1}
-                                    />
+                                    <PlayerRow key={player.userId} player={player} rank={i + 1} />
                                 ))
                             ) : (
                                 <TableRow>
-                                    <TableCell
-                                        colSpan={3}
-                                        className="text-center text-sm py-10"
-                                    >
+                                    <TableCell colSpan={3} className="text-center text-sm py-10">
                                         No ranked players yet.
                                     </TableCell>
                                 </TableRow>
@@ -62,5 +53,5 @@ export default async function LeaderboardPage() {
                 </div>
             </div>
         </div>
-    )
+    );
 }

@@ -1,42 +1,40 @@
-import type { Metadata } from "next"
-import { Geist, Geist_Mono, Inter } from "next/font/google"
-import "./globals.css"
-import { Providers } from "@/app/providers"
-import { SidebarProvider } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
-import Header from "@/components/header"
-import { Toaster } from "@/components/ui/sonner"
-import GlobalListeners from "@/features/multiplayer/components/global-listeners"
-import { AppBootstrap } from "@/components/app-bootstrap"
-import UserProvider from "@/features/profile/components/user-provider"
+import type { Metadata } from 'next';
+import { Geist, Geist_Mono, Inter } from 'next/font/google';
+import './globals.css';
+import { Providers } from '@/app/providers';
+import { SidebarProvider } from '@/components/ui/sidebar';
+import { AppSidebar } from '@/components/app-sidebar';
+import Header from '@/components/header';
+import { Toaster } from '@/components/ui/sonner';
+import GlobalListeners from '@/features/multiplayer/components/global-listeners';
+import { AppBootstrap } from '@/components/app-bootstrap';
+import UserProvider from '@/features/profile/components/user-provider';
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
+const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
 const geistSans = Geist({
-    variable: "--font-geist-sans",
-    subsets: ["latin"],
-})
+    variable: '--font-geist-sans',
+    subsets: ['latin'],
+});
 
 const geistMono = Geist_Mono({
-    variable: "--font-geist-mono",
-    subsets: ["latin"],
-})
+    variable: '--font-geist-mono',
+    subsets: ['latin'],
+});
 
 export const metadata: Metadata = {
-    title: "BChess",
-    description: "",
-}
+    title: 'BChess',
+    description: '',
+};
 
 export default function RootLayout({
     children,
 }: Readonly<{
-    children: React.ReactNode
+    children: React.ReactNode;
 }>) {
     return (
         <html lang="en" className={inter.variable}>
-            <body
-                className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-            >
+            <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
                 <Providers>
                     <SidebarProvider>
                         <UserProvider redirect={false}>
@@ -56,5 +54,5 @@ export default function RootLayout({
                 <Toaster />
             </body>
         </html>
-    )
+    );
 }

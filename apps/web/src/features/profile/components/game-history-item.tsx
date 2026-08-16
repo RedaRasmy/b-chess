@@ -1,66 +1,60 @@
-import PlayerAvatar from "@/features/profile/components/player-avatar"
-import { cn } from "@/lib/utils"
-import { formatMs, GameSummary } from "@bchess/shared"
-import { Clock, Crown, Equal, Swords, X } from "lucide-react"
-import Link from "next/link"
+import PlayerAvatar from '@/features/profile/components/player-avatar';
+import { cn } from '@/lib/utils';
+import { formatMs, GameSummary } from '@bchess/shared';
+import { Clock, Crown, Equal, Swords, X } from 'lucide-react';
+import Link from 'next/link';
 
 const resultConfig = {
     win: {
-        label: "Win",
+        label: 'Win',
         icon: Crown,
-        accent: "bg-emerald-500",
-        text: "text-emerald-600 dark:text-emerald-400",
-        iconBg: "bg-emerald-500/10",
+        accent: 'bg-emerald-500',
+        text: 'text-emerald-600 dark:text-emerald-400',
+        iconBg: 'bg-emerald-500/10',
     },
     loss: {
-        label: "Loss",
+        label: 'Loss',
         icon: X,
-        accent: "bg-rose-500",
-        text: "text-rose-600 dark:text-rose-400",
-        iconBg: "bg-rose-500/10",
+        accent: 'bg-rose-500',
+        text: 'text-rose-600 dark:text-rose-400',
+        iconBg: 'bg-rose-500/10',
     },
     draw: {
-        label: "Draw",
+        label: 'Draw',
         icon: Equal,
-        accent: "bg-muted-foreground/40",
-        text: "text-muted-foreground",
-        iconBg: "bg-muted",
+        accent: 'bg-muted-foreground/40',
+        text: 'text-muted-foreground',
+        iconBg: 'bg-muted',
     },
-} as const
+} as const;
 
 function formatRatingDiff(diff: number) {
-    if (diff === 0) return "0"
-    return diff > 0 ? `+${diff}` : `${diff}`
+    if (diff === 0) return '0';
+    return diff > 0 ? `+${diff}` : `${diff}`;
 }
 
 export function GameHistoryItem({ game }: { game: GameSummary }) {
-    const config = resultConfig[game.result]
-    const Icon = config.icon
+    const config = resultConfig[game.result];
+    const Icon = config.icon;
 
     const diffColor =
         game.ratingDiff > 0
-            ? "text-emerald-600 dark:text-emerald-400"
+            ? 'text-emerald-600 dark:text-emerald-400'
             : game.ratingDiff < 0
-              ? "text-rose-600 dark:text-rose-400"
-              : "text-muted-foreground"
+              ? 'text-rose-600 dark:text-rose-400'
+              : 'text-muted-foreground';
 
     return (
         <Link href={`review/${game.id}`}>
             <div className="group relative flex items-center gap-4 overflow-hidden rounded-lg border bg-card py-3 pl-4 pr-4 transition-colors hover:bg-accent/50">
                 {/* result accent bar */}
                 <span
-                    className={cn(
-                        "absolute left-0 top-0 h-full w-1",
-                        config.accent,
-                    )}
+                    className={cn('absolute left-0 top-0 h-full w-1', config.accent)}
                     aria-hidden="true"
                 />
 
                 {/* avatar */}
-                <PlayerAvatar
-                    username={game.opponent.username}
-                    avatar={game.opponent.avatar}
-                />
+                <PlayerAvatar username={game.opponent.username} avatar={game.opponent.avatar} />
 
                 {/* main content */}
                 <div className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -89,19 +83,14 @@ export function GameHistoryItem({ game }: { game: GameSummary }) {
                 </div>
 
                 {/* rating diff */}
-                <span
-                    className={cn(
-                        "shrink-0 text-xs font-semibold tabular-nums",
-                        diffColor,
-                    )}
-                >
+                <span className={cn('shrink-0 text-xs font-semibold tabular-nums', diffColor)}>
                     {formatRatingDiff(game.ratingDiff)}
                 </span>
 
                 {/* result */}
                 <div
                     className={cn(
-                        "flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold",
+                        'flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold',
                         config.iconBg,
                         config.text,
                     )}
@@ -111,5 +100,5 @@ export function GameHistoryItem({ game }: { game: GameSummary }) {
                 </div>
             </div>
         </Link>
-    )
+    );
 }

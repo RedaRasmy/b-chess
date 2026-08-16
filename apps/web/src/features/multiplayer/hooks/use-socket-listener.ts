@@ -1,25 +1,25 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useSocket } from "@/features/multiplayer/hooks/use-socket"
-import type { Args, ServerEvent } from "@bchess/shared"
-import { useEffect, useEffectEvent } from "react"
+import { useSocket } from '@/features/multiplayer/hooks/use-socket';
+import type { Args, ServerEvent } from '@bchess/shared';
+import { useEffect, useEffectEvent } from 'react';
 
 export function useSocketListener<T extends ServerEvent>(
     event: T,
     handler: (...args: Args<T>) => void,
 ) {
-    const socket = useSocket()
+    const socket = useSocket();
 
     const onEvent = useEffectEvent((...args: Args<T>) => {
-        handler(...args)
-    })
+        handler(...args);
+    });
 
     useEffect(() => {
-        if (!socket) return
+        if (!socket) return;
 
-        socket.on(event, onEvent as any)
+        socket.on(event, onEvent as any);
 
         return () => {
-            socket.off(event, onEvent as any)
-        }
-    }, [socket, event])
+            socket.off(event, onEvent as any);
+        };
+    }, [socket, event]);
 }

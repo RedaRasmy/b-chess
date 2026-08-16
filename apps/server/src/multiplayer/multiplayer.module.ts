@@ -20,7 +20,7 @@ import { TimerService } from './timer.service';
         MatchmakingService,
         MoveService,
         DrawService,
-        TimerService
+        TimerService,
     ],
     controllers: [MultiplayerController],
 })

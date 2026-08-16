@@ -1,42 +1,42 @@
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { LogoutButton } from "@/features/auth/components/logout-button"
-import { Handshake, Swords, Trophy } from "lucide-react"
-import { Stats } from "@bchess/shared"
-import { cn } from "@/lib/utils"
-import PlayerAvatar from "@/features/profile/components/player-avatar"
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { LogoutButton } from '@/features/auth/components/logout-button';
+import { Handshake, Swords, Trophy } from 'lucide-react';
+import { Stats } from '@bchess/shared';
+import { cn } from '@/lib/utils';
+import PlayerAvatar from '@/features/profile/components/player-avatar';
 
 const statConfig = {
     wins: {
-        label: "Wins",
+        label: 'Wins',
         icon: Trophy,
-        text: "text-emerald-600 dark:text-emerald-400",
-        iconBg: "bg-emerald-500/10",
+        text: 'text-emerald-600 dark:text-emerald-400',
+        iconBg: 'bg-emerald-500/10',
     },
     draws: {
-        label: "Draws",
+        label: 'Draws',
         icon: Handshake,
-        text: "text-amber-600 dark:text-amber-400",
-        iconBg: "bg-amber-500/10",
+        text: 'text-amber-600 dark:text-amber-400',
+        iconBg: 'bg-amber-500/10',
     },
     losses: {
-        label: "Losses",
+        label: 'Losses',
         icon: Swords,
-        text: "text-rose-600 dark:text-rose-400",
-        iconBg: "bg-rose-500/10",
+        text: 'text-rose-600 dark:text-rose-400',
+        iconBg: 'bg-rose-500/10',
     },
-} as const
+} as const;
 
 type Props = {
-    username: string
-    avatar: string | null | undefined
-    stats: Stats
-}
+    username: string;
+    avatar: string | null | undefined;
+    stats: Stats;
+};
 
 export default function ProfileHeader({ username, avatar, stats }: Props) {
-    const { wins, losses, draws, rating } = stats
+    const { wins, losses, draws, rating } = stats;
 
-    const totalGames = wins + losses + draws
-    const winRate = totalGames > 0 ? Math.round((wins / totalGames) * 100) : 0
+    const totalGames = wins + losses + draws;
+    const winRate = totalGames > 0 ? Math.round((wins / totalGames) * 100) : 0;
 
     return (
         <Card className="w-full space-y-5 px-6 py-5 lg:w-xl xl:w-2xl">
@@ -45,12 +45,9 @@ export default function ProfileHeader({ username, avatar, stats }: Props) {
                     <div className="flex items-center gap-3">
                         <PlayerAvatar username={username} avatar={avatar} />
                         <div className="flex flex-col">
-                            <h1 className="text-xl font-semibold leading-tight">
-                                {username}
-                            </h1>
+                            <h1 className="text-xl font-semibold leading-tight">{username}</h1>
                             <span className="text-xs text-muted-foreground">
-                                {totalGames} game{totalGames === 1 ? "" : "s"}{" "}
-                                played
+                                {totalGames} game{totalGames === 1 ? '' : 's'} played
                             </span>
                         </div>
                     </div>
@@ -62,9 +59,7 @@ export default function ProfileHeader({ username, avatar, stats }: Props) {
                 {/* rating */}
                 <div className="flex items-center justify-between rounded-lg border bg-muted/30 px-4 py-3">
                     <div className="flex flex-col">
-                        <span className="text-xs font-medium text-muted-foreground">
-                            Rating
-                        </span>
+                        <span className="text-xs font-medium text-muted-foreground">Rating</span>
                         <span className="text-3xl font-bold tabular-nums leading-tight">
                             {rating}
                         </span>
@@ -73,44 +68,33 @@ export default function ProfileHeader({ username, avatar, stats }: Props) {
 
                 {/* win / draw / loss grid */}
                 <div className="grid grid-cols-3 divide-x rounded-lg border">
-                    {(["wins", "draws", "losses"] as const).map((key) => {
-                        const config = statConfig[key]
-                        const Icon = config.icon
+                    {(['wins', 'draws', 'losses'] as const).map((key) => {
+                        const config = statConfig[key];
+                        const Icon = config.icon;
                         return (
-                            <div
-                                key={key}
-                                className="flex flex-col items-center gap-1.5 py-3"
-                            >
+                            <div key={key} className="flex flex-col items-center gap-1.5 py-3">
                                 <div
                                     className={cn(
-                                        "flex h-8 w-8 items-center justify-center rounded-full",
+                                        'flex h-8 w-8 items-center justify-center rounded-full',
                                         config.iconBg,
                                     )}
                                 >
-                                    <Icon
-                                        className={cn("h-4 w-4", config.text)}
-                                    />
+                                    <Icon className={cn('h-4 w-4', config.text)} />
                                 </div>
                                 <span className="text-lg font-semibold tabular-nums leading-none">
                                     {stats[key]}
                                 </span>
-                                <p className="text-xs text-muted-foreground">
-                                    {config.label}
-                                </p>
+                                <p className="text-xs text-muted-foreground">{config.label}</p>
                             </div>
-                        )
+                        );
                     })}
                 </div>
 
                 {/* win rate bar */}
                 <div className="space-y-1.5">
                     <div className="flex items-center justify-between text-xs">
-                        <span className="font-medium text-muted-foreground">
-                            Win rate
-                        </span>
-                        <span className="font-semibold tabular-nums">
-                            {winRate}%
-                        </span>
+                        <span className="font-medium text-muted-foreground">Win rate</span>
+                        <span className="font-semibold tabular-nums">{winRate}%</span>
                     </div>
                     <div className="flex h-2 w-full overflow-hidden rounded-full bg-muted">
                         <div
@@ -135,5 +119,5 @@ export default function ProfileHeader({ username, avatar, stats }: Props) {
                 </div>
             </CardContent>
         </Card>
-    )
+    );
 }

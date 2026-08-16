@@ -1,1 +1,1 @@
-export type ColorOption = "white" | "random" | "black"
+export type ColorOption = 'white' | 'random' | 'black';

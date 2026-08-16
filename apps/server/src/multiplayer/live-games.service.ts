@@ -12,10 +12,9 @@ export class LiveGamesService {
     }
 
     createGame(id: string, moves?: MoveType[]) {
-        
         const game = new LiveGame(moves);
         this.games.set(id, game);
-        
+
         this.logger.log('New game inserted to memory');
         this.logger.log(`Games in memory: ${this.size()}`);
 
