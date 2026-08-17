@@ -1,4 +1,5 @@
 {
+    "extends": "@bchess/ts-config/base.json",
     "compilerOptions": {
         "module": "nodenext",
         "moduleResolution": "nodenext",
@@ -20,7 +21,6 @@
         "noImplicitAny": false,
         "strictBindCallApply": false,
         "noFallthroughCasesInSwitch": false,
-        "noUncheckedIndexedAccess": true,
         "types": ["jest"]
     }
 }

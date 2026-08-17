@@ -19,9 +19,11 @@
     "scripts": {
         "build": "tsup src/index.ts --format cjs,esm --dts",
         "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+        "lint": "tsc",
         "test": "jest"
     },
     "devDependencies": {
+        "@bchess/ts-config": "workspace:*",
         "@babel/core": "^8.0.1",
         "@babel/preset-env": "^8.0.2",
         "@babel/preset-typescript": "^8.0.1",
