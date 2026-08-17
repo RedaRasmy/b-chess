@@ -2,11 +2,16 @@
 import LoadingPage from '@/components/loading-page';
 import { authClient } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
-import { ReactNode, useEffect } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
+    const [isMounted, setIsMounted] = useState(false);
     const { data: session, isPending } = authClient.useSession();
     const router = useRouter();
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
 
     useEffect(() => {
         if (!isPending && session) {
@@ -14,7 +19,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
         }
     }, [session, isPending, router]);
 
-    if (isPending) {
+    if (isPending || !isMounted) {
         return <LoadingPage />;
     }
 
