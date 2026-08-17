@@ -69,12 +69,9 @@ export class TimerService implements OnModuleInit {
         // Validation
 
         const timeLeft =
-            playingGame.currentTurn == 'w'
-                ? playingGame.whiteTimeLeft
-                : playingGame.blackTimeLeft;
+            playingGame.currentTurn == 'w' ? playingGame.whiteTimeLeft : playingGame.blackTimeLeft;
 
-        const lastTimestamp =
-            playingGame.lastMoveAt ?? playingGame.gameStartedAt;
+        const lastTimestamp = playingGame.lastMoveAt ?? playingGame.gameStartedAt;
 
         const isFinished = lastTimestamp + timeLeft <= Date.now();
 
@@ -85,8 +82,7 @@ export class TimerService implements OnModuleInit {
         return await this.db.transaction(async (tx) => {
             // Update Game
 
-            const result =
-                playingGame.currentTurn === 'w' ? 'black_won' : 'white_won';
+            const result = playingGame.currentTurn === 'w' ? 'black_won' : 'white_won';
 
             const elo = calcElo({
                 whiteRating: playingGame.whiteRating,

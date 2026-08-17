@@ -16,15 +16,11 @@ export class MatchmakingService {
 
     async getMatch(userId: string) {
         return await this.db.query.games.findFirst({
-            where: (games) =>
-                and(eq(games.status, 'matching'), eq(games.whiteId, userId)),
+            where: (games) => and(eq(games.status, 'matching'), eq(games.whiteId, userId)),
         });
     }
 
-    async findOrCreateMatch(
-        { timer, min, max }: CreateGameDto,
-        userId: string,
-    ) {
+    async findOrCreateMatch({ timer, min, max }: CreateGameDto, userId: string) {
         const alreadyCreatedMatch = await this.getMatch(userId);
 
         if (alreadyCreatedMatch) {
@@ -48,11 +44,7 @@ export class MatchmakingService {
                     eq(games.timer, timer),
                     ne(games.whiteId, userId),
                     between(games.whiteRating, minRating, maxRating),
-                    between(
-                        sql`${userRating}`,
-                        games.minRating,
-                        games.maxRating,
-                    ),
+                    between(sql`${userRating}`, games.minRating, games.maxRating),
                 ),
         });
 
@@ -98,8 +90,6 @@ export class MatchmakingService {
     async cancelMatch(userId: string) {
         await this.db
             .delete(games)
-            .where(
-                and(eq(games.status, 'matching'), eq(games.whiteId, userId)),
-            );
+            .where(and(eq(games.status, 'matching'), eq(games.whiteId, userId)));
     }
 }

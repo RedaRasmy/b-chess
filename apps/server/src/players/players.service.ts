@@ -81,10 +81,7 @@ export class PlayersService {
             .where(eq(userStats.userId, blackId));
     }
 
-    async getTopPlayers(
-        page: number = 1,
-        limit: number = 10,
-    ): Promise<TopPlayer[]> {
+    async getTopPlayers(page: number = 1, limit: number = 10): Promise<TopPlayer[]> {
         const players = await this.db
             .select({
                 userId: user.id,

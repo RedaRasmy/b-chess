@@ -1,15 +1,6 @@
-import {
-    Reason,
-    games,
-    PromotionPiece,
-    moves,
-    TimerOption,
-    userStats,
-    Status,
-} from '@bchess/db/tables';
-import { Chess, Square } from 'chess.js';
+import { Reason, games, moves, TimerOption, userStats, Status } from '@bchess/db/tables';
 import { Narrow, Prettify, Update } from '../types';
-import { PlayerConnectionState, PlayerStatus } from '../players';
+import { PlayerStatus } from '../players';
 
 // Selects
 

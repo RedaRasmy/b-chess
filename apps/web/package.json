@@ -39,6 +39,7 @@
     },
     "devDependencies": {
         "@bchess/ts-config": "workspace:*",
+        "@bchess/eslint-config": "workspace:*",
         "@tailwindcss/postcss": "^4",
         "@types/howler": "^2.2.12",
         "@types/node": "^20",

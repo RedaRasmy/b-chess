@@ -8,10 +8,7 @@ export class PlayersController {
 
     @Get('top')
     @OptionalAuth()
-    async getTopPlayers(
-        @Query('page') page: number,
-        @Query('limit') limit: number,
-    ) {
+    async getTopPlayers(@Query('page') page: number, @Query('limit') limit: number) {
         return await this.playersService.getTopPlayers(page, limit);
     }
 }

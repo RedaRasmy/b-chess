@@ -2,12 +2,7 @@ import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { DATABASE_CONNECTION } from '../database/database.module';
 import type { Database } from '@bchess/db';
 import { PlayersService } from '../players/players.service';
-import {
-    calcElo,
-    DrawingGame,
-    FinishedGame,
-    PlayingGame,
-} from '@bchess/shared';
+import { calcElo, DrawingGame, FinishedGame, PlayingGame } from '@bchess/shared';
 import { GamesService } from '../games/games.service';
 import { games } from '@bchess/db/tables';
 import { and, eq, isNotNull, or } from 'drizzle-orm';
@@ -21,10 +16,7 @@ export class DrawService {
         private readonly gamesService: GamesService,
     ) {}
 
-    async requestDraw(
-        gameId: string,
-        userId: string,
-    ): Promise<DrawingGame | null> {
+    async requestDraw(gameId: string, userId: string): Promise<DrawingGame | null> {
         const playingGame = await this.gamesService.getPlayingGame(gameId);
 
         if (!playingGame) return null;
@@ -35,9 +27,7 @@ export class DrawService {
         const now = Date.now();
         const COOLDOWN_MS = 30_000;
 
-        const isCooldown = requestDrawAt
-            ? requestDrawAt + COOLDOWN_MS < now
-            : false;
+        const isCooldown = requestDrawAt ? requestDrawAt + COOLDOWN_MS < now : false;
 
         if (playingGame.requestDraw || isCooldown) return null;
 

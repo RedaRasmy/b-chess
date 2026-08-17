@@ -33,9 +33,7 @@ import { ThrottlerWsExceptionFilter } from './throttler-ws-exception.filter';
 @UseGuards(WsThrottlerGuard)
 @UseFilters(ThrottlerWsExceptionFilter)
 @WebSocketGateway({ cors: { origin: true, credentials: true } })
-export class MultiplayerGateway
-    implements OnGatewayConnection, OnGatewayDisconnect
-{
+export class MultiplayerGateway implements OnGatewayConnection, OnGatewayDisconnect {
     constructor(
         private readonly resignService: ResignService,
         private readonly gamesService: GamesService,
@@ -83,23 +81,14 @@ export class MultiplayerGateway
 
             if (!liveGame) {
                 const moves = await this.gamesService.getMoves(gameId);
-                const newLiveGame = this.liveGamesService.createGame(
-                    gameId,
-                    moves,
-                );
+                const newLiveGame = this.liveGamesService.createGame(gameId, moves);
                 if (playerColor === 'w') {
-                    const isBlackConnected = await isConnected(
-                        this.server,
-                        ongoingGame.blackId,
-                    );
+                    const isBlackConnected = await isConnected(this.server, ongoingGame.blackId);
                     isBlackConnected
                         ? newLiveGame.setBlackConnected()
                         : newLiveGame.setBlackDisconnected();
                 } else {
-                    const isWhiteConnected = await isConnected(
-                        this.server,
-                        ongoingGame.whiteId,
-                    );
+                    const isWhiteConnected = await isConnected(this.server, ongoingGame.whiteId);
                     isWhiteConnected
                         ? newLiveGame.setWhiteConnected()
                         : newLiveGame.setWhiteDisconnected();
@@ -112,10 +101,7 @@ export class MultiplayerGateway
                     ongoingGame.currentTurn === 'w'
                         ? ongoingGame.whiteTimeLeft
                         : ongoingGame.blackTimeLeft;
-                const ref =
-                    ongoingGame.lastMoveAt ??
-                    ongoingGame.gameStartedAt ??
-                    Date.now();
+                const ref = ongoingGame.lastMoveAt ?? ongoingGame.gameStartedAt ?? Date.now();
                 this.timerService.setDeadline(gameId, currentTimeLeft, ref);
             }
 
@@ -127,12 +113,10 @@ export class MultiplayerGateway
                 blackStatus: liveGame.getBlackStatus(),
             });
 
-            this.server
-                .to(Rooms.game(ongoingGame.id))
-                .emit('player_status_changed', {
-                    status: 'connected',
-                    color: playerColor,
-                });
+            this.server.to(Rooms.game(ongoingGame.id)).emit('player_status_changed', {
+                status: 'connected',
+                color: playerColor,
+            });
         }
     }
 
@@ -160,10 +144,7 @@ export class MultiplayerGateway
         @MessageBody() gameDto: CreateGameDto,
     ) {
         const userId = socket.data.user.id;
-        const result = await this.matchmakingService.findOrCreateMatch(
-            gameDto,
-            userId,
-        );
+        const result = await this.matchmakingService.findOrCreateMatch(gameDto, userId);
 
         const playerColor = result.game.whiteId === userId ? 'w' : 'b';
         const gameId = result.game.id;
@@ -175,9 +156,7 @@ export class MultiplayerGateway
 
         if (result.status === 'MATCH_FOUND') {
             result.players.forEach((userId) => {
-                this.server
-                    .to(Rooms.user(userId))
-                    .emit('game_found', result.game);
+                this.server.to(Rooms.user(userId)).emit('game_found', result.game);
             });
 
             const game = this.liveGamesService.createGame(result.game.id);
@@ -188,10 +167,7 @@ export class MultiplayerGateway
                 result.game.gameStartedAt ?? Date.now(),
             );
 
-            const isWhiteConnected = await isConnected(
-                this.server,
-                result.game.whiteId,
-            );
+            const isWhiteConnected = await isConnected(this.server, result.game.whiteId);
             if (!isWhiteConnected) {
                 game.setBlackDisconnected();
             }
@@ -226,20 +202,15 @@ export class MultiplayerGateway
         };
 
         if (ongoingGame.status === 'preparing') {
-            const newGame = await this.gamesService.setReady(
-                ongoingGame.id,
-                userId,
-            );
-            this.server
-                .to(Rooms.users(newGame.whiteId, newGame.blackId))
-                .emit('sync', {
-                    ...newGame,
-                    white: ongoingGame.white,
-                    black: ongoingGame.black,
-                    moves: ongoingGame.moves,
-                    whiteStatus: 'connected',
-                    blackStatus: 'connected',
-                });
+            const newGame = await this.gamesService.setReady(ongoingGame.id, userId);
+            this.server.to(Rooms.users(newGame.whiteId, newGame.blackId)).emit('sync', {
+                ...newGame,
+                white: ongoingGame.white,
+                black: ongoingGame.black,
+                moves: ongoingGame.moves,
+                whiteStatus: 'connected',
+                blackStatus: 'connected',
+            });
         } else {
             const liveGame = this.liveGamesService.getGame(ongoingGame.id);
 
@@ -281,9 +252,7 @@ export class MultiplayerGateway
             let liveGame = this.liveGamesService.getGame(gameId);
 
             if (!liveGame) {
-                this.logger.warn(
-                    `Game not found in memory, will get recreated..`,
-                );
+                this.logger.warn(`Game not found in memory, will get recreated..`);
                 const moves = await this.gamesService.getMoves(gameId);
 
                 liveGame = this.liveGamesService.createGame(gameId, moves);
@@ -291,21 +260,17 @@ export class MultiplayerGateway
 
             const { move, end, isCheck } = liveGame.move(moveDto);
 
-            const { savedMove, newGame, elo } = await this.moveService.saveMove(
-                {
-                    game: playingGame,
-                    move,
-                    end: end ?? undefined,
-                    isCheck,
-                },
-            );
+            const { savedMove, newGame, elo } = await this.moveService.saveMove({
+                game: playingGame,
+                move,
+                end: end ?? undefined,
+                isCheck,
+            });
 
             // Update deadline
 
             const currentTimeLeft =
-                newGame.currentTurn === 'w'
-                    ? newGame.whiteTimeLeft
-                    : newGame.blackTimeLeft;
+                newGame.currentTurn === 'w' ? newGame.whiteTimeLeft : newGame.blackTimeLeft;
             const ref = newGame.lastMoveAt ?? newGame.gameStartedAt;
             this.timerService.setDeadline(playingGame.id, currentTimeLeft, ref);
 

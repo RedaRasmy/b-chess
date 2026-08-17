@@ -18,8 +18,7 @@ export class ResignService {
 
         if (!playingGame) return null;
 
-        const result =
-            playingGame.whiteId === userId ? 'black_won' : 'white_won';
+        const result = playingGame.whiteId === userId ? 'black_won' : 'white_won';
 
         const elo = calcElo({
             whiteRating: playingGame.whiteRating,

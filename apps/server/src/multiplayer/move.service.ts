@@ -64,20 +64,15 @@ export class MoveService {
             const reason = end?.reason ?? null;
             const result = end?.result ?? null;
 
-            const timeLeft =
-                game.currentTurn === 'w'
-                    ? game.whiteTimeLeft
-                    : game.blackTimeLeft;
+            const timeLeft = game.currentTurn === 'w' ? game.whiteTimeLeft : game.blackTimeLeft;
 
             const { plus } = parseTimerOption(game.timer);
 
             const newTimeLeft = timeLeft - moveTime + plus * 1000;
 
             const newTimestamps = {
-                whiteTimeLeft:
-                    game.currentTurn === 'w' ? newTimeLeft : game.whiteTimeLeft,
-                blackTimeLeft:
-                    game.currentTurn === 'b' ? newTimeLeft : game.blackTimeLeft,
+                whiteTimeLeft: game.currentTurn === 'w' ? newTimeLeft : game.whiteTimeLeft,
+                blackTimeLeft: game.currentTurn === 'b' ? newTimeLeft : game.blackTimeLeft,
                 lastMoveAt: currentMoveAt,
             };
 

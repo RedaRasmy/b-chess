@@ -41,15 +41,10 @@ export class GamesService {
      * Return a Playing or Finished Game
      * If the game is not found it will return null
      */
-    async getFullGameById(
-        gameId: string,
-    ): Promise<FullPlayingGame | FullFinishedGame | null> {
+    async getFullGameById(gameId: string): Promise<FullPlayingGame | FullFinishedGame | null> {
         const game = await this.db.query.games.findFirst({
             where: (games) =>
-                and(
-                    inArray(games.status, ['playing', 'finished']),
-                    eq(games.id, gameId),
-                ),
+                and(inArray(games.status, ['playing', 'finished']), eq(games.id, gameId)),
             with: {
                 white: {
                     columns: {
@@ -86,10 +81,7 @@ export class GamesService {
                 and(
                     or(
                         inArray(games.status, ['preparing', 'playing']),
-                        and(
-                            eq(games.status, 'finished'),
-                            gt(games.updatedAt, minuteAgo),
-                        ),
+                        and(eq(games.status, 'finished'), gt(games.updatedAt, minuteAgo)),
                     ),
                     or(eq(games.whiteId, userId), eq(games.blackId, userId)),
                 ),
@@ -125,8 +117,7 @@ export class GamesService {
 
     async getPlayingGame(gameId: string): Promise<PlayingGame> {
         const playingGame = await this.db.query.games.findFirst({
-            where: (games) =>
-                and(eq(games.status, 'playing'), eq(games.id, gameId)),
+            where: (games) => and(eq(games.status, 'playing'), eq(games.id, gameId)),
         });
 
         if (!playingGame) throw new Error('Game not found!');
@@ -188,9 +179,7 @@ export class GamesService {
                     whiteReady,
                     blackReady,
                     status: isBothReady ? 'playing' : 'preparing',
-                    gameStartedAt: isBothReady
-                        ? Date.now()
-                        : existingGame.gameStartedAt,
+                    gameStartedAt: isBothReady ? Date.now() : existingGame.gameStartedAt,
                 })
                 .where(eq(games.id, gameId))
                 .returning();

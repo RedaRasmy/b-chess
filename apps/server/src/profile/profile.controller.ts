@@ -21,10 +21,6 @@ export class ProfileController {
         @Query('page') page: number,
         @Query('limit') limit: number,
     ) {
-        return await this.gamesService.getUserGames(
-            session.user.id,
-            page,
-            limit,
-        );
+        return await this.gamesService.getUserGames(session.user.id, page, limit);
     }
 }
