@@ -6,7 +6,8 @@
         "dev": "next dev",
         "build": "next build",
         "start": "next start",
-        "lint": "eslint"
+        "lint": "eslint",
+        "test": "vitest run"
     },
     "dependencies": {
         "@base-ui/react": "^1.2.0",
@@ -38,17 +39,22 @@
         "zustand": "^5.0.11"
     },
     "devDependencies": {
-        "@bchess/ts-config": "workspace:*",
         "@bchess/eslint-config": "workspace:*",
+        "@bchess/ts-config": "workspace:*",
         "@tailwindcss/postcss": "^4",
+        "@testing-library/dom": "^10.4.1",
+        "@testing-library/react": "^16.3.2",
         "@types/howler": "^2.2.12",
         "@types/node": "^20",
         "@types/react": "^19",
         "@types/react-dom": "^19",
+        "@vitejs/plugin-react": "^6.0.5",
         "eslint": "^9",
         "eslint-config-next": "16.1.6",
+        "jsdom": "^30.0.1",
         "tailwindcss": "^4",
         "tsx": "^4.21.0",
-        "typescript": "^5"
+        "typescript": "^5",
+        "vitest": "^4.1.11"
     }
 }
