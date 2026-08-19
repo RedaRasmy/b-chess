@@ -132,7 +132,7 @@ export const useBotStore = create<BotState>()(
 
                 const botPlayer: PlayerInfo = {
                     id: 'stockfish',
-                    username: `Stockfish lvl ${difficulty}`,
+                    username: `Stockfish-${difficulty}`,
                     avatar: '/images/stockfish.webp',
                     status: null,
                     rating: ELO_MAP[difficulty],

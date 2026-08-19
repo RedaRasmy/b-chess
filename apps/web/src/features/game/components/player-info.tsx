@@ -53,16 +53,14 @@ export default function PlayerInfo({ color }: { color: Color | null }) {
                 <div className="flex flex-col -mt-1">
                     <p className="text-muted-foreground">{player.username}</p>
                     {player.rating !== undefined && (
-                        <div className="text-primary/70 text-xs md:text-sm ">
-                            <div className="py-0 text-xs bg-primary px-2 text-white rounded-xl flex gap-0.5">
-                                {player.rating}
-                                {diff !== null && (
-                                    <span>
-                                        {diff >= 0 && '+'}
-                                        {diff}
-                                    </span>
-                                )}
-                            </div>
+                        <div className="text-xs md:text-sm py-0 bg-primary px-2 text-white rounded-xl w-min flex gap-0.5">
+                            {player.rating}
+                            {diff !== null && (
+                                <span>
+                                    {diff >= 0 && '+'}
+                                    {diff}
+                                </span>
+                            )}
                         </div>
                     )}
                 </div>
