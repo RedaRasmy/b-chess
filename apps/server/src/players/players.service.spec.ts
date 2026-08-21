@@ -1,15 +1,20 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PlayersService } from './players.service';
+import { DATABASE_CONNECTION } from '../database/database.module';
+import { getTestDb, resetTestDb } from '../../test/test-db';
 
 describe('PlayersService', () => {
     let service: PlayersService;
 
-    beforeEach(async () => {
+    beforeAll(async () => {
         const module: TestingModule = await Test.createTestingModule({
-            providers: [PlayersService],
+            providers: [PlayersService, { provide: DATABASE_CONNECTION, useValue: getTestDb() }],
         }).compile();
+        service = module.get(PlayersService);
+    });
 
-        service = module.get<PlayersService>(PlayersService);
+    afterEach(async () => {
+        await resetTestDb();
     });
 
     it('should be defined', () => {
