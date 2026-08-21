@@ -1,7 +1,5 @@
 {
     "extends": "@bchess/ts-config/lib.json",
-    "compilerOptions": {
-        "types": ["jest"]
-    },
+    "compilerOptions": {},
     "include": ["src/**/*"]
 }

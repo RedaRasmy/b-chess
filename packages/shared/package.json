@@ -6,13 +6,13 @@
     "types": "./dist/index.d.ts",
     "exports": {
         ".": {
-            "require": {
-                "types": "./dist/index.d.ts",
-                "default": "./dist/index.js"
-            },
             "import": {
                 "types": "./dist/index.d.mts",
                 "default": "./dist/index.mjs"
+            },
+            "require": {
+                "types": "./dist/index.d.ts",
+                "default": "./dist/index.js"
             }
         }
     },
@@ -20,20 +20,15 @@
         "build": "tsup src/index.ts --format cjs,esm --dts",
         "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
         "lint": "eslint src/**/*.ts --fix",
-        "test": "jest"
+        "test": "vitest run"
     },
     "devDependencies": {
         "@bchess/eslint-config": "workspace:*",
-        "@babel/core": "^8.0.1",
-        "@babel/preset-env": "^8.0.2",
-        "@babel/preset-typescript": "^8.0.1",
         "@bchess/ts-config": "workspace:*",
-        "@types/jest": "^30.0.0",
-        "babel-jest": "^30.4.1",
         "eslint": "^10.8.1",
-        "jest": "^30.4.2",
         "tsup": "^8.5.1",
-        "typescript": "^5.9.3"
+        "typescript": "^5.9.3",
+        "vitest": "^4.1.11"
     },
     "dependencies": {
         "@bchess/db": "workspace:^",

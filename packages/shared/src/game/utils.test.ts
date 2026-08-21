@@ -1,4 +1,5 @@
 import { validateRatingRange } from './utils';
+import { describe, test, expect } from 'vitest';
 
 describe('Shared Utils', () => {
     test('Rating range validation', () => {
