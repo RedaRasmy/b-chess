@@ -10,16 +10,15 @@ import { useSocketListener } from '@/features/multiplayer/hooks/use-socket-liste
 import { getColor } from '@bchess/shared';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { toast } from 'sonner';
 
 export default function Page() {
     const socket = useSocket();
     const router = useRouter();
-    const gameState = useGameStore();
+    const players = useGameStore((s) => s.players);
 
     useEffect(() => {
         socket.emit('join_game');
-    }, []);
+    }, [socket]);
 
     useEffect(() => {
         const unsubscribe = useGameStore.subscribe(
@@ -39,7 +38,7 @@ export default function Page() {
                             console.warn('error : ', res.error);
                             console.warn('rollback..');
 
-                            gameState.rollback(res.timestamps);
+                            useGameStore.getState().rollback(res.timestamps);
                         }
                     });
                 }
@@ -55,7 +54,7 @@ export default function Page() {
         }
     });
 
-    const playerColor = gameState.players?.playerColor;
+    const playerColor = players?.playerColor;
 
     const opponentColor = playerColor === undefined ? null : playerColor === 'white' ? 'b' : 'w';
 

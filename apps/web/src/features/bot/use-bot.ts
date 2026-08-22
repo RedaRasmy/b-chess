@@ -29,10 +29,10 @@ export default function useBot() {
         return () => {
             if (timeoutRef.current) clearTimeout(timeoutRef.current);
         };
-    }, [displayFen, engineReady]);
+    }, [displayFen, engineReady, playerColor, status, requestBotMove, chess]);
 
     useEffect(() => {
         initEngine();
         return () => destroyEngine();
-    }, []);
+    }, [initEngine, destroyEngine]);
 }

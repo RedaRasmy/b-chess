@@ -41,7 +41,7 @@ export default function Page() {
                 playerColor,
             );
         }
-    }, [game, isPending, isSessionPending, session]);
+    }, [game, isPending, isSessionPending, session, setGame]);
 
     const opponentColor = getOppositeColor(playerColor);
 

@@ -43,7 +43,7 @@ export function PlayerTimer({ color }: { color: 'white' | 'black' }) {
             clearInterval(interval);
             alertedRef.current = false;
         };
-    }, [clock, status, color]);
+    }, [clock, status, color, isPlayer, endGame]);
 
     const display = formatMs(ms, ms < 10000);
 

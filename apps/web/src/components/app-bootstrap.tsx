@@ -7,6 +7,7 @@ export function AppBootstrap() {
     const router = useRouter();
     const pathname = usePathname();
 
+    /* eslint-disable react-hooks/exhaustive-deps */
     useEffect(() => {
         (async () => {
             if (!pathname.startsWith(`/multiplayer/play`)) {

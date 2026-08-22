@@ -16,7 +16,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                 router.replace('/profile');
             }
         }
-    }, [isPending, session]);
+    }, [isPending, session, router]);
 
     if (isPending) return <LoadingPage />;
     if (!session) return null;
