@@ -5,7 +5,7 @@ import { Socket } from 'socket.io';
 
 @Catch(ThrottlerException)
 export class ThrottlerWsExceptionFilter extends BaseWsExceptionFilter {
-    catch(exception: ThrottlerException, host: ArgumentsHost) {
+    catch(_exception: ThrottlerException, host: ArgumentsHost) {
         const client: Socket = host.switchToWs().getClient();
         const pattern = host.switchToWs().getPattern();
 

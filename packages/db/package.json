@@ -29,7 +29,8 @@
     "scripts": {
         "build": "tsup src/index.ts src/schema/index.ts --format cjs,esm --dts",
         "dev": "tsup src/index.ts src/schema/index.ts --format cjs,esm --dts --watch",
-        "lint": "tsc",
+        "lint": "tsc --noEmit",
+        "type-check": "tsc --noEmit",
         "push": "npx drizzle-kit push",
         "generate": "npx drizzle-kit generate",
         "migrate": "npx drizzle-kit migrate",

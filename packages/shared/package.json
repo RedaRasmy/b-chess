@@ -19,7 +19,8 @@
     "scripts": {
         "build": "tsup src/index.ts --format cjs,esm --dts",
         "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
-        "lint": "eslint src/**/*.ts --fix",
+        "lint": "eslint src/**/*.ts --fix && tsc --noEmit",
+        "type-check": "tsc --noEmit",
         "test": "vitest run"
     },
     "devDependencies": {
