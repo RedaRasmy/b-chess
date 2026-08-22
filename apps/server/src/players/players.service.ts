@@ -1,4 +1,4 @@
-import { HttpException, Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { DATABASE_CONNECTION } from '../database/database.module';
 import type { Database, Transaction } from '@bchess/db';
 import { desc, eq, isNotNull, sql } from 'drizzle-orm';
@@ -16,11 +16,16 @@ export class PlayersService {
 
         // in case the db hook failed during sign-up
         if (!stats) {
-            [stats] = await this.db
-                .insert(userStats)
-                .values({ userId })
-                .onConflictDoNothing()
-                .returning();
+            try {
+                [stats] = await this.db
+                    .insert(userStats)
+                    .values({ userId })
+                    .onConflictDoNothing()
+                    .returning();
+            } catch {
+                // FK violation = userId doesn't correspond to a real user at all
+                throw new NotFoundException('User not found');
+            }
 
             if (!stats) {
                 stats = await this.db.query.userStats.findFirst({
@@ -29,7 +34,7 @@ export class PlayersService {
             }
         }
 
-        if (!stats) throw new HttpException('User stats not found', 404);
+        if (!stats) throw new NotFoundException('User stats not found');
 
         return stats;
     }
