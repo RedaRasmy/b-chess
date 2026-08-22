@@ -8,6 +8,11 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+    title: 'Leaderboard',
+};
 
 export const revalidate = 60;
 
