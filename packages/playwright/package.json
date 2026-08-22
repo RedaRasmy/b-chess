@@ -1,0 +1,19 @@
+{
+    "name": "@bchess/playwright",
+    "version": "1.0.0",
+    "private": true,
+    "scripts": {
+        "install-deps": "exec playwright install --with-deps",
+        "test": "npx playwright test",
+        "show-report": "pnpm exec playwright show-report"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "packageManager": "pnpm@10.32.1",
+    "devDependencies": {
+        "@bchess/ts-config": "workspace:*",
+        "@playwright/test": "^1.62.1",
+        "@types/node": "^26.2.0"
+    }
+}
