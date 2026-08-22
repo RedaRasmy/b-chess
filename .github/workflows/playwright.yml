@@ -1,0 +1,71 @@
+name: Playwright Tests
+on:
+    push:
+        branches: [main]
+    pull_request:
+        branches: [main]
+jobs:
+    test:
+        timeout-minutes: 60
+        runs-on: ubuntu-latest
+
+        services:
+            postgres:
+                image: postgres:18
+                env:
+                    POSTGRES_USER: postgres
+                    POSTGRES_PASSWORD: postgres
+                    POSTGRES_DB: postgres
+                ports:
+                    - 5444:5432
+                options: >-
+                    --health-cmd "pg_isready -U postgres"
+                    --health-interval 10s
+                    --health-timeout 5s
+                    --health-retries 5
+        env:
+            DATABASE_URL: postgresql://postgres:postgres@localhost:5444/postgres
+            NEXT_PUBLIC_BACKEND_API_URL: http://localhost:3333
+            NEXT_PUBLIC_APP_URL: http://localhost:3000
+            BETTER_AUTH_URL: http://localhost:3333
+            BETTER_AUTH_SECRET: kdsajflkajksdjfklajsdkjfalksjdklfa
+
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: lts/*
+
+            - name: Install dependencies
+              run: npm install -g pnpm && pnpm install --no-frozen-lockfile
+
+            - name: Approve builds
+              run: pnpm approve-builds --all
+
+            - name: Build server (and its workspace deps)
+              run: pnpm exec turbo run build --filter=@bchess/server...
+
+            - name: Run migrations
+              run: |
+                  echo "DATABASE_URL is: $DATABASE_URL"
+                  pnpm --filter=@bchess/db migrate
+
+            - name: Build web (with backend active for SSG/ISR)
+              run: >
+                  npx start-server-and-test
+                  "node apps/server/dist/main.js"
+                  http://localhost:3333/health
+                  "pnpm exec turbo run build --filter=@bchess/web..."
+
+            - name: Install Playwright Browsers
+              run: pnpm --filter=@bchess/playwright install-deps
+
+            - name: Run Playwright tests
+              run: pnpm --filter=@bchess/playwright test
+
+            - uses: actions/upload-artifact@v4
+              if: ${{ !cancelled() }}
+              with:
+                  name: playwright-report
+                  path: apps/web/playwright-report/
+                  retention-days: 30
