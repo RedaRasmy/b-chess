@@ -12,7 +12,7 @@ import {
     PlayingGame,
 } from '@bchess/shared';
 import { games, moves, Reason, Result } from '@bchess/db/tables';
-import { and, asc, desc, eq, gt, inArray, ne, or } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, inArray, or } from 'drizzle-orm';
 
 @Injectable()
 export class GamesService {

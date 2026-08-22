@@ -1,13 +1,4 @@
-import {
-    Controller,
-    Get,
-    Post,
-    Body,
-    Patch,
-    Param,
-    Delete,
-    NotFoundException,
-} from '@nestjs/common';
+import { Controller, Get, Param, NotFoundException } from '@nestjs/common';
 import { GamesService } from './games.service';
 import { OptionalAuth } from '@thallesp/nestjs-better-auth';
 

@@ -19,7 +19,7 @@ export default async function globalSetup() {
         }),
     );
 
-    (globalThis as any).__PG_CONTAINER__ = container;
+    globalThis.__PG_CONTAINER__ = container;
 
     const client = postgres(container.getConnectionUri(), {
         // max: 1,

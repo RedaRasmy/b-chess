@@ -20,7 +20,9 @@ export class TimerService implements OnModuleInit {
     ) {}
 
     onModuleInit() {
-        setInterval(() => this.check(), 250);
+        setInterval(() => {
+            this.check().catch(() => {});
+        }, 250);
     }
 
     setDeadline(gameId: string, remainingMs: number, ref?: number) {
@@ -39,14 +41,14 @@ export class TimerService implements OnModuleInit {
         return this.deadlines.get(gameId) !== undefined;
     }
 
-    private check() {
+    private async check() {
         const expired: string[] = [];
         for (const [id, deadline] of this.deadlines) {
             if (deadline <= Date.now()) expired.push(id);
         }
         for (const id of expired) {
             this.deadlines.delete(id);
-            this.resolveAndEmit(id);
+            await this.resolveAndEmit(id);
         }
     }
 
@@ -62,7 +64,7 @@ export class TimerService implements OnModuleInit {
         let playingGame: PlayingGame;
         try {
             playingGame = await this.gamesService.getPlayingGame(gameId);
-        } catch (error) {
+        } catch {
             return null;
         }
 

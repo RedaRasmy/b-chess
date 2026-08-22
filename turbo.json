@@ -9,7 +9,16 @@
         },
         "dev": {
             "cache": false,
-            "persistent": true
+            "persistent": true,
+            "env": [
+                "FRONTEND_URL",
+                "PORT",
+                "BETTER_AUTH_URL",
+                "GITHUB_CLIENT_ID",
+                "GITHUB_CLIENT_SECRET",
+                "GOOGLE_CLIENT_ID",
+                "GOOGLE_CLIENT_SECRET"
+            ]
         },
         "lint": {
             "dependsOn": ["^lint"]
@@ -19,7 +28,8 @@
         },
         "test": {
             "dependsOn": ["^build"],
-            "outputs": []
+            "outputs": [],
+            "env": ["TEST_DATABASE_URL"]
         },
         "ete": {
             "dependsOn": ["^build"]

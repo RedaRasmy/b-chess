@@ -14,7 +14,7 @@ import { fromNodeHeaders } from 'better-auth/node';
 import { auth } from '../auth/auth';
 import { MoveDto } from './dto/move.dto';
 import { CreateGameDto } from './dto/create-game.dto';
-import { CLIENT_EVENTS, type MoveAck } from '@bchess/shared';
+import { CLIENT_EVENTS, Elo, FinishedGame, type MoveAck } from '@bchess/shared';
 import { GamesService } from '../games/games.service';
 import { Logger, UseFilters, UseGuards, UsePipes } from '@nestjs/common';
 import { LiveGamesService } from './live-games.service';
@@ -61,12 +61,12 @@ export class MultiplayerGateway implements OnGatewayConnection, OnGatewayDisconn
         const user = session.user;
 
         socket.data.user = user;
-        socket.join(Rooms.user(user.id));
+        await socket.join(Rooms.user(user.id));
 
         const ongoingGame = await this.gamesService.getFullCurrentGame(user.id);
 
         if (ongoingGame && ongoingGame.status !== 'finished') {
-            socket.join(Rooms.game(ongoingGame.id));
+            await socket.join(Rooms.game(ongoingGame.id));
 
             const playerColor = user.id === ongoingGame.whiteId ? 'w' : 'b';
 
@@ -84,14 +84,18 @@ export class MultiplayerGateway implements OnGatewayConnection, OnGatewayDisconn
                 const newLiveGame = this.liveGamesService.createGame(gameId, moves);
                 if (playerColor === 'w') {
                     const isBlackConnected = await isConnected(this.server, ongoingGame.blackId);
-                    isBlackConnected
-                        ? newLiveGame.setBlackConnected()
-                        : newLiveGame.setBlackDisconnected();
+                    if (isBlackConnected) {
+                        newLiveGame.setBlackConnected();
+                    } else {
+                        newLiveGame.setBlackDisconnected();
+                    }
                 } else {
                     const isWhiteConnected = await isConnected(this.server, ongoingGame.whiteId);
-                    isWhiteConnected
-                        ? newLiveGame.setWhiteConnected()
-                        : newLiveGame.setWhiteDisconnected();
+                    if (isWhiteConnected) {
+                        newLiveGame.setWhiteConnected();
+                    } else {
+                        newLiveGame.setWhiteDisconnected();
+                    }
                 }
                 liveGame = newLiveGame;
             }
@@ -120,7 +124,7 @@ export class MultiplayerGateway implements OnGatewayConnection, OnGatewayDisconn
         }
     }
 
-    async handleDisconnect(socket: TypedSocket) {
+    handleDisconnect(socket: TypedSocket) {
         const game = socket.data.currentGame;
 
         if (game) {
@@ -195,7 +199,7 @@ export class MultiplayerGateway implements OnGatewayConnection, OnGatewayDisconn
 
         const playerColor = ongoingGame.whiteId === userId ? 'w' : 'b';
 
-        socket.join(Rooms.game(ongoingGame.id));
+        await socket.join(Rooms.game(ongoingGame.id));
         socket.data.currentGame = {
             id: ongoingGame.id,
             playerColor,
@@ -407,7 +411,7 @@ export class MultiplayerGateway implements OnGatewayConnection, OnGatewayDisconn
     }
 
     @OnEvent('game.finished')
-    handleGameFinished({ game, elo }) {
+    handleGameFinished({ game, elo }: { game: FinishedGame; elo: Elo }) {
         this.server.to(Rooms.game(game.id)).emit('game_finished', {
             reason: game.reason,
             result: game.result,
