@@ -6,7 +6,6 @@ import { persist } from 'zustand/middleware';
 
 export interface BotState {
     difficulty: number;
-    botColor: ColorName;
     isThinking: boolean;
     engine: Worker | null;
     engineReady: boolean;
@@ -64,7 +63,6 @@ export const useBotStore = create<BotState>()(
     persist(
         (set, get) => ({
             difficulty: 0,
-            botColor: 'black',
             isThinking: false,
             engine: null,
             engineReady: false,
@@ -128,7 +126,6 @@ export const useBotStore = create<BotState>()(
             startBotGame: ({ difficulty, playerColor, timeControl, player }) => {
                 set({ lastConfig: { difficulty, playerColor, timeControl } });
                 const game = useGameStore.getState();
-                const botColor = playerColor === 'white' ? 'black' : 'white';
 
                 const botPlayer: PlayerInfo = {
                     id: 'stockfish',
@@ -155,7 +152,7 @@ export const useBotStore = create<BotState>()(
                 game.startClock(timeControl);
                 game.setStatus('playing');
 
-                set({ difficulty, botColor });
+                set({ difficulty });
             },
 
             requestBotMove: () => {
