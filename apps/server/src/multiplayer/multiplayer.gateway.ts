@@ -11,7 +11,6 @@ import {
 } from '@nestjs/websockets';
 import { ResignService } from './resign.service';
 import { fromNodeHeaders } from 'better-auth/node';
-import { auth } from '../auth/auth';
 import { MoveDto } from './dto/move.dto';
 import { CreateGameDto } from './dto/create-game.dto';
 import { CLIENT_EVENTS, Elo, FinishedGame, type MoveAck } from '@bchess/shared';
@@ -29,6 +28,8 @@ import { TimerService } from './timer.service';
 import { WsThrottlerGuard } from './ws-throttler.guard';
 import { SkipThrottle, Throttle } from '@nestjs/throttler';
 import { ThrottlerWsExceptionFilter } from './throttler-ws-exception.filter';
+import { AuthService } from '@thallesp/nestjs-better-auth';
+import { Auth } from '../auth/auth';
 
 @UseGuards(WsThrottlerGuard)
 @UseFilters(ThrottlerWsExceptionFilter)
@@ -42,6 +43,7 @@ export class MultiplayerGateway implements OnGatewayConnection, OnGatewayDisconn
         private readonly moveService: MoveService,
         private readonly drawService: DrawService,
         private readonly timerService: TimerService,
+        private readonly authService: AuthService<Auth>,
     ) {}
 
     @WebSocketServer()
@@ -50,7 +52,7 @@ export class MultiplayerGateway implements OnGatewayConnection, OnGatewayDisconn
     private readonly logger = new Logger(MultiplayerGateway.name);
 
     async handleConnection(socket: TypedSocket) {
-        const session = await auth.api.getSession({
+        const session = await this.authService.api.getSession({
             headers: fromNodeHeaders(socket.handshake.headers),
         });
 

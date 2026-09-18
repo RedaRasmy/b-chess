@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { auth } from './auth/auth';
 import { AuthModule } from '@thallesp/nestjs-better-auth';
 import { ConfigModule } from '@nestjs/config';
 import { MultiplayerModule } from './multiplayer/multiplayer.module';
@@ -12,6 +11,9 @@ import { PlayersModule } from './players/players.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
+import { MailModule } from './mail/mail.module';
+import { MailService } from './mail/mail.service';
+import { createAuth } from './auth/auth';
 
 @Module({
     imports: [
@@ -33,14 +35,17 @@ import { APP_GUARD } from '@nestjs/core';
             ],
         }),
         DatabaseModule,
-        AuthModule.forRoot({
-            auth,
+        AuthModule.forRootAsync({
+            imports: [MailModule],
+            inject: [MailService],
+            useFactory: (mail: MailService) => ({ auth: createAuth({ mail }) }),
         }),
         EventEmitterModule.forRoot(),
         ProfileModule,
         MultiplayerModule,
         GamesModule,
         PlayersModule,
+        MailModule,
     ],
     controllers: [AppController],
     providers: [
