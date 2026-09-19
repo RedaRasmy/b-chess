@@ -21,6 +21,7 @@
         "test:e2e": "jest --config ./test/jest-e2e.json"
     },
     "dependencies": {
+        "@bchess/emails": "workspace:^",
         "@bchess/db": "workspace:^",
         "@bchess/shared": "workspace:^",
         "@better-auth/drizzle-adapter": "^1.5.4",

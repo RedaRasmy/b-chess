@@ -1,0 +1,5 @@
+{
+    "extends": "@bchess/ts-config/react-library.json",
+    "compilerOptions": {},
+    "include": ["src/**/*"]
+}

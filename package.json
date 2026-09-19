@@ -15,7 +15,8 @@
         "db:migrate": "dotenv -e .env -- pnpm --filter ./packages/db migrate",
         "db:push": "dotenv -e .env -- pnpm --filter ./packages/db push",
         "db:studio": "dotenv -e .env -- pnpm --filter ./packages/db studio",
-        "act:push": "act push --env-file /dev/null"
+        "act:push": "act push --env-file /dev/null",
+        "email:dev": "pnpm --filter @bchess/emails email:dev"
     },
     "packageManager": "pnpm@10.32.1",
     "dependencies": {

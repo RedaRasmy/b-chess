@@ -1,0 +1,23 @@
+{
+    "name": "@bchess/emails",
+    "private": true,
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "scripts": {
+        "build": "tsup src/index.ts --format cjs --dts",
+        "dev": "tsup src/index.ts --format cjs --dts --watch",
+        "email:dev": "email dev --dir src/templates --port 3005"
+    },
+    "dependencies": {
+        "react": "19.2.3",
+        "react-dom": "19.2.3",
+        "react-email": "6.9.5"
+    },
+    "devDependencies": {
+        "@bchess/ts-config": "workspace:*",
+        "@react-email/ui": "6.9.5",
+        "@types/react": "^19",
+        "tsup": "latest",
+        "typescript": "latest"
+    }
+}
