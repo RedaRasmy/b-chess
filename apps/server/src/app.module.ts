@@ -14,6 +14,10 @@ import { APP_GUARD } from '@nestjs/core';
 import { MailModule } from './mail/mail.module';
 import { MailService } from './mail/mail.service';
 import { createAuth } from './auth/auth';
+import { BullModule } from '@nestjs/bullmq';
+import IORedis from 'ioredis';
+import { BullBoardModule } from '@bull-board/nestjs';
+import { ExpressAdapter } from '@bull-board/express';
 
 @Module({
     imports: [
@@ -46,6 +50,15 @@ import { createAuth } from './auth/auth';
         GamesModule,
         PlayersModule,
         MailModule,
+        BullModule.forRoot({
+            connection: new IORedis(process.env.REDIS_URL!, {
+                maxRetriesPerRequest: null, // required by BullMQ workers when you pass your own connection
+            }),
+        }),
+        BullBoardModule.forRoot({
+            route: '/queues',
+            adapter: ExpressAdapter,
+        }),
     ],
     controllers: [AppController],
     providers: [

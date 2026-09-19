@@ -1,19 +1,21 @@
 import { Injectable } from '@nestjs/common';
-import { Resend } from 'resend';
-import { renderWelcome } from '@bchess/emails';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 
 @Injectable()
 export class MailService {
-    private resend = new Resend(process.env.RESEND_API_KEY);
+    constructor(@InjectQueue('mail') private queue: Queue) {}
 
-    async sendWelcome(to: string) {
-        const { subject, html, text } = await renderWelcome({});
-        await this.resend.emails.send({
-            from: `BChess <no-reply@${process.env.MAIL_DOMAIN}>`,
-            to,
-            subject,
-            html,
-            text,
-        });
+    sendWelcome(to: string) {
+        return this.queue.add(
+            'welcome',
+            { to },
+            {
+                attempts: 5,
+                backoff: { type: 'exponential', delay: 5000 },
+                removeOnComplete: 1000,
+                removeOnFail: 5000,
+            },
+        );
     }
 }
