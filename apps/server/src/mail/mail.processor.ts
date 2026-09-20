@@ -1,4 +1,4 @@
-import { renderWelcome } from '@bchess/emails';
+import { renderPasswordChanged, renderResetPassword, renderWelcome } from '@bchess/emails';
 import { Resend } from 'resend';
 import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
@@ -42,6 +42,30 @@ export class MailProcessor extends WorkerHost {
                 },
             );
             if (error) throw new Error(error.message); // throwing triggers a retry
+        }
+        if (job.name === 'password-reset') {
+            const { to, url } = job.data;
+            const { subject, html, text } = await renderResetPassword({ url });
+            const { error } = await this.resend.emails.send({
+                from: this.from,
+                to,
+                subject,
+                html,
+                text,
+            });
+            if (error) throw new Error(error.message);
+        }
+        if (job.name === 'password-changed') {
+            const { to } = job.data;
+            const { subject, html, text } = await renderPasswordChanged({});
+            const { error } = await this.resend.emails.send({
+                from: this.from,
+                to,
+                subject,
+                html,
+                text,
+            });
+            if (error) throw new Error(error.message);
         }
     }
 }

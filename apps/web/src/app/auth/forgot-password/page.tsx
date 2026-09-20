@@ -8,66 +8,53 @@ import { useMutation } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useState } from 'react';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, Eye, EyeClosed, Key, Mail } from 'lucide-react';
-import { EmailSchema, LoginCredentials, LoginSchema } from '@/features/auth/validation';
+import { ArrowLeft, Mail } from 'lucide-react';
+import { ForgotPasswordSchema, ForgotPasswordCredentials } from '@/features/auth/validation';
 import { authClient } from '@/lib/auth-client';
 import Link from 'next/link';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import GoogleButton from '@/features/auth/components/google-button';
 import GithubButton from '@/features/auth/components/github-button';
 
-export default function LoginPage() {
+export default function Page() {
     const form = useForm({
-        resolver: zodResolver(LoginSchema),
+        resolver: zodResolver(ForgotPasswordSchema),
         defaultValues: {
-            emailOrUsername: '',
-            password: '',
+            email: '',
         },
     });
     const params = useSearchParams();
     const error = params.get('error');
 
-    const router = useRouter();
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
     const mutation = useMutation({
-        mutationFn: async (data: LoginCredentials) => {
-            const isEmail = EmailSchema.safeParse(data.emailOrUsername).success;
+        mutationFn: async (email: string) => {
+            const { error } = await authClient.requestPasswordReset({
+                email,
+                redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/reset-password`,
+            });
 
-            if (isEmail) {
-                const { data: result, error } = await authClient.signIn.email({
-                    email: data.emailOrUsername,
-                    password: data.password,
-                });
-                if (error) throw error;
-                return result;
-            } else {
-                const { data: result, error } = await authClient.signIn.username({
-                    username: data.emailOrUsername,
-                    password: data.password,
-                });
-                if (error) throw error;
-                return result;
-            }
+            if (error) throw error;
         },
         onSuccess: async () => {
-            router.replace('/profile');
+            setSuccessMessage('Check the sent email to proceed.');
         },
         onError: (err) => {
             const message = err.message || 'Something went wrong , Please try again.';
             form.setError('root', {
                 message,
             });
+            setSuccessMessage(null);
         },
     });
 
-    async function onSubmit(data: LoginCredentials) {
-        mutation.mutate(data);
+    async function onSubmit(data: ForgotPasswordCredentials) {
+        mutation.mutate(data.email);
     }
 
     const errors = form.formState.errors;
     const message = errors.root?.message ?? error ?? null;
-
-    const [showPassword, setShowPassword] = useState(false);
 
     return (
         <div className="w-full h-full flex items-center justify-center p-4">
@@ -82,8 +69,8 @@ export default function LoginPage() {
 
                 <Card className="shadow-xl">
                     <CardHeader className="text-center">
-                        <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
-                        <CardDescription>Sign in to your account</CardDescription>
+                        <CardTitle className="text-2xl font-bold">Forgot Password</CardTitle>
+                        <CardDescription>Enter your email to reset your password</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
                         <form
@@ -92,13 +79,14 @@ export default function LoginPage() {
                             noValidate
                         >
                             <p className="text-red-500">{message}</p>
+                            <p className="text-green-500">{successMessage}</p>
                             {/* Email Field */}
                             <Controller
-                                name="emailOrUsername"
+                                name="email"
                                 control={form.control}
                                 render={({ field, fieldState }) => (
                                     <Field data-invalid={fieldState.invalid}>
-                                        <FieldLabel htmlFor="email">Identifier</FieldLabel>
+                                        <FieldLabel htmlFor="email">Email</FieldLabel>
                                         <div className="relative">
                                             <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                                             <Input
@@ -106,59 +94,10 @@ export default function LoginPage() {
                                                 id="email"
                                                 type="email"
                                                 aria-invalid={fieldState.invalid}
-                                                placeholder="Enter your email or username"
+                                                placeholder="name@example.com"
                                                 className="pl-10"
                                             />
                                         </div>
-                                        {fieldState.invalid && (
-                                            <FieldError errors={[fieldState.error]} />
-                                        )}
-                                    </Field>
-                                )}
-                            />
-
-                            {/* Password Field */}
-                            <Controller
-                                name="password"
-                                control={form.control}
-                                render={({ field, fieldState }) => (
-                                    <Field data-invalid={fieldState.invalid}>
-                                        <FieldLabel htmlFor="password">Password</FieldLabel>
-
-                                        <div className="relative">
-                                            <Key className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                                            <Input
-                                                {...field}
-                                                id="password"
-                                                aria-invalid={fieldState.invalid}
-                                                type={showPassword ? 'text' : 'password'}
-                                                placeholder="Enter your password"
-                                                className="pl-10 pr-10"
-                                            />
-
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                size="sm"
-                                                className="absolute right-0 top-0 h-full px-3"
-                                                onClick={() => setShowPassword(!showPassword)}
-                                            >
-                                                {showPassword ? (
-                                                    <EyeClosed className="h-4 w-4" />
-                                                ) : (
-                                                    <Eye className="h-4 w-4" />
-                                                )}
-                                            </Button>
-                                        </div>
-                                        <Button
-                                            asChild
-                                            variant={'link'}
-                                            className="justify-end -mt-2 -mb-4"
-                                        >
-                                            <Link href={'/auth/forgot-password'}>
-                                                forgot password?
-                                            </Link>
-                                        </Button>
                                         {fieldState.invalid && (
                                             <FieldError errors={[fieldState.error]} />
                                         )}
@@ -173,7 +112,7 @@ export default function LoginPage() {
                                 size="lg"
                                 disabled={mutation.isPending}
                             >
-                                Sign in
+                                Send Email
                             </Button>
                         </form>
                         <div className="relative">

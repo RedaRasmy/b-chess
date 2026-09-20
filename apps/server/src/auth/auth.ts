@@ -16,6 +16,14 @@ export const createAuth = ({ mail }: { mail: MailService }) =>
         //
         emailAndPassword: {
             enabled: true,
+            revokeSessionsOnPasswordReset: true,
+            resetPasswordTokenExpiresIn: 60 * 30, // 30min
+            sendResetPassword: async ({ user, url }) => {
+                await mail.sendResetPassword(user.email, url);
+            },
+            onPasswordReset: async ({ user }) => {
+                await mail.sendPasswordChanged(user.email);
+            },
         },
         socialProviders: {
             github: {

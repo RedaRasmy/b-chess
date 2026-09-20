@@ -1,6 +1,7 @@
 import { render } from 'react-email';
 import { WelcomeEmail, type WelcomeEmailProps } from './templates/welcome';
-// import { ResetPasswordEmail, type ResetPasswordEmailProps } from './templates/reset-password';
+import ResetPasswordEmail, { ResetPasswordEmailProps } from './templates/reset-password';
+import PasswordChangedEmail, { PasswordChangedProps } from './templates/password-changed';
 
 export async function renderWelcome(props: WelcomeEmailProps) {
     return {
@@ -10,10 +11,18 @@ export async function renderWelcome(props: WelcomeEmailProps) {
     };
 }
 
-// export async function renderResetPassword(props: ResetPasswordEmailProps) {
-//   return {
-//     subject: 'Reset your password',
-//     html: await render(<ResetPasswordEmail {...props} />),
-//     text: await render(<ResetPasswordEmail {...props} />, { plainText: true }),
-//   };
-// }
+export async function renderResetPassword(props: ResetPasswordEmailProps) {
+    return {
+        subject: 'Request to reset password',
+        html: await render(<ResetPasswordEmail {...props} />),
+        text: await render(<ResetPasswordEmail {...props} />, { plainText: true }),
+    };
+}
+
+export async function renderPasswordChanged(props: PasswordChangedProps) {
+    return {
+        subject: 'Password Changed',
+        html: await render(<PasswordChangedEmail {...props} />),
+        text: await render(<PasswordChangedEmail {...props} />, { plainText: true }),
+    };
+}
