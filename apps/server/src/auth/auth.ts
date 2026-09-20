@@ -4,6 +4,7 @@ import { username } from 'better-auth/plugins';
 import { db } from '@bchess/db';
 import { userStats } from '@bchess/db/tables';
 import { MailService } from '../mail/mail.service';
+import { createAuthMiddleware } from 'better-auth/api';
 
 export const createAuth = ({ mail }: { mail: MailService }) =>
     betterAuth({
@@ -42,7 +43,6 @@ export const createAuth = ({ mail }: { mail: MailService }) =>
             }),
         ],
 
-        // Hooks
         databaseHooks: {
             user: {
                 create: {
@@ -54,6 +54,18 @@ export const createAuth = ({ mail }: { mail: MailService }) =>
                     },
                 },
             },
+        },
+
+        hooks: {
+            after: createAuthMiddleware(async (ctx) => {
+                if (ctx.path !== '/change-password') return;
+
+                const returned = ctx.context.returned as { user?: { email: string } } | undefined;
+                const email = returned?.user?.email;
+                if (!email) return;
+
+                await mail.sendPasswordChanged(email).catch(console.error);
+            }),
         },
 
         // Rate limiting

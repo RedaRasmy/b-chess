@@ -45,7 +45,23 @@ export const ForgotPasswordSchema = z.object({
     email: EmailSchema,
 });
 
+export const UpdatePasswordSchema = z
+    .object({
+        currentPassword: PasswordSchema,
+        password: PasswordSchema,
+        confirmPassword: z.string(),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+        message: "Passwords don't match",
+        path: ['confirmPassword'],
+    })
+    .refine((data) => data.currentPassword !== data.password, {
+        error: 'New password must be different',
+        path: ['password'],
+    });
+
 export type LoginCredentials = z.infer<typeof LoginSchema>;
 export type RegisterCredentials = z.infer<typeof RegisterSchema>;
 export type ResetPasswordCredentials = z.infer<typeof ResetPasswordSchema>;
 export type ForgotPasswordCredentials = z.infer<typeof ForgotPasswordSchema>;
+export type UpdatePasswordData = z.infer<typeof UpdatePasswordSchema>;

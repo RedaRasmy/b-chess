@@ -11,9 +11,11 @@ export function LogoutButton({
     variant = 'destructive',
     size,
     onlyIcon = false,
+    responsive = false,
 }: {
     className?: string;
     onlyIcon?: boolean;
+    responsive?: boolean;
 } & VariantProps<typeof buttonVariants>) {
     const router = useRouter();
 
@@ -34,7 +36,8 @@ export function LogoutButton({
         >
             <>
                 <LogOut size={16} color="red" />
-                {!onlyIcon && 'log out'}
+                {responsive && !onlyIcon && <span className="hidden sm:block">log out</span>}
+                {!responsive && !onlyIcon && 'log out'}
             </>
         </Button>
     );
