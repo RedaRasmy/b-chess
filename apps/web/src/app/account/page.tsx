@@ -1,5 +1,6 @@
 'use client';
 import AccountInfos from '@/features/profile/components/account-infos';
+import Passkeys from '@/features/profile/components/passkeys';
 import UpdatePassword from '@/features/profile/components/change-password';
 import { authClient } from '@/lib/auth-client';
 import { useQuery } from '@tanstack/react-query';
@@ -24,6 +25,7 @@ export default function Page() {
             <div className="container lg:max-w-xl space-y-2 md:space-y-3">
                 <AccountInfos />
                 {hasPassword && <UpdatePassword />}
+                <Passkeys />
             </div>
         </div>
     );

@@ -5,6 +5,7 @@ import { db } from '@bchess/db';
 import { userStats } from '@bchess/db/tables';
 import { MailService } from '../mail/mail.service';
 import { createAuthMiddleware } from 'better-auth/api';
+import { passkey } from '@better-auth/passkey';
 
 export const createAuth = ({ mail }: { mail: MailService }) =>
     betterAuth({
@@ -40,6 +41,11 @@ export const createAuth = ({ mail }: { mail: MailService }) =>
             username({
                 minUsernameLength: 3,
                 maxUsernameLength: 15,
+            }),
+            passkey({
+                rpID: process.env.DOMAIN || 'localhost',
+                rpName: 'BChess',
+                origin: process.env.FRONTEND_URL,
             }),
         ],
 

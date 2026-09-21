@@ -60,6 +60,21 @@ export default function LoginPage() {
         },
     });
 
+    const passkeyMutation = useMutation({
+        mutationFn: async () => {
+            const { error } = await authClient.signIn.passkey({});
+
+            if (error) {
+                form.setError('root', {
+                    message: error.message || 'Something went wrong, please try again.',
+                });
+                return;
+            }
+
+            router.replace('/profile');
+        },
+    });
+
     async function onSubmit(data: LoginCredentials) {
         mutation.mutate(data);
     }
@@ -174,6 +189,17 @@ export default function LoginPage() {
                                 disabled={mutation.isPending}
                             >
                                 Sign in
+                            </Button>
+                            <Button
+                                type="button"
+                                className="w-full cursor-pointer -mt-1"
+                                variant={'outline'}
+                                size="lg"
+                                disabled={passkeyMutation.isPending}
+                                onClick={() => passkeyMutation.mutate()}
+                            >
+                                <Key />
+                                Use Passkey
                             </Button>
                         </form>
                         <div className="relative">

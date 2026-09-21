@@ -5,8 +5,7 @@ import { useUser } from '@/features/profile/hooks/use-user';
 import { Mail } from 'lucide-react';
 
 export default function AccountInfos() {
-    const { user, session } = useUser();
-    console.log({ session });
+    const { user } = useUser();
     return (
         <Card className="shadow-xl w-full">
             {/* <CardHeader className="text-center">
