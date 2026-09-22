@@ -53,7 +53,7 @@ export class ResignService {
     async resignAndEmit(userId: string) {
         const activeGame = await this.gamesService.getActiveGameByUserId(userId);
 
-        if (!activeGame) return null;
+        if (!activeGame) return;
 
         const result = activeGame.whiteId === userId ? 'black_won' : 'white_won';
 
