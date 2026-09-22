@@ -1,20 +1,19 @@
 'use client';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Controller, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
-import { Field, FieldError, FieldLabel } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
 import { useMutation } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useState } from 'react';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, Eye, EyeClosed, Key, Mail, User } from 'lucide-react';
+import { ArrowLeft, Mail, User } from 'lucide-react';
 import { RegisterSchema, RegisterCredentials } from '@/features/auth/validation';
 import { authClient } from '@/lib/auth-client';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import GoogleButton from '@/features/auth/components/google-button';
 import GithubButton from '@/features/auth/components/github-button';
+import { TextField } from '@/features/auth/components/text-field';
+import { PasswordField } from '@/features/auth/components/password-field';
 
 export default function LoginPage() {
     const form = useForm({
@@ -65,9 +64,6 @@ export default function LoginPage() {
     const errors = form.formState.errors;
     const message = errors.root?.message ?? error ?? null;
 
-    const [showPassword, setShowPassword] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
     return (
         <div className="w-full h-full flex items-center justify-center p-4">
             <div className="w-full max-w-md">
@@ -91,136 +87,41 @@ export default function LoginPage() {
                             noValidate
                         >
                             <p className="text-red-500">{message}</p>
-                            {/* Name Field */}
-                            <Controller
+
+                            {/* Username Field */}
+                            <TextField
                                 control={form.control}
                                 name="username"
-                                render={({ field, fieldState }) => (
-                                    <Field data-invalid={fieldState.invalid}>
-                                        <FieldLabel htmlFor="username">Username</FieldLabel>
-                                        <div className="relative">
-                                            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-
-                                            <Input
-                                                id={field.name}
-                                                type="string"
-                                                placeholder="Enter your username"
-                                                className="pl-10"
-                                                aria-invalid={fieldState.invalid}
-                                                {...field}
-                                            />
-                                        </div>
-                                        {fieldState.invalid && (
-                                            <FieldError errors={[fieldState.error]} />
-                                        )}
-                                    </Field>
-                                )}
+                                label="Username"
+                                placeholder="Enter your username"
+                                icon={User}
                             />
+
                             {/* Email Field */}
-                            <Controller
+                            <TextField
                                 control={form.control}
                                 name="email"
-                                render={({ field, fieldState }) => (
-                                    <Field data-invalid={fieldState.invalid}>
-                                        <FieldLabel htmlFor="email">Email</FieldLabel>
-                                        <div className="relative">
-                                            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                                            <Input
-                                                id={field.name}
-                                                type="email"
-                                                placeholder="Enter your email"
-                                                className="pl-10"
-                                                aria-invalid={fieldState.invalid}
-                                                {...field}
-                                            />
-                                        </div>
-                                        {fieldState.invalid && (
-                                            <FieldError errors={[fieldState.error]} />
-                                        )}
-                                    </Field>
-                                )}
+                                type="email"
+                                label="Email"
+                                placeholder="Enter your email"
+                                icon={Mail}
                             />
 
                             {/* Password Field */}
-                            <Controller
+                            <PasswordField
                                 control={form.control}
-                                name="password"
-                                render={({ field, fieldState }) => (
-                                    <Field data-invalid={fieldState.invalid}>
-                                        <FieldLabel htmlFor="password">Password</FieldLabel>
-                                        <div className="relative">
-                                            <Key className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                                            <Input
-                                                id="password"
-                                                type={showPassword ? 'text' : 'password'}
-                                                placeholder="Create a password"
-                                                className="pl-10 pr-10"
-                                                aria-invalid={fieldState.invalid}
-                                                {...field}
-                                            />
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                size="sm"
-                                                className="absolute right-0 top-0 h-full px-3"
-                                                onClick={() => setShowPassword(!showPassword)}
-                                            >
-                                                {showPassword ? (
-                                                    <EyeClosed className="h-4 w-4" />
-                                                ) : (
-                                                    <Eye className="h-4 w-4" />
-                                                )}
-                                            </Button>
-                                        </div>
-                                        {fieldState.invalid && (
-                                            <FieldError errors={[fieldState.error]} />
-                                        )}
-                                    </Field>
-                                )}
+                                name={'password'}
+                                placeholder="Create a password"
                             />
 
                             {/* Confirm Password Field */}
-                            <Controller
+                            <PasswordField
                                 control={form.control}
-                                name="confirmPassword"
-                                render={({ field, fieldState }) => (
-                                    <Field data-invalid={fieldState.invalid}>
-                                        <FieldLabel htmlFor="confirmPassword">
-                                            Confirm Password
-                                        </FieldLabel>
-                                        <div className="relative">
-                                            <Key className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-
-                                            <Input
-                                                id="confirmPassword"
-                                                type={showConfirmPassword ? 'text' : 'password'}
-                                                placeholder="Confirm your password"
-                                                className="pl-10 pr-10"
-                                                aria-invalid={fieldState.invalid}
-                                                {...field}
-                                            />
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                size="sm"
-                                                className="absolute right-0 top-0 h-full px-3"
-                                                onClick={() =>
-                                                    setShowConfirmPassword(!showConfirmPassword)
-                                                }
-                                            >
-                                                {showConfirmPassword ? (
-                                                    <EyeClosed className="h-4 w-4" />
-                                                ) : (
-                                                    <Eye className="h-4 w-4" />
-                                                )}
-                                            </Button>
-                                        </div>
-                                        {fieldState.invalid && (
-                                            <FieldError errors={[fieldState.error]} />
-                                        )}
-                                    </Field>
-                                )}
+                                name={'confirmPassword'}
+                                label="Confirm Password"
+                                placeholder="Confirm your password"
                             />
+
                             {/* Sign Up Button */}
                             <Button
                                 type="submit"

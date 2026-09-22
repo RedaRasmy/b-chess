@@ -1,9 +1,7 @@
 'use client';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Controller, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
-import { Field, FieldError, FieldLabel } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
 import { useMutation } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useState } from 'react';
@@ -15,6 +13,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import GoogleButton from '@/features/auth/components/google-button';
 import GithubButton from '@/features/auth/components/github-button';
+import { TextField } from '@/features/auth/components/text-field';
 
 export default function Page() {
     const form = useForm({
@@ -80,29 +79,14 @@ export default function Page() {
                         >
                             <p className="text-red-500">{message}</p>
                             <p className="text-green-500">{successMessage}</p>
-                            {/* Email Field */}
-                            <Controller
-                                name="email"
+
+                            <TextField
                                 control={form.control}
-                                render={({ field, fieldState }) => (
-                                    <Field data-invalid={fieldState.invalid}>
-                                        <FieldLabel htmlFor="email">Email</FieldLabel>
-                                        <div className="relative">
-                                            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                                            <Input
-                                                {...field}
-                                                id="email"
-                                                type="email"
-                                                aria-invalid={fieldState.invalid}
-                                                placeholder="name@example.com"
-                                                className="pl-10"
-                                            />
-                                        </div>
-                                        {fieldState.invalid && (
-                                            <FieldError errors={[fieldState.error]} />
-                                        )}
-                                    </Field>
-                                )}
+                                name="email"
+                                label="Email"
+                                type="email"
+                                placeholder="name@example.com"
+                                icon={Mail}
                             />
 
                             {/* Sign In Button */}
