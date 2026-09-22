@@ -1,4 +1,4 @@
-import { Heading, Hr, Text, Button } from 'react-email';
+import { Heading, Hr, Text, Button, Section } from 'react-email';
 import { Layout } from '../components/layout';
 
 export interface DeleteAccountProps {
@@ -17,16 +17,15 @@ export function DeleteAccountEmail({ url }: DeleteAccountProps) {
                     anonymously
                 </li>
             </ul>
-            <Text className="text-base text-gray-700 flex flex-col">
-                If you are sure and want to proceed, click the button bellow:
-                <br />
-                <Button
-                    href={url}
-                    className="bg-red-700 px-3 py-1 mt-4 w-fit self-center text-white rounded-xl"
-                >
+            <Text className="text-base text-gray-700">
+                If you are sure and want to proceed, click the button below:
+            </Text>
+
+            <Section className="text-center">
+                <Button href={url} className="bg-red-700 px-3 py-1 rounded-xl text-white">
                     Delete Account
                 </Button>
-            </Text>
+            </Section>
             <Hr className="my-6 border-gray-200" />
             <Text className="text-xs text-gray-500">This link will be invalid in few minutes.</Text>
         </Layout>
