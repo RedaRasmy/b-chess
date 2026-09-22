@@ -2,6 +2,7 @@ import { render } from 'react-email';
 import { WelcomeEmail, type WelcomeEmailProps } from './templates/welcome';
 import ResetPasswordEmail, { ResetPasswordEmailProps } from './templates/reset-password';
 import PasswordChangedEmail, { PasswordChangedProps } from './templates/password-changed';
+import DeleteAccountEmail, { DeleteAccountProps } from './templates/delete-account';
 
 export async function renderWelcome(props: WelcomeEmailProps) {
     return {
@@ -21,8 +22,16 @@ export async function renderResetPassword(props: ResetPasswordEmailProps) {
 
 export async function renderPasswordChanged(props: PasswordChangedProps) {
     return {
-        subject: 'Password Changed',
+        subject: 'Password Has Changed',
         html: await render(<PasswordChangedEmail {...props} />),
         text: await render(<PasswordChangedEmail {...props} />, { plainText: true }),
+    };
+}
+
+export async function renderDeleteAccount(props: DeleteAccountProps) {
+    return {
+        subject: 'Request to delete account',
+        html: await render(<DeleteAccountEmail {...props} />),
+        text: await render(<DeleteAccountEmail {...props} />, { plainText: true }),
     };
 }

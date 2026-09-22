@@ -46,16 +46,16 @@ export const useGameStore = create<GameStore>()(
 
                 get().setPlayers({
                     white: {
-                        id: game.whiteId,
-                        username: game.white.username,
-                        avatar: game.white.image,
+                        id: game.whiteId ?? 'white_deleted',
+                        username: game.white?.username ?? '[deleted]',
+                        avatar: game.white?.image ?? null,
                         rating: game.whiteRating,
                         status: game.whiteStatus,
                     },
                     black: {
-                        id: game.blackId,
-                        username: game.black.username,
-                        avatar: game.black.image,
+                        id: game.blackId ?? 'black_deleted',
+                        username: game.black?.username ?? '[deleted]',
+                        avatar: game.black?.image ?? null,
                         rating: game.blackRating,
                         status: game.blackStatus,
                     },

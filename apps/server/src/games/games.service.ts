@@ -12,7 +12,7 @@ import {
     PlayingGame,
 } from '@bchess/shared';
 import { games, moves, Reason, Result } from '@bchess/db/tables';
-import { and, asc, desc, eq, gt, inArray, or } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, inArray, isNull, ne, or } from 'drizzle-orm';
 
 @Injectable()
 export class GamesService {
@@ -216,12 +216,14 @@ export class GamesService {
             with: {
                 white: {
                     columns: {
+                        id: true,
                         username: true,
                         image: true,
                     },
                 },
                 black: {
                     columns: {
+                        id: true,
                         username: true,
                         image: true,
                     },
@@ -246,8 +248,7 @@ export class GamesService {
                 ...game
             }) => {
                 const isWhite = userId === whiteId;
-                const oppoent = isWhite ? black! : white;
-                const oppoentId = isWhite ? blackId! : whiteId;
+                const opponent = isWhite ? black : white;
                 const duration = updatedAt.getTime() - gameStartedAt!;
                 const cleanResult =
                     result === 'draw'
@@ -260,16 +261,24 @@ export class GamesService {
 
                 return {
                     ...game,
-                    opponent: {
-                        id: oppoentId,
-                        username: oppoent.username,
-                        avatar: oppoent.image,
-                    },
+                    opponent,
                     result: cleanResult,
                     duration,
                     ratingDiff,
                 } as GameSummary;
             },
         );
+    }
+
+    async getActiveGameByUserId(userId: string): Promise<MatchedGame | null> {
+        const activeGame = await this.db.query.games.findFirst({
+            where: and(
+                or(eq(games.whiteId, userId), eq(games.blackId, userId)),
+                ne(games.status, 'matching'),
+                isNull(games.result),
+            ),
+        });
+
+        return (activeGame as MatchedGame) ?? null;
     }
 }

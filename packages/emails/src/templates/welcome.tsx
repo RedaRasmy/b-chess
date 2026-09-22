@@ -5,7 +5,7 @@ export interface WelcomeEmailProps {}
 
 export function WelcomeEmail({}: WelcomeEmailProps) {
     return (
-        <Layout preview={`Welcome to BChess!`}>
+        <Layout>
             <Heading className="text-2xl font-bold text-gray-900">
                 Welcome to <span className="text-red-700">BChess</span>
             </Heading>

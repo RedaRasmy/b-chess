@@ -6,8 +6,18 @@ import { userStats } from '@bchess/db/tables';
 import { MailService } from '../mail/mail.service';
 import { createAuthMiddleware } from 'better-auth/api';
 import { passkey } from '@better-auth/passkey';
+import { ResignService } from '../multiplayer/resign.service';
+import { MatchmakingService } from '../multiplayer/matchmaking.service';
 
-export const createAuth = ({ mail }: { mail: MailService }) =>
+export const createAuth = ({
+    mail,
+    resignService,
+    matchmakingService,
+}: {
+    mail: MailService;
+    resignService: ResignService;
+    matchmakingService: MatchmakingService;
+}) =>
     betterAuth({
         database: drizzleAdapter(db, {
             provider: 'pg',
@@ -15,6 +25,23 @@ export const createAuth = ({ mail }: { mail: MailService }) =>
         trustedOrigins: [process.env.FRONTEND_URL ?? 'http://localhost:3000'],
         baseURL: process.env.BETTER_AUTH_URL ?? 'http://localhost:3333',
 
+        user: {
+            deleteUser: {
+                enabled: true,
+                sendDeleteAccountVerification: async ({ user, url }) => {
+                    await mail.sendDeleteAccount(user.email, url);
+                },
+                deleteTokenExpiresIn: 60 * 15, // 15min
+                beforeDelete: async (user) => {
+                    await matchmakingService.cancelMatch(user.id);
+                    // Note: Resign -> Emit, so the gateway can notify the opponent
+                    await resignService.resignAndEmit(user.id);
+                },
+            },
+        },
+        session: {
+            freshAge: 0, // 0 == disabled, I'm using email verification on account deletion
+        },
         //
         emailAndPassword: {
             enabled: true,
@@ -27,6 +54,7 @@ export const createAuth = ({ mail }: { mail: MailService }) =>
                 await mail.sendPasswordChanged(user.email);
             },
         },
+
         socialProviders: {
             github: {
                 clientId: process.env.GITHUB_CLIENT_ID as string,
@@ -37,6 +65,7 @@ export const createAuth = ({ mail }: { mail: MailService }) =>
                 clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
             },
         },
+
         plugins: [
             username({
                 minUsernameLength: 3,

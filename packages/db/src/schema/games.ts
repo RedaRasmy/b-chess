@@ -21,10 +21,8 @@ export const colorsEnum = pgEnum('color', ['w', 'b']);
 
 export const games = pgTable('games', {
     id: uuid().primaryKey().defaultRandom(),
-    whiteId: text('white_id')
-        .references(() => user.id)
-        .notNull(),
-    blackId: text('black_id').references(() => user.id),
+    whiteId: text('white_id').references(() => user.id, { onDelete: 'set null' }),
+    blackId: text('black_id').references(() => user.id, { onDelete: 'set null' }),
     currentFen: text('current_fen').default(DEFAULT_POSITION).notNull(),
     result: resultEnum(),
     reason: reasonEnum('game_over_reason'),

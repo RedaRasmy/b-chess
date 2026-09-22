@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { authClient } from '@/lib/auth-client';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { getAuthenticatorName, Passkey } from '@better-auth/passkey';
 import { Item, ItemActions, ItemContent, ItemDescription, ItemTitle } from '@/components/ui/item';
@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/alert-dialog';
 
 export default function Passkeys() {
+    const queryClient = useQueryClient();
     const { data: passkeys } = useQuery({
         queryKey: ['passkeys'],
         queryFn: async () => await authClient.passkey.listUserPasskeys(),
@@ -35,6 +36,9 @@ export default function Passkeys() {
         onSuccess: async () => {
             toast.success('Passkey has been registered successfully', {
                 richColors: true,
+            });
+            queryClient.invalidateQueries({
+                queryKey: ['passkeys'],
             });
         },
         onError: (err) => {
@@ -56,7 +60,9 @@ export default function Passkeys() {
             toast.success('Passkey has been deleted successfully', {
                 richColors: true,
             });
-            // form.reset();
+            queryClient.invalidateQueries({
+                queryKey: ['passkeys'],
+            });
         },
         onError: (err) => {
             const message = err.message || 'Something went wrong';
@@ -84,7 +90,7 @@ export default function Passkeys() {
             </CardHeader>
             <CardContent className="">
                 {passkeys?.data?.map((passkey) => (
-                    <Item variant="outline">
+                    <Item variant="outline" key={passkey.id}>
                         <ItemContent>
                             <ItemTitle>{getPasskeyName(passkey)}</ItemTitle>
                             <ItemDescription>

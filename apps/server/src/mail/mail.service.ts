@@ -44,4 +44,17 @@ export class MailService {
             },
         );
     }
+
+    sendDeleteAccount(to: string, url: string) {
+        return this.queue.add(
+            'delete-account',
+            { to, url },
+            {
+                attempts: 5,
+                backoff: { type: 'exponential', delay: 5000 },
+                removeOnComplete: 1000,
+                removeOnFail: 5000,
+            },
+        );
+    }
 }

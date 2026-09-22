@@ -12,7 +12,6 @@ export default function GlobalListeners() {
     const { user } = useUser();
 
     useSocketListener('game_found', (game) => {
-        console.log('game found: ', game);
         gameState.resetGame();
         gameState.setMode('multiplayer');
         gameState.setStatus(game.status);
@@ -25,7 +24,6 @@ export default function GlobalListeners() {
     });
 
     useSocketListener('sync', (game) => {
-        console.log('sync/ full game: ', game);
         const userId = user.id;
 
         const playerColor = game.whiteId === userId ? 'white' : 'black';
@@ -34,8 +32,6 @@ export default function GlobalListeners() {
     });
 
     useSocketListener('game_finished', (game) => {
-        console.log('game finished: ', game.result, game.reason, game.diff);
-
         gameState.endGame({
             result: game.result,
             reason: game.reason,
@@ -47,7 +43,6 @@ export default function GlobalListeners() {
     });
 
     useSocketListener('new_move', (move) => {
-        console.log('new move: ', move);
         if (!gameState.players) {
             throw new Error('Game is not initialized');
         }
@@ -63,8 +58,6 @@ export default function GlobalListeners() {
     });
 
     useSocketListener('exception', (exception) => {
-        console.error('exception: ', exception);
-
         if (exception.code === 'TOO_MANY_REQUESTS') {
             toast.error(exception.message, {
                 richColors: true,

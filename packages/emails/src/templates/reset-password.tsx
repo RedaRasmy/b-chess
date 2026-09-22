@@ -7,7 +7,7 @@ export interface ResetPasswordEmailProps {
 
 export function ResetPasswordEmail({ url }: ResetPasswordEmailProps) {
     return (
-        <Layout preview={`Request to reset password`}>
+        <Layout>
             <Heading className="text-2xl font-bold text-gray-900">
                 Reset your password in few steps
             </Heading>
@@ -23,7 +23,7 @@ export function ResetPasswordEmail({ url }: ResetPasswordEmailProps) {
                 </Button>
             </Text>
             <Hr className="my-6 border-gray-200" />
-            <Text className="text-xs text-gray-500">The link will be invalid in few minutes.</Text>
+            <Text className="text-xs text-gray-500">This link will be invalid in few minutes.</Text>
         </Layout>
     );
 }

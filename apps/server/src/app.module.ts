@@ -18,6 +18,8 @@ import { BullModule } from '@nestjs/bullmq';
 import IORedis from 'ioredis';
 import { BullBoardModule } from '@bull-board/nestjs';
 import { ExpressAdapter } from '@bull-board/express';
+import { MatchmakingService } from './multiplayer/matchmaking.service';
+import { ResignService } from './multiplayer/resign.service';
 
 @Module({
     imports: [
@@ -40,9 +42,15 @@ import { ExpressAdapter } from '@bull-board/express';
         }),
         DatabaseModule,
         AuthModule.forRootAsync({
-            imports: [MailModule],
-            inject: [MailService],
-            useFactory: (mail: MailService) => ({ auth: createAuth({ mail }) }),
+            imports: [MailModule, MatchmakingService, ResignService],
+            inject: [MailService, MatchmakingService, ResignService],
+            useFactory: (
+                mail: MailService,
+                matchmakingService: MatchmakingService,
+                resignService: ResignService,
+            ) => ({
+                auth: createAuth({ mail, matchmakingService, resignService }),
+            }),
         }),
         EventEmitterModule.forRoot(),
         ProfileModule,
