@@ -23,5 +23,6 @@ import { TimerService } from './timer.service';
         TimerService,
     ],
     controllers: [MultiplayerController],
+    exports: [MatchmakingService, ResignService],
 })
 export class MultiplayerModule {}

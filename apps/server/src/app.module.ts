@@ -42,7 +42,7 @@ import { ResignService } from './multiplayer/resign.service';
         }),
         DatabaseModule,
         AuthModule.forRootAsync({
-            imports: [MailModule, MatchmakingService, ResignService],
+            imports: [MailModule, MultiplayerModule],
             inject: [MailService, MatchmakingService, ResignService],
             useFactory: (
                 mail: MailService,
