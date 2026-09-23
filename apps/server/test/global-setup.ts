@@ -1,33 +1,36 @@
 import 'dotenv/config';
-import { PostgreSqlContainer } from '@testcontainers/postgresql';
-import { writeFileSync } from 'fs';
+import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers/postgresql';
+import { unlink, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import postgres from 'postgres';
-import { join } from 'path';
 
-export default async function globalSetup() {
-    const container = await new PostgreSqlContainer('postgres:18').start();
+let container: StartedPostgreSqlContainer | undefined;
 
-    // stash connection info + container id so teardown can find it
-    process.env.TEST_DATABASE_URL = container.getConnectionUri();
-    writeFileSync(
-        '.testcontainer.json',
-        JSON.stringify({
-            id: container.getId(),
-            uri: container.getConnectionUri(),
-        }),
-    );
+export async function setup() {
+    container = await new PostgreSqlContainer('postgres:18').start();
+    const uri = container.getConnectionUri();
 
-    globalThis.__PG_CONTAINER__ = container;
+    process.env.TEST_DATABASE_URL = uri;
+    await writeFile('.testcontainer.json', JSON.stringify({ id: container.getId(), uri }));
 
-    const client = postgres(container.getConnectionUri(), {
-        // max: 1,
-        // idle_timeout: 30,
-        // connect_timeout: 10,
-        // prepare: false,
+    const client = postgres(uri);
+    try {
+        await migrate(drizzle(client), {
+            migrationsFolder: join(__dirname, '../../../packages/db/migrations'),
+        });
+    } catch (err) {
+        await container.stop(); // don't leak the container if migrations fail
+        throw err;
+    } finally {
+        await client.end();
+    }
+}
+
+export async function teardown() {
+    await container?.stop();
+    await unlink('.testcontainer.json').catch((error) => {
+        console.error('Failed to delete .testcontainer.json file: ', error);
     });
-    const db = drizzle(client);
-    await migrate(db, { migrationsFolder: join(__dirname, '../../../packages/db/migrations') });
-    await client.end();
 }
