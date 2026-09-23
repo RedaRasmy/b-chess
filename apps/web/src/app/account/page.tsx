@@ -1,10 +1,10 @@
 'use client';
 import AccountInfos from '@/features/profile/components/account-infos';
-import Passkeys from '@/features/profile/components/passkeys';
-import UpdatePassword from '@/features/profile/components/change-password';
+import Passkeys from '@/features/auth/components/passkeys';
+import UpdatePassword from '@/features/auth/components/change-password';
 import { authClient } from '@/lib/auth-client';
 import { useQuery } from '@tanstack/react-query';
-import DeleteAccount from '@/features/profile/components/delete-account';
+import DeleteAccount from '@/features/auth/components/delete-account';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
