@@ -1,11 +1,10 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { CreateGameDto } from './dto/create-game.dto';
 import { DATABASE_CONNECTION } from '../database/database.module';
 import type { Database } from '@bchess/db';
 import { PlayersService } from '../players/players.service';
 import { and, between, eq, ne, sql } from 'drizzle-orm';
 import { games } from '@bchess/db/tables';
-import { MatchedGame, MatchingGame, parseTimerOption } from '@bchess/shared';
+import { IGame, MatchedGame, MatchingGame, parseTimerOption } from '@bchess/shared';
 
 @Injectable()
 export class MatchmakingService {
@@ -21,7 +20,7 @@ export class MatchmakingService {
         return matchingGame as MatchingGame;
     }
 
-    async findOrCreateMatch({ timer, min, max }: CreateGameDto, userId: string) {
+    async findOrCreateMatch({ timer, min, max }: IGame, userId: string) {
         const alreadyCreatedMatch = await this.getMatch(userId);
 
         if (alreadyCreatedMatch) {

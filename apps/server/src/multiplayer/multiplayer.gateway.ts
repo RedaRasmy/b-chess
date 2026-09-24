@@ -11,16 +11,28 @@ import {
 } from '@nestjs/websockets';
 import { ResignService } from './resign.service';
 import { fromNodeHeaders } from 'better-auth/node';
-import { MoveDto } from './dto/move.dto';
-import { CreateGameDto } from './dto/create-game.dto';
-import { CLIENT_EVENTS, Elo, FinishedGame, type MoveAck } from '@bchess/shared';
+import {
+    CLIENT_EVENTS,
+    Elo,
+    FinishedGame,
+    type IGame,
+    InsertGameSchema,
+    type MoveAck,
+    InsertMoveSchema,
+    type IMove,
+} from '@bchess/shared';
 import { GamesService } from '../games/games.service';
-import { Logger, UseFilters, UseGuards, UsePipes } from '@nestjs/common';
+import {
+    Logger,
+    StandardSchemaValidationPipe,
+    UseFilters,
+    UseGuards,
+    UsePipes,
+} from '@nestjs/common';
 import { LiveGamesService } from './live-games.service';
 import { MatchmakingService } from './matchmaking.service';
 import { MoveService } from './move.service';
 import { DrawService } from './draw.service';
-import { ZodValidationPipe } from 'nestjs-zod';
 import type { TypedServer, TypedSocket } from './socket.type';
 import { isConnected, Rooms } from './utils';
 import { OnEvent } from '@nestjs/event-emitter';
@@ -33,6 +45,11 @@ import { Auth } from '../auth/auth';
 
 @UseGuards(WsThrottlerGuard)
 @UseFilters(ThrottlerWsExceptionFilter)
+@UsePipes(
+    new StandardSchemaValidationPipe({
+        exceptionFactory: (issues) => new WsException(issues.map((i) => i.message)),
+    }),
+)
 @WebSocketGateway({ cors: { origin: true, credentials: true } })
 export class MultiplayerGateway implements OnGatewayConnection, OnGatewayDisconnect {
     constructor(
@@ -143,14 +160,16 @@ export class MultiplayerGateway implements OnGatewayConnection, OnGatewayDisconn
         }
     }
 
-    @UsePipes(new ZodValidationPipe())
     @SubscribeMessage(CLIENT_EVENTS.JOIN_QUEUE)
     async handleJoinQueue(
         @ConnectedSocket() socket: TypedSocket,
-        @MessageBody() gameDto: CreateGameDto,
+        @MessageBody({
+            schema: InsertGameSchema,
+        })
+        gameData: IGame,
     ) {
         const userId = socket.data.user.id;
-        const result = await this.matchmakingService.findOrCreateMatch(gameDto, userId);
+        const result = await this.matchmakingService.findOrCreateMatch(gameData, userId);
 
         const playerColor = result.game.whiteId === userId ? 'w' : 'b';
         const gameId = result.game.id;
@@ -238,7 +257,10 @@ export class MultiplayerGateway implements OnGatewayConnection, OnGatewayDisconn
     })
     @SubscribeMessage(CLIENT_EVENTS.MOVE)
     async handleMove(
-        @MessageBody() moveDto: MoveDto,
+        @MessageBody({
+            schema: InsertMoveSchema,
+        })
+        moveData: IMove,
         @ConnectedSocket() socket: TypedSocket,
         @Ack() ack: MoveAck,
     ) {
@@ -264,7 +286,7 @@ export class MultiplayerGateway implements OnGatewayConnection, OnGatewayDisconn
                 liveGame = this.liveGamesService.createGame(gameId, moves);
             }
 
-            const { move, end, isCheck } = liveGame.move(moveDto);
+            const { move, end, isCheck } = liveGame.move(moveData);
 
             const { savedMove, newGame, elo } = await this.moveService.saveMove({
                 game: playingGame,

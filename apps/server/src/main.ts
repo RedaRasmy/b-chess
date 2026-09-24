@@ -1,8 +1,7 @@
 import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ZodValidationPipe } from 'nestjs-zod';
-import { ConsoleLogger } from '@nestjs/common';
+import { ConsoleLogger, StandardSchemaValidationPipe } from '@nestjs/common';
 import helmet from 'helmet';
 
 async function bootstrap() {
@@ -15,7 +14,7 @@ async function bootstrap() {
 
     app.use(helmet());
 
-    app.useGlobalPipes(new ZodValidationPipe());
+    app.useGlobalPipes(new StandardSchemaValidationPipe());
 
     app.enableCors({
         origin: process.env.FRONTEND_URL || 'http://localhost:3000',
