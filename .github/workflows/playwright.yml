@@ -29,6 +29,7 @@ jobs:
             NEXT_PUBLIC_APP_URL: http://localhost:3000
             BETTER_AUTH_URL: http://localhost:3333
             BETTER_AUTH_SECRET: kdsajflkajksdjfklajsdkjfalksjdklfa
+            RESEND_API_KEY: fksaduweinvksfsadfasjdkfajsjdlfkjaksl
 
         steps:
             - uses: actions/checkout@v4
