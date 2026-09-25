@@ -3,7 +3,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { authClient } from '@/lib/auth-client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { getAuthenticatorName, Passkey } from '@better-auth/passkey';
 import { Item, ItemActions, ItemContent, ItemDescription, ItemTitle } from '@/components/ui/item';
 import {
     AlertDialog,
@@ -16,6 +15,8 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import RenamePasskeyDialog from '@/features/auth/components/rename-passkey';
+import { getPasskeyName } from '@/features/auth/utils/get-passkey-name';
 
 export default function Passkeys() {
     const queryClient = useQueryClient();
@@ -78,10 +79,6 @@ export default function Passkeys() {
         deleteMutation.mutate(id);
     }
 
-    function getPasskeyName(passkey: Passkey) {
-        return passkey.name || getAuthenticatorName(passkey.aaguid) || 'Passkey';
-    }
-
     return (
         <Card className="shadow-xl w-full">
             <CardHeader className="text-center">
@@ -98,6 +95,7 @@ export default function Passkeys() {
                             </ItemDescription>
                         </ItemContent>
                         <ItemActions>
+                            <RenamePasskeyDialog passkey={passkey} />
                             <AlertDialog>
                                 <AlertDialogTrigger asChild>
                                     <Button variant="destructive" size="sm">
