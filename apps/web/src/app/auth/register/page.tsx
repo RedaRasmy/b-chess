@@ -64,6 +64,9 @@ export default function LoginPage() {
     const errors = form.formState.errors;
     const message = errors.root?.message ?? error ?? null;
 
+    const wasGoogle = authClient.isLastUsedLoginMethod('google');
+    const wasGithub = authClient.isLastUsedLoginMethod('github');
+
     return (
         <div className="w-full h-full flex items-center justify-center p-4">
             <div className="w-full max-w-md">
@@ -145,8 +148,8 @@ export default function LoginPage() {
 
                         {/* OAuth Login */}
                         <div className="grid grid-cols-2 gap-4">
-                            <GoogleButton />
-                            <GithubButton />
+                            <GoogleButton isLastUsed={wasGoogle} />
+                            <GithubButton isLastUsed={wasGithub} />
                         </div>
 
                         {/* Sign In Link */}

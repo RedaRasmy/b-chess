@@ -14,6 +14,7 @@ import GoogleButton from '@/features/auth/components/google-button';
 import GithubButton from '@/features/auth/components/github-button';
 import { PasswordField } from '@/features/auth/components/password-field';
 import { TextField } from '@/features/auth/components/text-field';
+import LastUsedBadge from '@/features/auth/components/last-used-badge';
 
 export default function LoginPage() {
     const form = useForm({
@@ -25,6 +26,11 @@ export default function LoginPage() {
     });
     const params = useSearchParams();
     const error = params.get('error');
+
+    const wasGoogle = authClient.isLastUsedLoginMethod('google');
+    const wasGithub = authClient.isLastUsedLoginMethod('github');
+    const wasEmail = authClient.isLastUsedLoginMethod('email');
+    const wasPasskey = authClient.isLastUsedLoginMethod('passkey');
 
     const router = useRouter();
 
@@ -122,16 +128,17 @@ export default function LoginPage() {
                             {/* Sign In Button */}
                             <Button
                                 type="submit"
-                                className="w-full cursor-pointer mt-3"
+                                className="w-full relative mt-3"
                                 size="lg"
                                 disabled={mutation.isPending}
                             >
                                 Sign in
+                                {wasEmail && <LastUsedBadge variant={'secondary'} />}
                             </Button>
                             {/* Passkey Button */}
                             <Button
                                 type="button"
-                                className="w-full cursor-pointer -mt-1"
+                                className="w-full relative -mt-1"
                                 variant={'outline'}
                                 size="lg"
                                 disabled={passkeyMutation.isPending}
@@ -139,6 +146,7 @@ export default function LoginPage() {
                             >
                                 <Key />
                                 Use Passkey
+                                {wasPasskey && <LastUsedBadge className="top-1/1" />}
                             </Button>
                         </form>
                         <div className="relative">
@@ -154,8 +162,8 @@ export default function LoginPage() {
 
                         {/* OAuth Login */}
                         <div className="grid grid-cols-2 gap-4">
-                            <GoogleButton />
-                            <GithubButton />
+                            <GoogleButton isLastUsed={wasGoogle} />
+                            <GithubButton isLastUsed={wasGithub} />
                         </div>
 
                         {/* Sign Up Link */}

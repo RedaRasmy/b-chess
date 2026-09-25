@@ -8,6 +8,7 @@ import { createAuthMiddleware } from 'better-auth/api';
 import { passkey } from '@better-auth/passkey';
 import { ResignService } from '../multiplayer/resign.service.js';
 import { MatchmakingService } from '../multiplayer/matchmaking.service.js';
+import { lastLoginMethod } from 'better-auth/plugins';
 
 export const createAuth = ({
     mail,
@@ -19,6 +20,12 @@ export const createAuth = ({
     matchmakingService: MatchmakingService;
 }) =>
     betterAuth({
+        advanced: {
+            crossSubDomainCookies: {
+                enabled: true,
+                domain: process.env.DOMAIN,
+            },
+        },
         database: drizzleAdapter(db, {
             provider: 'pg',
         }),
@@ -75,6 +82,28 @@ export const createAuth = ({
                 rpID: process.env.DOMAIN || 'localhost',
                 rpName: 'BChess',
                 origin: process.env.FRONTEND_URL,
+            }),
+            lastLoginMethod({
+                customResolveMethod: (ctx) => {
+                    if (ctx.path === '/passkey/verify-authentication') {
+                        return 'passkey';
+                    }
+                    return null;
+                }, // TODO
+                // beforeStoreCookie: async (ctx, lastUsedLoginMethod) => {
+                //     // Example 1: Check consent from session or database
+                //     const session = await getSessionFromCtx(ctx);
+                //     if (session?.user) {
+                //         // custom function which hits your database to check if the user has given consent
+                //         const userConsent = await checkUserConsent(session.user.id);
+                //         return userConsent?.allowsNonEssentialCookies ?? false;
+                //     }
+                //     // Example 2: Check consent from request headers (cookie banner)
+                //     // parseConsentCookie should return false/null/undefined when no consent is present
+                //     const consentCookie = ctx.request?.headers?.get('cookie');
+                //     const hasConsent = parseConsentCookie(consentCookie);
+                //     return !!hasConsent;
+                // },
             }),
         ],
 
