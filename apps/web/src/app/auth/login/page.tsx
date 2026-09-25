@@ -15,6 +15,7 @@ import GithubButton from '@/features/auth/components/github-button';
 import { PasswordField } from '@/features/auth/components/password-field';
 import { TextField } from '@/features/auth/components/text-field';
 import LastUsedBadge from '@/features/auth/components/last-used-badge';
+import { CheckboxField } from '@/components/checkbox-field';
 
 export default function LoginPage() {
     const form = useForm({
@@ -22,6 +23,7 @@ export default function LoginPage() {
         defaultValues: {
             emailOrUsername: '',
             password: '',
+            rememberMe: true,
         },
     });
     const params = useSearchParams();
@@ -42,6 +44,7 @@ export default function LoginPage() {
                 const { data: result, error } = await authClient.signIn.email({
                     email: data.emailOrUsername,
                     password: data.password,
+                    rememberMe: data.rememberMe,
                 });
                 if (error) throw error;
                 return result;
@@ -123,6 +126,13 @@ export default function LoginPage() {
                                 control={form.control}
                                 name={'password'}
                                 forgotPasswordHref="/auth/forgot-password"
+                            />
+
+                            <CheckboxField
+                                control={form.control}
+                                name="rememberMe"
+                                label="Remember Me"
+                                className="-mt-1"
                             />
 
                             {/* Sign In Button */}

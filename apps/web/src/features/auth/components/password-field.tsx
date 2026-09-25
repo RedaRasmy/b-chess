@@ -60,14 +60,14 @@ export function PasswordField<T extends FieldValues>({
                             )}
                         </Button>
                     </div>
-
-                    {forgotPasswordHref && (
-                        <Button asChild variant="link" className="justify-end -mt-2 -mb-4">
-                            <Link href={forgotPasswordHref}>forgot password?</Link>
-                        </Button>
-                    )}
-
-                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                    <div className="flex">
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                        {forgotPasswordHref && (
+                            <Button asChild variant="link" className="ml-auto -mt-2 -mb-4">
+                                <Link href={forgotPasswordHref}>forgot password?</Link>
+                            </Button>
+                        )}
+                    </div>
                 </Field>
             )}
         />

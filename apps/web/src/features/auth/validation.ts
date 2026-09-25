@@ -17,6 +17,7 @@ export const PasswordSchema = z
 export const LoginSchema = z.object({
     emailOrUsername: z.string().min(1, 'Email or username is required'),
     password: PasswordSchema,
+    rememberMe: z.boolean().default(true),
 });
 
 export const RegisterSchema = z
