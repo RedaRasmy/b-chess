@@ -11,11 +11,12 @@ import {
 } from '@/components/ui/dialog';
 import { FieldGroup } from '@/components/ui/field';
 import { TextField } from '@/features/auth/components/text-field';
-import { getPasskeyName } from '@/features/auth/utils/get-passkey-name';
+import { getPasskeyName } from '@/features/auth/utils/passkey-utils';
 import { authClient } from '@/lib/auth-client';
 import { Passkey } from '@better-auth/passkey';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { RotateCcw } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -65,12 +66,16 @@ export default function RenamePasskeyDialog({ passkey }: { passkey: Passkey }) {
         updateMutation.mutate(data);
     }
 
+    function reset() {
+        form.reset({ name: getPasskeyName(passkey) });
+    }
+
     return (
         <Dialog
             open={open}
             onOpenChange={(next) => {
                 setOpen(next);
-                if (next) form.reset({ name: getPasskeyName(passkey) });
+                if (next) reset();
             }}
         >
             <DialogTrigger asChild>
@@ -90,13 +95,26 @@ export default function RenamePasskeyDialog({ passkey }: { passkey: Passkey }) {
                             name="name"
                             label="Passkey Name"
                             placeholder='e.g. "MacBook Pro" or "My Phone"'
+                            endAdornment={
+                                <Button
+                                    type="button"
+                                    size={'icon-xs'}
+                                    variant={'ghost'}
+                                    onClick={reset}
+                                >
+                                    <RotateCcw />
+                                </Button>
+                            }
                         />
                     </FieldGroup>
                     <DialogFooter>
                         <DialogClose asChild>
                             <Button variant="outline">Cancel</Button>
                         </DialogClose>
-                        <Button type="submit" disabled={updateMutation.isPending}>
+                        <Button
+                            type="submit"
+                            disabled={updateMutation.isPending || !form.formState.isDirty}
+                        >
                             Save changes
                         </Button>
                     </DialogFooter>

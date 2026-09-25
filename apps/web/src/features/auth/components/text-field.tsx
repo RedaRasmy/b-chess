@@ -51,7 +51,9 @@ export function TextField<T extends FieldValues>({
                             disabled={disabled}
                             className={cn(Icon && 'pl-10', endAdornment && 'pr-10', inputClassName)}
                         />
-                        {endAdornment}
+                        <div className="absolute right-1 top-1/2 -translate-y-1/2 text-muted-foreground">
+                            {endAdornment}
+                        </div>
                     </div>
 
                     {fieldState.invalid && <FieldError errors={[fieldState.error]} />}

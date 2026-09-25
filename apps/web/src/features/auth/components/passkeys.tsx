@@ -16,7 +16,8 @@ import {
     AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import RenamePasskeyDialog from '@/features/auth/components/rename-passkey';
-import { getPasskeyName } from '@/features/auth/utils/get-passkey-name';
+import { getPasskeyName, isPasskeySynced } from '@/features/auth/utils/passkey-utils';
+import { Badge } from '@/components/ui/badge';
 
 export default function Passkeys() {
     const queryClient = useQueryClient();
@@ -89,7 +90,14 @@ export default function Passkeys() {
                 {passkeys?.data?.map((passkey) => (
                     <Item variant="outline" key={passkey.id}>
                         <ItemContent>
-                            <ItemTitle>{getPasskeyName(passkey)}</ItemTitle>
+                            <ItemTitle>
+                                {getPasskeyName(passkey)}{' '}
+                                {isPasskeySynced(passkey) && (
+                                    <Badge className="ml-1 hidden lg:block" variant={'outline'}>
+                                        synced
+                                    </Badge>
+                                )}
+                            </ItemTitle>
                             <ItemDescription>
                                 Added {passkey.createdAt.toDateString()}
                             </ItemDescription>
