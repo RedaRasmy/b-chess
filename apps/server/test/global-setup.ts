@@ -18,7 +18,7 @@ export async function setup() {
     const client = postgres(uri);
     try {
         await migrate(drizzle(client), {
-            migrationsFolder: join(__dirname, '../../../packages/db/migrations'),
+            migrationsFolder: join(import.meta.dirname, '../../../packages/db/migrations'),
         });
     } catch (err) {
         await container.stop(); // don't leak the container if migrations fail

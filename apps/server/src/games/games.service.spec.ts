@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { GamesService } from './games.service';
-import { getTestDbProvider, resetTestDb } from '../../test/test-db';
+import { GamesService } from './games.service.js';
+import { getTestDbProvider, resetTestDb } from '../../test/test-db.js';
 
 describe('GamesService', () => {
     let service: GamesService;

@@ -1,5 +1,5 @@
 import { Controller, Get, Param, NotFoundException } from '@nestjs/common';
-import { GamesService } from './games.service';
+import { GamesService } from './games.service.js';
 import { OptionalAuth } from '@thallesp/nestjs-better-auth';
 
 @Controller('games')

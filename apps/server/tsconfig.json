@@ -6,7 +6,8 @@
         "resolvePackageJsonExports": true,
         "esModuleInterop": true,
         "isolatedModules": true,
-        "declaration": true,
+        "declaration": false,
+        "declarationMap": false,
         "removeComments": true,
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
@@ -21,6 +22,6 @@
         "noImplicitAny": false,
         "strictBindCallApply": false,
         "noFallthroughCasesInSwitch": false,
-        "types": ["jest"]
+        "types": ["vitest/globals"]
     }
 }

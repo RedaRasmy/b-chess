@@ -1,9 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { DATABASE_CONNECTION } from '../database/database.module';
+import { DATABASE_CONNECTION } from '../database/database.module.js';
 import { type Database } from '@bchess/db';
 import { calcElo, FinishedGame } from '@bchess/shared';
-import { GamesService } from '../games/games.service';
-import { PlayersService } from '../players/players.service';
+import { GamesService } from '../games/games.service.js';
+import { PlayersService } from '../players/players.service.js';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()

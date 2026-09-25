@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ResignService } from './resign.service';
-import { getTestDbProvider, resetTestDb } from '../../test/test-db';
-import { GamesService } from '../games/games.service';
-import { PlayersService } from '../players/players.service';
+import { ResignService } from './resign.service.js';
+import { getTestDbProvider, resetTestDb } from '../../test/test-db.js';
+import { GamesService } from '../games/games.service.js';
+import { PlayersService } from '../players/players.service.js';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
 describe('ResignService', () => {

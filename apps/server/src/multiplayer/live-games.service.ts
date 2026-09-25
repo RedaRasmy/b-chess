@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { LiveGame } from './live-game';
+import { LiveGame } from './live-game.js';
 import { MoveType } from '@bchess/shared';
 
 @Injectable()

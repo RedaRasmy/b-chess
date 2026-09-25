@@ -1,4 +1,4 @@
-import { TypedServer } from './socket.type';
+import { TypedServer } from './socket.type.js';
 
 export const Rooms = {
     game: (gameId: string) => `game:${gameId}`,

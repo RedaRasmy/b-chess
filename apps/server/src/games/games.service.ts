@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { DATABASE_CONNECTION } from '../database/database.module';
+import { DATABASE_CONNECTION } from '../database/database.module.js';
 import type { Transaction, Database } from '@bchess/db';
 import {
     Elo,

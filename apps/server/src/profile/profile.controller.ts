@@ -1,7 +1,7 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
-import { PlayersService } from '../players/players.service';
-import { GamesService } from '../games/games.service';
+import { PlayersService } from '../players/players.service.js';
+import { GamesService } from '../games/games.service.js';
 
 @Controller('profile')
 export class ProfileController {

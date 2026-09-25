@@ -1,7 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
 import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
-import { GamesService } from '../games/games.service';
-import { MatchmakingService } from './matchmaking.service';
+import { GamesService } from '../games/games.service.js';
+import { MatchmakingService } from './matchmaking.service.js';
 
 @Controller('multiplayer')
 export class MultiplayerController {

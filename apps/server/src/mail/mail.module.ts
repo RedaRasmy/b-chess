@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
-import { MailService } from './mail.service';
+import { MailService } from './mail.service.js';
 import { BullModule } from '@nestjs/bullmq';
 import { BullBoardModule } from '@bull-board/nestjs';
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
-import { MailProcessor } from './mail.processor';
+import { MailProcessor } from './mail.processor.js';
 
 @Module({
     imports: [

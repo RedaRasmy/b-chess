@@ -9,7 +9,7 @@ import {
     WsException,
     Ack,
 } from '@nestjs/websockets';
-import { ResignService } from './resign.service';
+import { ResignService } from './resign.service.js';
 import { fromNodeHeaders } from 'better-auth/node';
 import {
     CLIENT_EVENTS,
@@ -21,7 +21,7 @@ import {
     InsertMoveSchema,
     type IMove,
 } from '@bchess/shared';
-import { GamesService } from '../games/games.service';
+import { GamesService } from '../games/games.service.js';
 import {
     Logger,
     StandardSchemaValidationPipe,
@@ -29,19 +29,19 @@ import {
     UseGuards,
     UsePipes,
 } from '@nestjs/common';
-import { LiveGamesService } from './live-games.service';
-import { MatchmakingService } from './matchmaking.service';
-import { MoveService } from './move.service';
-import { DrawService } from './draw.service';
-import type { TypedServer, TypedSocket } from './socket.type';
-import { isConnected, Rooms } from './utils';
+import { LiveGamesService } from './live-games.service.js';
+import { MatchmakingService } from './matchmaking.service.js';
+import { MoveService } from './move.service.js';
+import { DrawService } from './draw.service.js';
+import type { TypedServer, TypedSocket } from './socket.type.js';
+import { isConnected, Rooms } from './utils.js';
 import { OnEvent } from '@nestjs/event-emitter';
-import { TimerService } from './timer.service';
-import { WsThrottlerGuard } from './ws-throttler.guard';
+import { TimerService } from './timer.service.js';
+import { WsThrottlerGuard } from './ws-throttler.guard.js';
 import { SkipThrottle, Throttle } from '@nestjs/throttler';
-import { ThrottlerWsExceptionFilter } from './throttler-ws-exception.filter';
+import { ThrottlerWsExceptionFilter } from './throttler-ws-exception.filter.js';
 import { AuthService } from '@thallesp/nestjs-better-auth';
-import { Auth } from '../auth/auth';
+import { Auth } from '../auth/auth.js';
 
 @UseGuards(WsThrottlerGuard)
 @UseFilters(ThrottlerWsExceptionFilter)

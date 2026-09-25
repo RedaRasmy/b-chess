@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { PlayersService } from './players.service';
-import { getTestDb, getTestDbProvider, resetTestDb } from '../../test/test-db';
-import { createUser, createUserStats } from '../../test/factories/user.factory';
+import { PlayersService } from './players.service.js';
+import { getTestDb, getTestDbProvider, resetTestDb } from '../../test/test-db.js';
+import { createUser, createUserStats } from '../../test/factories/user.factory.js';
 import { NotFoundException } from '@nestjs/common';
 
 describe('PlayersService', () => {

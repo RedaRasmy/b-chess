@@ -1,7 +1,7 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { DATABASE_CONNECTION } from '../database/database.module';
+import { DATABASE_CONNECTION } from '../database/database.module.js';
 import type { Database } from '@bchess/db';
-import { PlayersService } from '../players/players.service';
+import { PlayersService } from '../players/players.service.js';
 import {
     calcElo,
     FinishedGame,

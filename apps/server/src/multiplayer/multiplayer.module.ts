@@ -1,14 +1,14 @@
 import { Module } from '@nestjs/common';
-import { ResignService } from './resign.service';
-import { MultiplayerGateway } from './multiplayer.gateway';
-import { MultiplayerController } from './multiplayer.controller';
-import { GamesService } from '../games/games.service';
-import { PlayersService } from '../players/players.service';
-import { LiveGamesService } from './live-games.service';
-import { MatchmakingService } from './matchmaking.service';
-import { MoveService } from './move.service';
-import { DrawService } from './draw.service';
-import { TimerService } from './timer.service';
+import { ResignService } from './resign.service.js';
+import { MultiplayerGateway } from './multiplayer.gateway.js';
+import { MultiplayerController } from './multiplayer.controller.js';
+import { GamesService } from '../games/games.service.js';
+import { PlayersService } from '../players/players.service.js';
+import { LiveGamesService } from './live-games.service.js';
+import { MatchmakingService } from './matchmaking.service.js';
+import { MoveService } from './move.service.js';
+import { DrawService } from './draw.service.js';
+import { TimerService } from './timer.service.js';
 
 @Module({
     providers: [

@@ -1,9 +1,9 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { DATABASE_CONNECTION } from '../database/database.module';
+import { DATABASE_CONNECTION } from '../database/database.module.js';
 import type { Database } from '@bchess/db';
-import { PlayersService } from '../players/players.service';
+import { PlayersService } from '../players/players.service.js';
 import { calcElo, DrawingGame, FinishedGame, PlayingGame } from '@bchess/shared';
-import { GamesService } from '../games/games.service';
+import { GamesService } from '../games/games.service.js';
 import { games } from '@bchess/db/tables';
 import { and, eq, isNotNull, or } from 'drizzle-orm';
 import { WsException } from '@nestjs/websockets';

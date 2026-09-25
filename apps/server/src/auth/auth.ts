@@ -3,11 +3,11 @@ import { drizzleAdapter } from '@better-auth/drizzle-adapter';
 import { username } from 'better-auth/plugins';
 import { db } from '@bchess/db';
 import { userStats } from '@bchess/db/tables';
-import { MailService } from '../mail/mail.service';
+import { MailService } from '../mail/mail.service.js';
 import { createAuthMiddleware } from 'better-auth/api';
 import { passkey } from '@better-auth/passkey';
-import { ResignService } from '../multiplayer/resign.service';
-import { MatchmakingService } from '../multiplayer/matchmaking.service';
+import { ResignService } from '../multiplayer/resign.service.js';
+import { MatchmakingService } from '../multiplayer/matchmaking.service.js';
 
 export const createAuth = ({
     mail,

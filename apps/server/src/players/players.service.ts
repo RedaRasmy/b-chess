@@ -1,5 +1,5 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { DATABASE_CONNECTION } from '../database/database.module';
+import { DATABASE_CONNECTION } from '../database/database.module.js';
 import type { Database, Transaction } from '@bchess/db';
 import { desc, eq, isNotNull, sql } from 'drizzle-orm';
 import { Elo, Result, TopPlayer } from '@bchess/shared';
