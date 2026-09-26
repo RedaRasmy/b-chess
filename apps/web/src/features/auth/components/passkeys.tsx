@@ -106,9 +106,7 @@ export default function Passkeys() {
                             <RenamePasskeyDialog passkey={passkey} />
                             <AlertDialog>
                                 <AlertDialogTrigger asChild>
-                                    <Button variant="destructive" size="sm">
-                                        Delete
-                                    </Button>
+                                    <Button variant="destructive">Delete</Button>
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
                                     <AlertDialogHeader>
