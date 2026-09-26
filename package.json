@@ -10,6 +10,7 @@
         "lint": "turbo lint",
         "type-check": "turbo type-check",
         "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+        "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
         "dev:web": "dotenv -e .env -- pnpm --filter ./apps/web dev",
         "db:generate": "dotenv -e .env -- pnpm --filter ./packages/db generate",
         "db:migrate": "dotenv -e .env -- pnpm --filter ./packages/db migrate",
