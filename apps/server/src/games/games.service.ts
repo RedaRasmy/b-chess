@@ -239,7 +239,6 @@ export class GamesService {
                 white,
                 black,
                 whiteId,
-                blackId,
                 gameStartedAt,
                 updatedAt,
                 result,

@@ -36,10 +36,6 @@
         "migrate": "npx drizzle-kit migrate",
         "studio": "npx drizzle-kit studio"
     },
-    "keywords": [],
-    "author": "",
-    "license": "ISC",
-    "packageManager": "pnpm@10.32.1",
     "devDependencies": {
         "@bchess/ts-config": "workspace:*",
         "@types/node": "^26.1.1",

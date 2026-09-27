@@ -18,7 +18,10 @@
                 "GITHUB_CLIENT_SECRET",
                 "GOOGLE_CLIENT_ID",
                 "GOOGLE_CLIENT_SECRET",
-                "NODE_ENV"
+                "NODE_ENV",
+                "RESEND_API_KEY",
+                "MAIL_DOMAIN",
+                "DOMAIN"
             ]
         },
         "lint": {

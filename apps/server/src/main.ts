@@ -24,5 +24,8 @@ async function bootstrap() {
     });
     await app.listen(process.env.PORT ?? 3333);
 }
-/* eslint-disable @typescript-eslint/no-floating-promises */
-bootstrap();
+
+bootstrap().catch((err) => {
+    console.error('Nest application failed to start', err);
+    process.exit(1);
+});
