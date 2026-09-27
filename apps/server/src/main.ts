@@ -3,6 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module.js';
 import { ConsoleLogger, StandardSchemaValidationPipe } from '@nestjs/common';
 import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
     const app = await NestFactory.create(AppModule, {
@@ -13,6 +14,8 @@ async function bootstrap() {
     });
 
     app.use(helmet());
+
+    app.use(cookieParser());
 
     app.useGlobalPipes(new StandardSchemaValidationPipe());
 

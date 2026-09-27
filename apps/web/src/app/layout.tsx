@@ -9,6 +9,7 @@ import { Toaster } from '@/components/ui/sonner';
 import GlobalListeners from '@/features/multiplayer/components/global-listeners';
 import { AppBootstrap } from '@/components/app-bootstrap';
 import UserProvider from '@/features/profile/components/user-provider';
+import { CookieConsentBanner } from '@/features/profile/components/cookie-consent-banner';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
@@ -49,6 +50,7 @@ export default function RootLayout({
                                 {children}
                             </main>
                         </div>
+                        <CookieConsentBanner />
                     </SidebarProvider>
                 </Providers>
                 <Toaster />
