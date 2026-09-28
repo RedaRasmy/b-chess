@@ -8,6 +8,13 @@ export const UsernameSchema = z
 
 export const EmailSchema = z.string().min(1, 'Email is required').pipe(z.email());
 
+export const RequiredApprovalSchema = z
+    .boolean()
+    .default(false)
+    .refine((value) => value, {
+        error: '',
+    });
+
 export const PasswordSchema = z
     .string()
     .min(1, 'Password is required')
@@ -26,16 +33,18 @@ export const RegisterSchema = z
         email: EmailSchema,
         password: PasswordSchema,
         confirmPassword: z.string(),
-        approval: z.boolean().default(false),
+        approval: RequiredApprovalSchema,
     })
     .refine((data) => data.password === data.confirmPassword, {
         error: "Passwords don't match",
         path: ['confirmPassword'],
-    })
-    .refine((data) => data.approval, {
-        error: '',
-        path: ['approval'],
     });
+
+export const OnboardingSchema = z.object({
+    username: UsernameSchema,
+    approval: RequiredApprovalSchema,
+});
+export type OnboardingData = z.infer<typeof OnboardingSchema>;
 
 export const ResetPasswordSchema = z
     .object({

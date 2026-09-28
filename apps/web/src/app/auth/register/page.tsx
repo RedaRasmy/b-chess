@@ -15,6 +15,7 @@ import GithubButton from '@/features/auth/components/github-button';
 import { TextField } from '@/features/auth/components/text-field';
 import { PasswordField } from '@/features/auth/components/password-field';
 import { CheckboxField } from '@/components/checkbox-field';
+import ApprovalLabel from '@/features/auth/components/approval-label';
 
 export default function LoginPage() {
     const form = useForm({
@@ -129,30 +130,7 @@ export default function LoginPage() {
                             <CheckboxField
                                 control={form.control}
                                 name="approval"
-                                label={
-                                    <span className="text-sm leading-snug">
-                                        I am 13+ and agree to the{' '}
-                                        <Link
-                                            href="/terms-of-service"
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            onClick={(e) => e.stopPropagation()}
-                                            className="text-primary font-medium underline underline-offset-4 hover:opacity-80"
-                                        >
-                                            Terms of Service
-                                        </Link>{' '}
-                                        and{' '}
-                                        <Link
-                                            href="/privacy-policy"
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            onClick={(e) => e.stopPropagation()}
-                                            className="text-primary font-medium underline underline-offset-4 hover:opacity-80"
-                                        >
-                                            Privacy Policy
-                                        </Link>
-                                    </span>
-                                }
+                                label={<ApprovalLabel />}
                             />
 
                             {/* Sign Up Button */}
