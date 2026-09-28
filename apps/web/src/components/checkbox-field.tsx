@@ -2,11 +2,12 @@ import { Controller, type Control, type FieldValues, type Path } from 'react-hoo
 import { Checkbox } from '@/components/ui/checkbox';
 import { Field, FieldLabel, FieldError } from '@/components/ui/field'; // adjust to your actual path
 import { cn } from '@/lib/utils';
+import { ReactNode } from 'react';
 
 interface CheckboxFieldProps<T extends FieldValues> {
     name: Path<T>;
     control: Control<T>;
-    label?: string;
+    label?: string | ReactNode;
     className?: string;
     disabled?: boolean;
 }

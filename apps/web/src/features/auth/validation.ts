@@ -26,10 +26,15 @@ export const RegisterSchema = z
         email: EmailSchema,
         password: PasswordSchema,
         confirmPassword: z.string(),
+        approval: z.boolean().default(false),
     })
     .refine((data) => data.password === data.confirmPassword, {
-        message: "Passwords don't match",
+        error: "Passwords don't match",
         path: ['confirmPassword'],
+    })
+    .refine((data) => data.approval, {
+        error: '',
+        path: ['approval'],
     });
 
 export const ResetPasswordSchema = z
@@ -38,7 +43,7 @@ export const ResetPasswordSchema = z
         confirmPassword: z.string(),
     })
     .refine((data) => data.password === data.confirmPassword, {
-        message: "Passwords don't match",
+        error: "Passwords don't match",
         path: ['confirmPassword'],
     });
 
@@ -53,7 +58,7 @@ export const UpdatePasswordSchema = z
         confirmPassword: z.string(),
     })
     .refine((data) => data.password === data.confirmPassword, {
-        message: "Passwords don't match",
+        error: "Passwords don't match",
         path: ['confirmPassword'],
     })
     .refine((data) => data.currentPassword !== data.password, {
