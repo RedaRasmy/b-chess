@@ -24,9 +24,9 @@ A multiplayer chess platform built with React and Node.js (Nest)
 
 ### Prerequisites
 
-- Node.js
+- Node.js LTS
 - Docker
-- pnpm
+- pnpm +12.6.0
 
 1. **Clone the repository**
 
