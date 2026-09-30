@@ -17,6 +17,7 @@
         "db:push": "dotenv -e .env -- pnpm --filter ./packages/db push",
         "db:studio": "dotenv -e .env -- pnpm --filter ./packages/db studio",
         "act:push": "act push --env-file /dev/null",
+        "act:ete": "act push -W .github/workflows/playwright.yml ",
         "email:dev": "pnpm --filter @bchess/emails email:dev"
     },
     "packageManager": "pnpm@12.6.0",
