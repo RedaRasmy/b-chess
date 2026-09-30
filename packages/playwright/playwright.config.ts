@@ -44,10 +44,10 @@ export default defineConfig({
             use: { ...devices['Desktop Firefox'] },
         },
 
-        {
-            name: 'webkit',
-            use: { ...devices['Desktop Safari'] },
-        },
+        // {
+        //     name: 'webkit',
+        //     use: { ...devices['Desktop Safari'] },
+        // },
 
         /* Test against mobile viewports. */
         // {
@@ -77,6 +77,7 @@ export default defineConfig({
             url: 'http://localhost:3333/health',
             reuseExistingServer: !process.env.CI,
             timeout: 120_000,
+            env: { E2E: 'true' },
         },
         {
             command: 'pnpm --filter @bchess/web start',

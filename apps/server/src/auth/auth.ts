@@ -125,16 +125,19 @@ export const createAuth = ({
         },
 
         // Rate limiting
-        rateLimit: {
-            enabled: true,
-            window: 60,
-            max: 100,
-            customRules: {
-                '/sign-in/email': { window: 60, max: 5 }, // stricter: brute-force protection
-                '/sign-up/email': { window: 3600, max: 3 }, // very strict: bot protection
-                '/forget-password': { window: 300, max: 3 },
-            },
-        },
+        rateLimit:
+            process.env.E2E === 'true'
+                ? undefined
+                : {
+                      enabled: true,
+                      window: 60,
+                      max: 100,
+                      customRules: {
+                          '/sign-in/email': { window: 60, max: 5 }, // stricter: brute-force protection
+                          '/sign-up/email': { window: 3600, max: 3 }, // very strict: bot protection
+                          '/forget-password': { window: 300, max: 3 },
+                      },
+                  },
     });
 
 export type Auth = ReturnType<typeof createAuth>;

@@ -30,6 +30,7 @@ jobs:
             BETTER_AUTH_URL: http://localhost:3333
             BETTER_AUTH_SECRET: kdsajflkajksdjfklajsdkjfalksjdklfa
             RESEND_API_KEY: fksaduweinvksfsadfasjdkfajsjdlfkjaksl
+            E2E: true
 
         steps:
             - uses: actions/checkout@v4
@@ -47,9 +48,7 @@ jobs:
               run: pnpm exec turbo run build --filter=@bchess/server...
 
             - name: Run migrations
-              run: |
-                  echo "DATABASE_URL is: $DATABASE_URL"
-                  pnpm --filter=@bchess/db migrate
+              run: pnpm --filter=@bchess/db migrate
 
             - name: Build web (with backend active for SSG/ISR)
               run: >
