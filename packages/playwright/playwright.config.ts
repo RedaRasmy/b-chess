@@ -22,6 +22,7 @@ export default defineConfig({
     /* Opt out of parallel tests on CI. */
     workers: process.env.CI ? 1 : undefined,
     /* Reporter to use. See https://playwright.dev/docs/test-reporters */
+
     reporter: 'html',
     /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
     use: {
@@ -78,12 +79,14 @@ export default defineConfig({
             reuseExistingServer: !process.env.CI,
             timeout: 120_000,
             env: { E2E: 'true' },
+            gracefulShutdown: { signal: 'SIGTERM', timeout: 5000 },
         },
         {
             command: 'pnpm --filter @bchess/web start',
             url: 'http://localhost:3000',
             reuseExistingServer: !process.env.CI,
             timeout: 120_000,
+            gracefulShutdown: { signal: 'SIGTERM', timeout: 5000 },
         },
     ],
 });
