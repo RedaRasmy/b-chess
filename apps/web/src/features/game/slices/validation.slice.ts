@@ -37,8 +37,7 @@ export const validationSlice: GameSlice<ValidationSlice> = (set, get) => ({
     },
     rollback: (timestamps) => {
         const { chess, mode, status, players } = get();
-        if (!players || mode !== 'multiplayer' || status !== 'playing') return; // TODO!: rollback iven if the game has finished
-
+        if (!players || mode !== 'multiplayer' || status !== 'playing') return;
         chess.undo();
 
         set({
