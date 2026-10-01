@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { LiveGamesService } from './live-games.service';
-import { LiveGame } from './live-game';
+import { LiveGamesService } from './live-games.service.js';
+import { LiveGame } from './live-game.js';
 
 describe('LiveGamesService', () => {
     let service: LiveGamesService;

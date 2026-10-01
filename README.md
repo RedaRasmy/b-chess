@@ -5,6 +5,12 @@ https://github.com/user-attachments/assets/10ec960d-5976-434f-a701-6237128302dc
 A multiplayer chess platform built with React and Node.js (Nest)
 
 ## Features
+
+- **Auth**
+    - Username/Email + Password
+    - OAuth: Google & Github
+    - Passkeys
+    - Password Reset/Change
 - **Profile** — Stats and games history.
 - **Bot** — Play against bot with different difficulty levels (stockfish).
 - **Multiplayer** — Play against other players in real-time.
@@ -18,9 +24,9 @@ A multiplayer chess platform built with React and Node.js (Nest)
 
 ### Prerequisites
 
-- Node.js
+- Node.js LTS
 - Docker
-- pnpm
+- pnpm +12.6.0
 
 1. **Clone the repository**
 
@@ -44,7 +50,7 @@ cp apps/server/.env.example apps/server/.env
 cp apps/web/.env.example apps/web/.env
 ```
 
-`.env` in `apps/server/` requires configuration for OAuth
+`.env` in `apps/server/` requires configuration for OAuth and Emails
 
 4. **Run the database**
 

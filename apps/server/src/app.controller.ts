@@ -1,5 +1,5 @@
 import { Controller, Get } from '@nestjs/common';
-import { AppService } from './app.service';
+import { AppService } from './app.service.js';
 import { OptionalAuth } from '@thallesp/nestjs-better-auth';
 
 @Controller()

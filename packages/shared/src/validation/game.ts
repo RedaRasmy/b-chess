@@ -21,8 +21,10 @@ export type Game = z.infer<typeof SelectGameSchema>;
 
 export type IGame = z.infer<typeof InsertGameSchema>;
 
-export const MoveSchema = z.object({
+export const InsertMoveSchema = z.object({
     from: z.string().length(2),
     to: z.string().length(2),
     promotion: z.string().length(1).optional(),
 });
+
+export type IMove = z.infer<typeof InsertMoveSchema>;

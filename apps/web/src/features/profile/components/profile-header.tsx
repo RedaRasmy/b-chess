@@ -1,9 +1,11 @@
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { LogoutButton } from '@/features/auth/components/logout-button';
-import { Handshake, Swords, Trophy } from 'lucide-react';
+import { Handshake, Settings, Swords, Trophy } from 'lucide-react';
 import { Stats } from '@bchess/shared';
 import { cn } from '@/lib/utils';
 import PlayerAvatar from '@/features/profile/components/player-avatar';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 const statConfig = {
     wins: {
@@ -51,7 +53,15 @@ export default function ProfileHeader({ username, avatar, stats }: Props) {
                             </span>
                         </div>
                     </div>
-                    <LogoutButton size="sm" />
+                    <div className="flex gap-1">
+                        <Button asChild size={'sm'} variant={'outline'}>
+                            <Link href={'/account'}>
+                                <Settings />
+                                <span className="">account</span>
+                            </Link>
+                        </Button>
+                        <LogoutButton size="sm" responsive />
+                    </div>
                 </div>
             </CardHeader>
 

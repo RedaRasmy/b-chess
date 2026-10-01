@@ -3,7 +3,7 @@ import postgres from 'postgres';
 import * as schema from '@bchess/db/tables';
 import { getTableName, is, sql } from 'drizzle-orm';
 import { Database } from '@bchess/db';
-import { DATABASE_CONNECTION } from '../src/database/database.module';
+import { DATABASE_CONNECTION } from '../src/database/database.module.js';
 import { ValueProvider } from '@nestjs/common';
 import { PgTable } from 'drizzle-orm/pg-core';
 

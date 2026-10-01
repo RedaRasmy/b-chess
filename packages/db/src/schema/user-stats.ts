@@ -9,7 +9,7 @@ export const userStats = pgTable(
         id: uuid('id').defaultRandom().primaryKey(),
         userId: text('user_id')
             .notNull()
-            .references(() => user.id),
+            .references(() => user.id, { onDelete: 'cascade' }),
         wins: integer('wins').default(0).notNull(),
         losses: integer('losses').default(0).notNull(),
         draws: integer('draws').default(0).notNull(),

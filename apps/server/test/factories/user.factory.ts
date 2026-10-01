@@ -1,4 +1,4 @@
-import { getTestDb } from '../test-db';
+import { getTestDb } from '../test-db.js';
 import { user, userStats } from '@bchess/db/tables';
 import { randomUUID } from 'crypto';
 

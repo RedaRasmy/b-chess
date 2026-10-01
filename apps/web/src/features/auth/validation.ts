@@ -8,6 +8,13 @@ export const UsernameSchema = z
 
 export const EmailSchema = z.string().min(1, 'Email is required').pipe(z.email());
 
+export const RequiredApprovalSchema = z
+    .boolean()
+    .default(false)
+    .refine((value) => value, {
+        error: '',
+    });
+
 export const PasswordSchema = z
     .string()
     .min(1, 'Password is required')
@@ -17,6 +24,7 @@ export const PasswordSchema = z
 export const LoginSchema = z.object({
     emailOrUsername: z.string().min(1, 'Email or username is required'),
     password: PasswordSchema,
+    rememberMe: z.boolean().default(true),
 });
 
 export const RegisterSchema = z
@@ -25,11 +33,50 @@ export const RegisterSchema = z
         email: EmailSchema,
         password: PasswordSchema,
         confirmPassword: z.string(),
+        approval: RequiredApprovalSchema,
     })
     .refine((data) => data.password === data.confirmPassword, {
-        message: "Passwords don't match",
+        error: "Passwords don't match",
         path: ['confirmPassword'],
+    });
+
+export const OnboardingSchema = z.object({
+    username: UsernameSchema,
+    approval: RequiredApprovalSchema,
+});
+export type OnboardingData = z.infer<typeof OnboardingSchema>;
+
+export const ResetPasswordSchema = z
+    .object({
+        password: PasswordSchema,
+        confirmPassword: z.string(),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+        error: "Passwords don't match",
+        path: ['confirmPassword'],
+    });
+
+export const ForgotPasswordSchema = z.object({
+    email: EmailSchema,
+});
+
+export const UpdatePasswordSchema = z
+    .object({
+        currentPassword: PasswordSchema,
+        password: PasswordSchema,
+        confirmPassword: z.string(),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+        error: "Passwords don't match",
+        path: ['confirmPassword'],
+    })
+    .refine((data) => data.currentPassword !== data.password, {
+        error: 'New password must be different',
+        path: ['password'],
     });
 
 export type LoginCredentials = z.infer<typeof LoginSchema>;
 export type RegisterCredentials = z.infer<typeof RegisterSchema>;
+export type ResetPasswordCredentials = z.infer<typeof ResetPasswordSchema>;
+export type ForgotPasswordCredentials = z.infer<typeof ForgotPasswordSchema>;
+export type UpdatePasswordData = z.infer<typeof UpdatePasswordSchema>;

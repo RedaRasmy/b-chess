@@ -8,3 +8,9 @@ export async function fetchStats() {
 export async function fetchGames() {
     return (await api.get<GameSummary[]>('/profile/games')).data;
 }
+
+export async function consentCookies(accepted: boolean) {
+    return await api.post(`/profile/consent`, {
+        accepted,
+    });
+}

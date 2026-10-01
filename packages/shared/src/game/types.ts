@@ -26,8 +26,8 @@ export type DrawReason = Extract<
 export type WinLossReason = Extract<Reason, 'Checkmate' | 'Timeout' | 'Resignation'>;
 
 type Players = {
-    white: { username: string; image: string | null };
-    black: { username: string; image: string | null };
+    white: { username: string; image: string | null } | null;
+    black: { username: string; image: string | null } | null;
 };
 export type ColorName = 'white' | 'black';
 
@@ -42,8 +42,17 @@ export type DrawRequest = {
     requestedDrawAt: Date;
 };
 
-export type PreparingGame = Narrow<
+export type MatchingGame = Narrow<
     SGame,
+    {
+        status: 'matching';
+        whiteId: string;
+        whiteRating: number;
+    }
+>;
+
+export type PreparingGame = Update<
+    MatchingGame,
     {
         status: 'preparing';
         blackId: string;
@@ -74,6 +83,9 @@ export type EndState = Prettify<
         status: 'finished';
         whiteEloDiff: number;
         blackEloDiff: number;
+        // Finished games can have deleted users
+        whiteId: string | null;
+        blackId: string | null;
     } & EndCase
 >;
 
@@ -120,8 +132,8 @@ export type GameSummary = {
     opponent: {
         id: string;
         username: string;
-        avatar: string | null;
-    };
+        image: string | null;
+    } | null;
     result: 'win' | 'loss' | 'draw';
     duration: number;
     reason: Reason;

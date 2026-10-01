@@ -44,6 +44,8 @@ export function GameHistoryItem({ game }: { game: GameSummary }) {
               ? 'text-rose-600 dark:text-rose-400'
               : 'text-muted-foreground';
 
+    const username = game.opponent?.username ?? '[deleted]';
+
     return (
         <Link href={`review/${game.id}`}>
             <div className="group relative flex items-center gap-4 overflow-hidden rounded-lg border bg-card py-3 pl-4 pr-4 transition-colors hover:bg-accent/50">
@@ -54,13 +56,13 @@ export function GameHistoryItem({ game }: { game: GameSummary }) {
                 />
 
                 {/* avatar */}
-                <PlayerAvatar username={game.opponent.username} avatar={game.opponent.avatar} />
+                <PlayerAvatar username={username} avatar={game.opponent?.image} />
 
                 {/* main content */}
                 <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                     <div className="flex items-center gap-2">
                         <span className="truncate text-sm font-medium leading-none">
-                            {game.opponent.username}
+                            {username}
                         </span>
                     </div>
                     <div className="flex items-center gap-2.5 text-xs text-muted-foreground">

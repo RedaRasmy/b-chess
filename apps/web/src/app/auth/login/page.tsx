@@ -1,20 +1,21 @@
 'use client';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Controller, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
-import { Field, FieldError, FieldLabel } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
 import { useMutation } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useState } from 'react';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, Eye, EyeClosed, Key, Mail } from 'lucide-react';
+import { ArrowLeft, Key, Mail } from 'lucide-react';
 import { EmailSchema, LoginCredentials, LoginSchema } from '@/features/auth/validation';
 import { authClient } from '@/lib/auth-client';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import GoogleButton from '@/features/auth/components/google-button';
 import GithubButton from '@/features/auth/components/github-button';
+import { PasswordField } from '@/features/auth/components/password-field';
+import { TextField } from '@/features/auth/components/text-field';
+import LastUsedBadge from '@/features/auth/components/last-used-badge';
+import { CheckboxField } from '@/components/checkbox-field';
 
 export default function LoginPage() {
     const form = useForm({
@@ -22,10 +23,16 @@ export default function LoginPage() {
         defaultValues: {
             emailOrUsername: '',
             password: '',
+            rememberMe: true,
         },
     });
     const params = useSearchParams();
     const error = params.get('error');
+
+    const wasGoogle = authClient.isLastUsedLoginMethod('google');
+    const wasGithub = authClient.isLastUsedLoginMethod('github');
+    const wasEmail = authClient.isLastUsedLoginMethod('email');
+    const wasPasskey = authClient.isLastUsedLoginMethod('passkey');
 
     const router = useRouter();
 
@@ -37,6 +44,7 @@ export default function LoginPage() {
                 const { data: result, error } = await authClient.signIn.email({
                     email: data.emailOrUsername,
                     password: data.password,
+                    rememberMe: data.rememberMe,
                 });
                 if (error) throw error;
                 return result;
@@ -60,14 +68,27 @@ export default function LoginPage() {
         },
     });
 
+    const passkeyMutation = useMutation({
+        mutationFn: async () => {
+            const { error } = await authClient.signIn.passkey({});
+
+            if (error) {
+                form.setError('root', {
+                    message: error.message || 'Something went wrong, please try again.',
+                });
+                return;
+            }
+
+            router.replace('/profile');
+        },
+    });
+
     async function onSubmit(data: LoginCredentials) {
         mutation.mutate(data);
     }
 
     const errors = form.formState.errors;
     const message = errors.root?.message ?? error ?? null;
-
-    const [showPassword, setShowPassword] = useState(false);
 
     return (
         <div className="w-full h-full flex items-center justify-center p-4">
@@ -92,79 +113,50 @@ export default function LoginPage() {
                             noValidate
                         >
                             <p className="text-red-500">{message}</p>
-                            {/* Email Field */}
-                            <Controller
-                                name="emailOrUsername"
+
+                            <TextField
+                                label="Identifier"
                                 control={form.control}
-                                render={({ field, fieldState }) => (
-                                    <Field data-invalid={fieldState.invalid}>
-                                        <FieldLabel htmlFor="email">Identifier</FieldLabel>
-                                        <div className="relative">
-                                            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                                            <Input
-                                                {...field}
-                                                id="email"
-                                                type="email"
-                                                aria-invalid={fieldState.invalid}
-                                                placeholder="Enter your email or username"
-                                                className="pl-10"
-                                            />
-                                        </div>
-                                        {fieldState.invalid && (
-                                            <FieldError errors={[fieldState.error]} />
-                                        )}
-                                    </Field>
-                                )}
+                                name="emailOrUsername"
+                                icon={Mail}
+                                placeholder="Enter your email or username"
                             />
 
-                            {/* Password Field */}
-                            <Controller
-                                name="password"
+                            <PasswordField
                                 control={form.control}
-                                render={({ field, fieldState }) => (
-                                    <Field data-invalid={fieldState.invalid}>
-                                        <FieldLabel htmlFor="password">Password</FieldLabel>
+                                name={'password'}
+                                forgotPasswordHref="/auth/forgot-password"
+                            />
 
-                                        <div className="relative">
-                                            <Key className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                                            <Input
-                                                {...field}
-                                                id="password"
-                                                aria-invalid={fieldState.invalid}
-                                                type={showPassword ? 'text' : 'password'}
-                                                placeholder="Enter your password"
-                                                className="pl-10 pr-10"
-                                            />
-
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                size="sm"
-                                                className="absolute right-0 top-0 h-full px-3"
-                                                onClick={() => setShowPassword(!showPassword)}
-                                            >
-                                                {showPassword ? (
-                                                    <EyeClosed className="h-4 w-4" />
-                                                ) : (
-                                                    <Eye className="h-4 w-4" />
-                                                )}
-                                            </Button>
-                                        </div>
-                                        {fieldState.invalid && (
-                                            <FieldError errors={[fieldState.error]} />
-                                        )}
-                                    </Field>
-                                )}
+                            <CheckboxField
+                                control={form.control}
+                                name="rememberMe"
+                                label="Remember Me"
+                                className="-mt-1"
                             />
 
                             {/* Sign In Button */}
                             <Button
                                 type="submit"
-                                className="w-full cursor-pointer mt-3"
+                                className="w-full relative mt-3"
                                 size="lg"
                                 disabled={mutation.isPending}
                             >
                                 Sign in
+                                {wasEmail && <LastUsedBadge variant={'secondary'} />}
+                            </Button>
+                            {/* Passkey Button */}
+                            <Button
+                                type="button"
+                                className="w-full relative -mt-1"
+                                variant={'outline'}
+                                size="lg"
+                                disabled={passkeyMutation.isPending}
+                                onClick={() => passkeyMutation.mutate()}
+                            >
+                                <Key />
+                                Use Passkey
+                                {wasPasskey && <LastUsedBadge className="top-1/1" />}
                             </Button>
                         </form>
                         <div className="relative">
@@ -180,8 +172,8 @@ export default function LoginPage() {
 
                         {/* OAuth Login */}
                         <div className="grid grid-cols-2 gap-4">
-                            <GoogleButton />
-                            <GithubButton />
+                            <GoogleButton isLastUsed={wasGoogle} />
+                            <GithubButton isLastUsed={wasGithub} />
                         </div>
 
                         {/* Sign Up Link */}

@@ -23,12 +23,19 @@ jobs:
                     --health-interval 10s
                     --health-timeout 5s
                     --health-retries 5
+            redis:
+                image: redis:latest
+                ports:
+                    - 6377:6379
         env:
             DATABASE_URL: postgresql://postgres:postgres@localhost:5444/postgres
             NEXT_PUBLIC_BACKEND_API_URL: http://localhost:3333
             NEXT_PUBLIC_APP_URL: http://localhost:3000
             BETTER_AUTH_URL: http://localhost:3333
             BETTER_AUTH_SECRET: kdsajflkajksdjfklajsdkjfalksjdklfa
+            RESEND_API_KEY: invalid_key
+            REDIS_URL: redis://localhost:6377
+            E2E: 'true'
 
         steps:
             - uses: actions/checkout@v4
@@ -46,9 +53,7 @@ jobs:
               run: pnpm exec turbo run build --filter=@bchess/server...
 
             - name: Run migrations
-              run: |
-                  echo "DATABASE_URL is: $DATABASE_URL"
-                  pnpm --filter=@bchess/db migrate
+              run: pnpm --filter=@bchess/db migrate
 
             - name: Build web (with backend active for SSG/ISR)
               run: >

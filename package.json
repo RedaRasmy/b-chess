@@ -10,33 +10,24 @@
         "lint": "turbo lint",
         "type-check": "turbo type-check",
         "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+        "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
         "dev:web": "dotenv -e .env -- pnpm --filter ./apps/web dev",
         "db:generate": "dotenv -e .env -- pnpm --filter ./packages/db generate",
         "db:migrate": "dotenv -e .env -- pnpm --filter ./packages/db migrate",
         "db:push": "dotenv -e .env -- pnpm --filter ./packages/db push",
         "db:studio": "dotenv -e .env -- pnpm --filter ./packages/db studio",
-        "act:push": "act push --env-file /dev/null"
+        "act:push": "act push --env-file /dev/null",
+        "act:ete": "act push -W .github/workflows/playwright.yml",
+        "email:dev": "pnpm --filter @bchess/emails email:dev"
     },
-    "packageManager": "pnpm@10.32.1",
+    "packageManager": "pnpm@12.6.0",
     "dependencies": {
-        "next": "16.1.6"
+        "next": "16.3.6"
     },
     "devDependencies": {
         "dotenv-cli": "^11.0.0",
         "prettier": "^3.9.6",
         "start-server-and-test": "^3.0.12",
         "turbo": "^2.10.7"
-    },
-    "pnpm": {
-        "overrides": {
-            "drizzle-orm": "0.45.2",
-            "typescript": "^5.7.3"
-        },
-        "onlyBuiltDependencies": [
-            "cpu-features",
-            "msw",
-            "protobufjs",
-            "ssh2"
-        ]
     }
 }

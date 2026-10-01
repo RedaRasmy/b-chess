@@ -9,29 +9,47 @@ import {
     WsException,
     Ack,
 } from '@nestjs/websockets';
-import { ResignService } from './resign.service';
+import { ResignService } from './resign.service.js';
 import { fromNodeHeaders } from 'better-auth/node';
-import { auth } from '../auth/auth';
-import { MoveDto } from './dto/move.dto';
-import { CreateGameDto } from './dto/create-game.dto';
-import { CLIENT_EVENTS, Elo, FinishedGame, type MoveAck } from '@bchess/shared';
-import { GamesService } from '../games/games.service';
-import { Logger, UseFilters, UseGuards, UsePipes } from '@nestjs/common';
-import { LiveGamesService } from './live-games.service';
-import { MatchmakingService } from './matchmaking.service';
-import { MoveService } from './move.service';
-import { DrawService } from './draw.service';
-import { ZodValidationPipe } from 'nestjs-zod';
-import type { TypedServer, TypedSocket } from './socket.type';
-import { isConnected, Rooms } from './utils';
+import {
+    CLIENT_EVENTS,
+    Elo,
+    FinishedGame,
+    type IGame,
+    InsertGameSchema,
+    type MoveAck,
+    InsertMoveSchema,
+    type IMove,
+} from '@bchess/shared';
+import { GamesService } from '../games/games.service.js';
+import {
+    Logger,
+    StandardSchemaValidationPipe,
+    UseFilters,
+    UseGuards,
+    UsePipes,
+} from '@nestjs/common';
+import { LiveGamesService } from './live-games.service.js';
+import { MatchmakingService } from './matchmaking.service.js';
+import { MoveService } from './move.service.js';
+import { DrawService } from './draw.service.js';
+import type { TypedServer, TypedSocket } from './socket.type.js';
+import { isConnected, Rooms } from './utils.js';
 import { OnEvent } from '@nestjs/event-emitter';
-import { TimerService } from './timer.service';
-import { WsThrottlerGuard } from './ws-throttler.guard';
+import { TimerService } from './timer.service.js';
+import { WsThrottlerGuard } from './ws-throttler.guard.js';
 import { SkipThrottle, Throttle } from '@nestjs/throttler';
-import { ThrottlerWsExceptionFilter } from './throttler-ws-exception.filter';
+import { ThrottlerWsExceptionFilter } from './throttler-ws-exception.filter.js';
+import { AuthService } from '@thallesp/nestjs-better-auth';
+import { Auth } from '../auth/auth.js';
 
 @UseGuards(WsThrottlerGuard)
 @UseFilters(ThrottlerWsExceptionFilter)
+@UsePipes(
+    new StandardSchemaValidationPipe({
+        exceptionFactory: (issues) => new WsException(issues.map((i) => i.message)),
+    }),
+)
 @WebSocketGateway({ cors: { origin: true, credentials: true } })
 export class MultiplayerGateway implements OnGatewayConnection, OnGatewayDisconnect {
     constructor(
@@ -42,6 +60,7 @@ export class MultiplayerGateway implements OnGatewayConnection, OnGatewayDisconn
         private readonly moveService: MoveService,
         private readonly drawService: DrawService,
         private readonly timerService: TimerService,
+        private readonly authService: AuthService<Auth>,
     ) {}
 
     @WebSocketServer()
@@ -50,7 +69,7 @@ export class MultiplayerGateway implements OnGatewayConnection, OnGatewayDisconn
     private readonly logger = new Logger(MultiplayerGateway.name);
 
     async handleConnection(socket: TypedSocket) {
-        const session = await auth.api.getSession({
+        const session = await this.authService.api.getSession({
             headers: fromNodeHeaders(socket.handshake.headers),
         });
 
@@ -141,14 +160,16 @@ export class MultiplayerGateway implements OnGatewayConnection, OnGatewayDisconn
         }
     }
 
-    @UsePipes(new ZodValidationPipe())
     @SubscribeMessage(CLIENT_EVENTS.JOIN_QUEUE)
     async handleJoinQueue(
         @ConnectedSocket() socket: TypedSocket,
-        @MessageBody() gameDto: CreateGameDto,
+        @MessageBody({
+            schema: InsertGameSchema,
+        })
+        gameData: IGame,
     ) {
         const userId = socket.data.user.id;
-        const result = await this.matchmakingService.findOrCreateMatch(gameDto, userId);
+        const result = await this.matchmakingService.findOrCreateMatch(gameData, userId);
 
         const playerColor = result.game.whiteId === userId ? 'w' : 'b';
         const gameId = result.game.id;
@@ -236,7 +257,10 @@ export class MultiplayerGateway implements OnGatewayConnection, OnGatewayDisconn
     })
     @SubscribeMessage(CLIENT_EVENTS.MOVE)
     async handleMove(
-        @MessageBody() moveDto: MoveDto,
+        @MessageBody({
+            schema: InsertMoveSchema,
+        })
+        moveData: IMove,
         @ConnectedSocket() socket: TypedSocket,
         @Ack() ack: MoveAck,
     ) {
@@ -262,7 +286,7 @@ export class MultiplayerGateway implements OnGatewayConnection, OnGatewayDisconn
                 liveGame = this.liveGamesService.createGame(gameId, moves);
             }
 
-            const { move, end, isCheck } = liveGame.move(moveDto);
+            const { move, end, isCheck } = liveGame.move(moveData);
 
             const { savedMove, newGame, elo } = await this.moveService.saveMove({
                 game: playingGame,

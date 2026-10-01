@@ -1,11 +1,11 @@
 import { calcElo, FinishedGame, PlayingGame } from '@bchess/shared';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { LiveGamesService } from './live-games.service';
+import { LiveGamesService } from './live-games.service.js';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { GamesService } from '../games/games.service';
-import { DATABASE_CONNECTION } from '../database/database.module';
+import { GamesService } from '../games/games.service.js';
+import { DATABASE_CONNECTION } from '../database/database.module.js';
 import type { Database } from '@bchess/db';
-import { PlayersService } from '../players/players.service';
+import { PlayersService } from '../players/players.service.js';
 
 @Injectable()
 export class TimerService implements OnModuleInit {

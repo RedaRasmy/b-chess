@@ -1,11 +1,10 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { CreateGameDto } from './dto/create-game.dto';
-import { DATABASE_CONNECTION } from '../database/database.module';
+import { DATABASE_CONNECTION } from '../database/database.module.js';
 import type { Database } from '@bchess/db';
-import { PlayersService } from '../players/players.service';
+import { PlayersService } from '../players/players.service.js';
 import { and, between, eq, ne, sql } from 'drizzle-orm';
 import { games } from '@bchess/db/tables';
-import { parseTimerOption } from '@bchess/shared';
+import { IGame, MatchedGame, MatchingGame, parseTimerOption } from '@bchess/shared';
 
 @Injectable()
 export class MatchmakingService {
@@ -15,12 +14,13 @@ export class MatchmakingService {
     ) {}
 
     async getMatch(userId: string) {
-        return await this.db.query.games.findFirst({
+        const matchingGame = await this.db.query.games.findFirst({
             where: (games) => and(eq(games.status, 'matching'), eq(games.whiteId, userId)),
         });
+        return matchingGame as MatchingGame;
     }
 
-    async findOrCreateMatch({ timer, min, max }: CreateGameDto, userId: string) {
+    async findOrCreateMatch({ timer, min, max }: IGame, userId: string) {
         const alreadyCreatedMatch = await this.getMatch(userId);
 
         if (alreadyCreatedMatch) {
@@ -63,8 +63,8 @@ export class MatchmakingService {
 
             return {
                 status: 'MATCH_FOUND',
-                game,
-                players: [match.whiteId, userId],
+                game: game as MatchedGame,
+                players: [match.whiteId!, userId],
             } as const;
         }
 
@@ -84,7 +84,7 @@ export class MatchmakingService {
 
         if (!newGame) throw new Error('Failed to insert new game');
 
-        return { status: 'QUEUED', game: newGame } as const;
+        return { status: 'QUEUED', game: newGame as MatchingGame } as const;
     }
 
     async cancelMatch(userId: string) {
